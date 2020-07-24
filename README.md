@@ -31,6 +31,10 @@ This will involve implementing or sourcing:
   technical signals, or an optimizer that can tune the signals for a handwritten
   trading strategy
 
+Other annoying subproblems that may crop up:
+* Dealing with time series data effectively (including gaps)
+
+
 The basic idea:
 
 ```

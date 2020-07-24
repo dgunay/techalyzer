@@ -1,0 +1,22 @@
+[package]
+name = "ta_experiments"
+version = "0.1.0"
+authors = ["Devin Gunay <devingunay@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+# TODO: figure out a way to cleanly separate and import lib code into main
+# [lib]
+# name = ""
+# path = "src/lib.rs"
+
+# [[bin]]
+# name = "dice"
+# path = "src/bin/dice.rs"
+
+[dependencies]
+ta = "0.1.5"
+alphavantage = { version = "0.6.0", features = ["blocking"] }
+chrono = "0.4"
+structopt = "0.3"
