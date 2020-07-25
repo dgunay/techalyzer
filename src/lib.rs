@@ -38,7 +38,7 @@ pub fn get_market_data(
             let res = av.get("JPM", start, end);
             StubMarketData {}
         }
-    }
+    };
 
     return market_data;
 }

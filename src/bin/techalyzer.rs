@@ -9,12 +9,17 @@ use ta_experiments::source::Source;
 #[derive(StructOpt, Debug)]
 #[structopt(name = "basic")]
 struct Opts {
+    /// Secret associated with your chosen data source, usually an API key or something.
     #[structopt(long)]
     secret: Option<String>,
 
+    /// The symbol of the security to analyze
     symbol: String,
 
+    /// Start date of the analysis. Leave out to go to the earliest possible date.
     start_date: Option<NaiveDate>,
+
+    /// End date of the analysis. Leave out to go to the latest possible date (usually today).
     end_date: Option<NaiveDate>,
 }
 
