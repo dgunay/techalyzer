@@ -1,12 +1,10 @@
-// TODO: library code goes here
-
-mod datasources;
+pub mod datasources;
 pub mod marketdata;
 pub mod secret;
 pub mod source;
 
 use crate::datasources::alphavantage;
-use crate::datasources::datasource::DataSource;
+use crate::datasources::datasource::{DataSource, Error};
 use crate::marketdata::stubmarketdata::StubMarketData;
 use crate::source::Source;
 use chrono::NaiveDate;
@@ -17,7 +15,7 @@ pub fn get_market_data(
     start_date: Option<NaiveDate>,
     end_date: Option<NaiveDate>,
     secret: Secret,
-) -> StubMarketData {
+) -> Result<StubMarketData, Error> {
     let end = match end_date {
         Some(d) => d,
         None => chrono::Utc::now().naive_local().date(), // end at today's date
@@ -30,15 +28,14 @@ pub fn get_market_data(
         None => NaiveDate::from_ymd(1901, 1, 1),
     };
 
-    let market_data = match source {
+    let market_data: StubMarketData = match source {
         Source::AlphaVantage => {
-            let key = secret.data.unwrap();
+            let key = secret.data.unwrap_or("".to_string());
             let cl = ::alphavantage::blocking::Client::new(key.as_str());
             let av = alphavantage::AlphaVantage::new(cl);
-            let res = av.get("JPM", start, end);
-            StubMarketData {}
+            av.get("JPM", start, end)?.into()
         }
     };
 
-    return market_data;
+    return Ok(market_data);
 }

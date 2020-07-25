@@ -48,3 +48,11 @@ The basic idea:
 For funsies:
 
 * Integrate a sentiment analyzer for r/wallstreetbets or various investing forums
+
+## Known Issues
+
+Compiling in Windows is a bit of a pain in the ass because the `peroxide` crate's
+`dataframe` feature uses `netcdf`, 
+[which has a linking bug at the moment](https://github.com/Axect/Peroxide/issues/16). 
+Can be solved by either manually adding it to the linking path, or by building 
+it in WSL.

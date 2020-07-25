@@ -20,3 +20,5 @@ ta = "0.1.5"
 alphavantage = { version = "0.6.0", features = ["blocking"] }
 chrono = "0.4"
 structopt = "0.3"
+peroxide = { version = "0.25.2", features = ["dataframe"] }
+derive_more = "0.6.2"

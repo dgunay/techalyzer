@@ -35,7 +35,15 @@ fn main() -> Result<(), chrono::format::ParseError> {
     let secret = Secret { data: opts.secret };
 
     // Get market data
-    get_market_data(Source::AlphaVantage, start, end, secret);
+    match get_market_data(Source::AlphaVantage, start, end, secret) {
+        Ok(d) => todo!(),
+        Err(e) => match e {
+            ta_experiments::datasources::datasource::Error::AlphaVantageError(msg) => {
+                println!("{}", msg);
+                std::process::exit(1);
+            }
+        },
+    }
 
     Ok(())
 }
