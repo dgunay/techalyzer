@@ -24,7 +24,7 @@ fn main() -> Result<(), chrono::format::ParseError> {
     // TODO: default to all history available or use args
     // Date range for the data
     let start = opts.start_date;
-    let end = today;
+    let end = opts.end_date;
 
     // API keys if necessary
     let secret = Secret { data: opts.secret };
