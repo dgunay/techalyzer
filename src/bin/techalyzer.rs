@@ -23,10 +23,9 @@ struct Opts {
     end_date: Option<NaiveDate>,
 }
 
-fn main() -> Result<(), chrono::format::ParseError> {
+fn main() {
     let opts = Opts::from_args();
 
-    // TODO: default to all history available or use args
     // Date range for the data
     let start = opts.start_date;
     let end = opts.end_date;
@@ -37,13 +36,9 @@ fn main() -> Result<(), chrono::format::ParseError> {
     // Get market data
     match get_market_data(Source::AlphaVantage, start, end, secret) {
         Ok(d) => todo!(),
-        Err(e) => match e {
-            ta_experiments::datasources::datasource::Error::AlphaVantageError(msg) => {
-                println!("{}", msg);
-                std::process::exit(1);
-            }
+        Err(e) => {
+            println!("{}", e);
+            std::process::exit(1);
         },
     }
-
-    Ok(())
 }

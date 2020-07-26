@@ -55,4 +55,7 @@ Compiling in Windows is a bit of a pain in the ass because the `peroxide` crate'
 `dataframe` feature uses `netcdf`, 
 [which has a linking bug at the moment](https://github.com/Axect/Peroxide/issues/16). 
 Can be solved by either manually adding it to the linking path, or by building 
-it in WSL.
+it in WSL. To get it for Windows, [install it from here][netcdf] and then add
+it to your PATH.
+
+[netcdf]: https://www.unidata.ucar.edu/software/netcdf/docs/winbin.html
