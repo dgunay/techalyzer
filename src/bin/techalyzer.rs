@@ -6,6 +6,8 @@ use ta_experiments::get_market_data;
 use ta_experiments::secret::Secret;
 use ta_experiments::source::Source;
 
+// FIXME: we probably don't need the overhead of structopt, look into switching
+// to pico-args (https://github.com/RazrFalcon/pico-args)
 #[derive(StructOpt, Debug)]
 #[structopt(name = "basic")]
 struct Opts {
@@ -39,6 +41,6 @@ fn main() {
         Err(e) => {
             println!("{}", e);
             std::process::exit(1);
-        },
+        }
     }
 }

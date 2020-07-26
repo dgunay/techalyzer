@@ -22,6 +22,23 @@ struct Prices {
 
 impl Into<Prices> for TimeSeries {
     fn into(self) -> Prices {
-        todo!("implement Into<Prices> for TimeSeries")
+        todo!("implement Into<Prices> for TimeSeries");
+
+        let df = DataFrame::new();
+
+        Prices {
+            df: df,
+            symbol: self.symbol
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn create_from_time_series() {
+        // let ts = TimeSeries::from(vec![]);
     }
 }
