@@ -22,6 +22,8 @@ struct Prices {
     // TODO: it is not clear to me yet how to efficiently implement a 
     // date-indexed series of prices like pandas, so I'll just use two ndarrays
     // instead
+    // TODO: maybe use a map of dates to prices, or a map to indices on the 
+    // prices array?
     dates: Array1<DateTime<Tz>>,
     prices: Array1<f64>,
     symbol: String,
@@ -46,7 +48,6 @@ mod tests {
 
     #[test]
     fn create_prices_from_alphavantage_time_series() {
-        // let now = DateTime::from_utc(Utc::now().naive_local(), Eastern);
         let dt = Eastern.ymd(2012, 2, 2).and_hms(12, 0, 0);
         let entry = Entry {
             date: dt,
@@ -66,5 +67,6 @@ mod tests {
         let p: Prices = ts.into();
 
         assert!(p.prices[0] == 30.0);
+        assert!(p.dates[0] == dt);
     }
 }
