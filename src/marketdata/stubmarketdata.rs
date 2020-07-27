@@ -1,5 +1,8 @@
 use alphavantage::time_series::TimeSeries;
-use peroxide::structure::dataframe::DataFrame;
+use ndarray::prelude::*;
+use chrono::DateTime;
+use chrono_tz::Tz;
+use std::iter::FromIterator;
 
 /// TODO: This is only here because I haven't figured out my standard MarketData
 /// object yet
@@ -16,18 +19,19 @@ impl From<TimeSeries> for StubMarketData {
 
 /// Wraps DataFrame to enable conversion from various data sources.
 struct Prices {
-    df: DataFrame,
+    // TODO: it is not clear to me yet how to efficiently implement a 
+    // date-indexed series of prices like pandas, so I'll just use two ndarrays
+    // instead
+    dates: Array1<DateTime<Tz>>,
+    prices: Array1<f64>,
     symbol: String,
 }
 
 impl Into<Prices> for TimeSeries {
     fn into(self) -> Prices {
-        todo!("implement Into<Prices> for TimeSeries");
-
-        let df = DataFrame::new();
-
         Prices {
-            df: df,
+            dates: Array::from_iter(self.entries.iter().map(|entry| entry.date)),
+            prices: Array::from_iter(self.entries.iter().map(|entry| entry.close)),
             symbol: self.symbol
         }
     }
@@ -36,9 +40,31 @@ impl Into<Prices> for TimeSeries {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use alphavantage::time_series::Entry;
+    use chrono::prelude::*;
+    use chrono_tz::US::Eastern;
 
     #[test]
-    fn create_from_time_series() {
-        // let ts = TimeSeries::from(vec![]);
+    fn create_prices_from_alphavantage_time_series() {
+        // let now = DateTime::from_utc(Utc::now().naive_local(), Eastern);
+        let dt = Eastern.ymd(2012, 2, 2).and_hms(12, 0, 0);
+        let entry = Entry {
+            date: dt,
+            open: 30.0,
+            high: 32.0,
+            low: 28.0,
+            close: 30.0,
+            volume: 300,      
+        };
+        // FIXME: this is highly obnoxious to create fixtures for
+        let ts = TimeSeries {
+            entries: vec![entry],
+            symbol: "JPM".to_string(),
+            last_refreshed: dt
+        };
+
+        let p: Prices = ts.into();
+
+        assert!(p.prices[0] == 30.0);
     }
 }

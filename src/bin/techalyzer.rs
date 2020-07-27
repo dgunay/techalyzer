@@ -36,8 +36,8 @@ fn main() {
     let secret = Secret { data: opts.secret };
 
     // Get market data
-    match get_market_data(Source::AlphaVantage, start, end, secret) {
-        Ok(d) => todo!(),
+    match get_market_data(Source::AlphaVantage, opts.symbol, start, end, secret) {
+        Ok(d) => todo!("do something with the market data"),
         Err(e) => {
             println!("{}", e);
             std::process::exit(1);

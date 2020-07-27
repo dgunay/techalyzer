@@ -1,6 +1,6 @@
-use alphavantage::time_series::TimeSeries;
 use chrono::NaiveDate;
 use derive_more::Display;
+use crate::StubMarketData;
 
 /// Errors arising from attempts to get data from different data sources
 #[derive(Debug, Display)]
@@ -10,5 +10,5 @@ pub enum Error {
 }
 
 pub trait DataSource {
-    fn get(self, symbol: &str, start: NaiveDate, end: NaiveDate) -> Result<TimeSeries, Error>;
+    fn get(self, symbol: &str, start: NaiveDate, end: NaiveDate) -> Result<StubMarketData, Error>;
 }
