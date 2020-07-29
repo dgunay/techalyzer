@@ -24,9 +24,9 @@ struct Prices {
     // instead
     // TODO: maybe use a map of dates to prices, or a map to indices on the
     // prices array?
-    dates: Array1<DateTime<Tz>>,
-    prices: Array1<f64>,
-    symbol: String,
+    pub dates: Array1<DateTime<Tz>>,
+    pub prices: Array1<f64>,
+    pub symbol: String,
 }
 
 impl Into<Prices> for TimeSeries {
