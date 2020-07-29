@@ -22,17 +22,58 @@ struct Opts {
 
     /// End date of the analysis. Leave out to go to the latest possible date (usually today).
     end_date: Option<NaiveDate>,
+
+    #[structopt(subcommand)]
+    cmd: SubCommands,
+}
+
+/// The subcommands that Techalyzer can do
+#[derive(StructOpt, Debug)]
+#[structopt(name = "basic")]
+enum SubCommands {
+    /// Prints a technical indicator to STDOUT as JSON data.
+    Print {
+        #[structopt(short, long)]
+        indicator: SupportedIndicators,
+
+        /// Print buy/sell signals along with the indicator
+        #[structopt(short, long)]
+        signals: bool,
+    },
+    Train {},
+    Suggest {},
+}
+
+#[derive(Debug)]
+enum SupportedIndicators {
+    BollingerBands,
+    RelativeStrengthIndex,
+    MACD
+}
+
+impl std::str::FromStr for SupportedIndicators {
+    type Err = TechalyzerError;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "bollinger-bands" => Ok(SupportedIndicators::BollingerBands),
+            "rsi" => Ok(SupportedIndicators::RelativeStrengthIndex),
+            "macd" => Ok(SupportedIndicators::MACD),
+            _ => Err(TechalyzerError::Generic(format!("{} is not a supported technical indicator", s)))
+        }
+    }
 }
 
 fn main() {
-    match run_program(Opts::from_args()) {
-        Ok(_) => todo!(),
+    let opts = Opts::from_args();
+    match run_program(opts) {
+        Ok(_) => std::process::exit(0),
         Err(e) => {
             println!("{}", e);
             std::process::exit(1);
         }
     }
 }
+
 #[derive(Debug, Display)]
 enum TechalyzerError {
     #[display(fmt = "{}", _0)]
@@ -49,21 +90,33 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
     let secret = Secret { data: opts.secret };
 
     // Get market data
-    match get_market_data(Source::AlphaVantage, opts.symbol, start, end, secret) {
-        Ok(d) => todo!(),
+    // TODO: parameterize the data source
+    let data = match get_market_data(Source::AlphaVantage, opts.symbol, start, end, secret) {
+        Ok(d) => d,
         Err(e) => {
             return Err(TechalyzerError::Generic(format!("{}", e)));
         }
+    };
+
+    match opts.cmd {
+        SubCommands::Print {
+            indicator, 
+            signals
+        } =>  {
+            todo!()   
+        }
+        SubCommands::Suggest {} => todo!(),
+        SubCommands::Train {} => todo!(),
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{run_program, Opts};
+    use super::{run_program, Opts, SubCommands};
 
     #[test]
     fn test_main() {
-        todo!("write some kind of integration test for the whole program");
+        todo!("write some kind of integration tests for the whole program");
         // ()
         // let res = run_program(Opts {
         //     secret: None,
