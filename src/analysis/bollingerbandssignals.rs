@@ -41,6 +41,7 @@ impl Signals for BollingerBandsSignals<'_> {
 
 mod tests {
     use super::*;
+    use crate::util::nearly_equal;
 
     struct Close {
         price: f64,
@@ -50,10 +51,6 @@ mod tests {
         fn close(&self) -> f64 {
             self.price
         }
-    }
-
-    fn nearly_equal(a: f64, b: f64) -> bool {
-        (a - b) < 0.000001
     }
 
     #[test]
