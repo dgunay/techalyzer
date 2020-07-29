@@ -31,6 +31,8 @@ struct Prices {
 
 impl Into<Prices> for TimeSeries {
     fn into(self) -> Prices {
+        print!("Converting from TimeSeries into Prices");
+        // FIXME: this might be causing stack overflows
         Prices {
             dates: Array::from_iter(self.entries.iter().map(|entry| entry.date)),
             prices: Array::from_iter(self.entries.iter().map(|entry| entry.close)),
