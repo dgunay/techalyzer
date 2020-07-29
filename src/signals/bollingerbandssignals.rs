@@ -1,7 +1,7 @@
 use crate::signals::signals::Signals;
+use serde::Serialize;
 use ta::indicators::{BollingerBands, BollingerBandsOutput};
 use ta::Next;
-use serde::Serialize;
 
 /// basically a carbon copy of BollingerBandsOutput because Serializing a vector
 /// of remote types is way too hard for me right now
@@ -10,6 +10,16 @@ struct BBOutput {
     pub average: f64,
     pub upper: f64,
     pub lower: f64,
+}
+
+impl From<&BollingerBandsOutput> for BBOutput {
+    fn from(b: &BollingerBandsOutput) -> BBOutput {
+        Self {
+            average: b.average,
+            upper: b.upper,
+            lower: b.lower,
+        }
+    }
 }
 
 #[derive(Serialize)]
@@ -37,7 +47,7 @@ impl<'a> BollingerBandsSignals<'a> {
         }
 
         Self {
-            outputs: outputs.iter().map(|o| BBOutput::from(o)),
+            outputs: outputs.iter().map(|o| BBOutput::from(o)).collect(),
             prices: prices,
             signals: signals,
         }
