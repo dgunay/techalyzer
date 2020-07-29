@@ -1,6 +1,5 @@
-// TODO: use StructOpt or something to get args
-
 use chrono::NaiveDate;
+use derive_more::Display;
 use structopt::StructOpt;
 use ta_experiments::get_market_data;
 use ta_experiments::secret::Secret;
@@ -26,8 +25,22 @@ struct Opts {
 }
 
 fn main() {
-    let opts = Opts::from_args();
+    match run_program(Opts::from_args()) {
+        Ok(_) => todo!(),
+        Err(e) => {
+            println!("{}", e);
+            std::process::exit(1);
+        }
+    }
+}
+#[derive(Debug, Display)]
+enum TechalyzerError {
+    #[display(fmt = "{}", _0)]
+    Generic(String),
+}
 
+/// Wrapper function for Techalyzer to make it easier to test.
+fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
     // Date range for the data
     let start = opts.start_date;
     let end = opts.end_date;
@@ -39,8 +52,24 @@ fn main() {
     match get_market_data(Source::AlphaVantage, opts.symbol, start, end, secret) {
         Ok(d) => todo!(),
         Err(e) => {
-            println!("{}", e);
-            std::process::exit(1);
+            return Err(TechalyzerError::Generic(format!("{}", e)));
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{run_program, Opts};
+
+    #[test]
+    fn test_main() {
+        todo!("write some kind of integration test for the whole program");
+        // ()
+        // let res = run_program(Opts {
+        //     secret: None,
+        //     symbol: "JPM".to_string(),
+        //     start_date: None,
+        //     end_date: None,
+        // });
     }
 }

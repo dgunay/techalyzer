@@ -41,7 +41,7 @@ impl Signals for BollingerBandsSignals<'_> {
 
 #[cfg(test)]
 mod tests {
-    use super::{BollingerBandsSignals, BollingerBands};
+    use super::{BollingerBands, BollingerBandsSignals, Signals};
     use crate::util::nearly_equal;
 
     struct Close {
