@@ -1,11 +1,11 @@
+use crate::analysis::signals::Signals;
 use ta::indicators::RelativeStrengthIndex;
 use ta::Next;
-use crate::analysis::signals::Signals;
 
 struct RelativeStrengthIndexSignals<'a> {
     outputs: Vec<f64>,
     prices: &'a Vec<f64>,
-    signals: Vec<f64>
+    signals: Vec<f64>,
 }
 
 impl<'a> RelativeStrengthIndexSignals<'a> {
@@ -15,7 +15,7 @@ impl<'a> RelativeStrengthIndexSignals<'a> {
         let mut outputs = Vec::new();
         for price in prices.iter() {
             let rsi_val = rsi.next(*price);
-            
+
             // TODO: we can create a "Signals" object that simply takes the math
             // to calculate signal
             // and abstracts out all this looping over prices and stuff
@@ -30,7 +30,7 @@ impl<'a> RelativeStrengthIndexSignals<'a> {
         Self {
             outputs: outputs,
             prices: prices,
-            signals: signals
+            signals: signals,
         }
     }
 }
@@ -58,11 +58,9 @@ mod tests {
     #[test]
     fn test_signals_from_rsi() {
         let prices = vec![1.9, 2.0, 2.1, 2.2, 2.1, 1.5];
-        
-        let mut signals = RelativeStrengthIndexSignals::new(
-            &prices, 
-            RelativeStrengthIndex::new(14).unwrap()
-        );
+
+        let mut signals =
+            RelativeStrengthIndexSignals::new(&prices, RelativeStrengthIndex::new(14).unwrap());
 
         println!("{:?}", signals.signals());
         println!("{:?}", signals.outputs);

@@ -1,7 +1,7 @@
 use alphavantage::time_series::TimeSeries;
-use ndarray::prelude::*;
 use chrono::DateTime;
 use chrono_tz::Tz;
+use ndarray::prelude::*;
 use std::iter::FromIterator;
 
 /// TODO: This is only here because I haven't figured out my standard MarketData
@@ -19,10 +19,10 @@ impl From<TimeSeries> for StubMarketData {
 
 /// Wraps DataFrame to enable conversion from various data sources.
 struct Prices {
-    // TODO: it is not clear to me yet how to efficiently implement a 
+    // TODO: it is not clear to me yet how to efficiently implement a
     // date-indexed series of prices like pandas, so I'll just use two ndarrays
     // instead
-    // TODO: maybe use a map of dates to prices, or a map to indices on the 
+    // TODO: maybe use a map of dates to prices, or a map to indices on the
     // prices array?
     dates: Array1<DateTime<Tz>>,
     prices: Array1<f64>,
@@ -34,7 +34,7 @@ impl Into<Prices> for TimeSeries {
         Prices {
             dates: Array::from_iter(self.entries.iter().map(|entry| entry.date)),
             prices: Array::from_iter(self.entries.iter().map(|entry| entry.close)),
-            symbol: self.symbol
+            symbol: self.symbol,
         }
     }
 }
@@ -55,13 +55,13 @@ mod tests {
             high: 32.0,
             low: 28.0,
             close: 30.0,
-            volume: 300,      
+            volume: 300,
         };
         // FIXME: this is highly obnoxious to create fixtures for
         let ts = TimeSeries {
             entries: vec![entry],
             symbol: "JPM".to_string(),
-            last_refreshed: dt
+            last_refreshed: dt,
         };
 
         let p: Prices = ts.into();

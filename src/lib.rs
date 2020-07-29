@@ -1,6 +1,6 @@
+pub mod analysis;
 pub mod datasources;
 pub mod marketdata;
-pub mod analysis;
 pub mod secret;
 pub mod source;
 pub mod util;

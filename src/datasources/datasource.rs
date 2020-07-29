@@ -1,6 +1,6 @@
+use crate::StubMarketData;
 use chrono::NaiveDate;
 use derive_more::Display;
-use crate::StubMarketData;
 
 /// Errors arising from attempts to get data from different data sources
 #[derive(Debug, Display)]

@@ -1,11 +1,11 @@
+use crate::analysis::signals::Signals;
 use ta::indicators::{BollingerBands, BollingerBandsOutput};
 use ta::Next;
-use crate::analysis::signals::Signals;
 
 struct BollingerBandsSignals<'a> {
     outputs: Vec<BollingerBandsOutput>,
     prices: &'a Vec<f64>,
-    signals: Vec<f64>
+    signals: Vec<f64>,
 }
 
 impl<'a> BollingerBandsSignals<'a> {
@@ -17,9 +17,9 @@ impl<'a> BollingerBandsSignals<'a> {
         let mut outputs = Vec::new();
         for price in prices.iter() {
             let o = bb.next(*price);
-            
+
             // how far along from the average to the bounds is the price?
-            let signal = 2.0*(((price - o.lower) / (o.upper - o.lower)) - 0.5);
+            let signal = 2.0 * (((price - o.lower) / (o.upper - o.lower)) - 0.5);
 
             signals.push(signal);
             outputs.push(o);
@@ -28,7 +28,7 @@ impl<'a> BollingerBandsSignals<'a> {
         Self {
             outputs: outputs,
             prices: prices,
-            signals: signals
+            signals: signals,
         }
     }
 }
@@ -58,11 +58,8 @@ mod tests {
         let mut bb = BollingerBands::new(5, 2.0).unwrap();
 
         let prices = vec![1.9, 2.0, 2.1, 2.2, 2.1, 1.5];
-        
-        let mut signals = BollingerBandsSignals::new(
-            &prices, 
-            BollingerBands::new(5, 2.0).unwrap()
-        );
+
+        let mut signals = BollingerBandsSignals::new(&prices, BollingerBands::new(5, 2.0).unwrap());
 
         assert_eq!(signals.signals().len(), prices.len());
         assert!(nearly_equal(signals.signals()[1], 0.5));

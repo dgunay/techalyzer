@@ -1,8 +1,8 @@
 use crate::analysis::signals::Signals;
-use ta::indicators::MovingAverageConvergenceDivergence;
-use ta::Next;
 use crate::util::clamp;
 use gnuplot::Figure;
+use ta::indicators::MovingAverageConvergenceDivergence;
+use ta::Next;
 
 struct MovingAverageConvergenceDivergenceSignals {
     // outputs: Vec<ta::Next::Output<MovingAverageConvergenceDivergence>, &'a f64>,
@@ -37,8 +37,8 @@ impl MovingAverageConvergenceDivergenceSignals {
             } else {
                 0.0
             };
-            
-            // slope is normalized and clamped to 0.5/-0.5 (with 0.5 being a 45 
+
+            // slope is normalized and clamped to 0.5/-0.5 (with 0.5 being a 45
             // degree angle trending upwards)
             // FIXME: ensure no div by zero
             let slope = macd_line - macd_line_prev;
@@ -65,8 +65,8 @@ impl Signals for MovingAverageConvergenceDivergenceSignals {
 
 mod tests {
     use super::MovingAverageConvergenceDivergenceSignals;
-    use ta::indicators::MovingAverageConvergenceDivergence;
     use super::Signals;
+    use ta::indicators::MovingAverageConvergenceDivergence;
     // use crate::util::nearly_equal;
     use gnuplot::Figure;
 
@@ -103,7 +103,7 @@ mod tests {
 
         // TODO: test more specific values/calculations after plotting is
         // implemented
-        let nan = 0./0.;
+        let nan = 0. / 0.;
         assert!(signals.signals().iter().cloned().fold(nan, f64::max) <= 1.0);
         assert!(signals.signals().iter().cloned().fold(nan, f64::min) >= -1.0);
     }
