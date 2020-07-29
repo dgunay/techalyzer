@@ -47,6 +47,8 @@ impl MovingAverageConvergenceDivergenceSignals {
 
             signals.push(signal);
             outputs.push(tuple);
+
+            macd_line_prev = macd_line;
         }
 
         Self {
