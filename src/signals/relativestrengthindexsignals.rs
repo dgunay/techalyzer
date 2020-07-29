@@ -1,4 +1,4 @@
-use crate::analysis::signals::Signals;
+use crate::signals::signals::Signals;
 use ta::indicators::RelativeStrengthIndex;
 use ta::Next;
 

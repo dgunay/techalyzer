@@ -1,4 +1,4 @@
-use crate::analysis::signals::Signals;
+use crate::signals::signals::Signals;
 use crate::util::clamp;
 use gnuplot::Figure;
 use ta::indicators::MovingAverageConvergenceDivergence;

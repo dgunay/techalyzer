@@ -1,11 +1,11 @@
-use crate::analysis::signals::Signals;
+use crate::signals::signals::Signals;
 use ta::indicators::{BollingerBands, BollingerBandsOutput};
 use ta::Next;
 
 struct BollingerBandsSignals<'a> {
-    outputs: Vec<BollingerBandsOutput>,
-    prices: &'a Vec<f64>,
-    signals: Vec<f64>,
+    pub outputs: Vec<BollingerBandsOutput>,
+    pub prices: &'a Vec<f64>,
+    pub signals: Vec<f64>,
 }
 
 impl<'a> BollingerBandsSignals<'a> {
