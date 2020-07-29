@@ -65,12 +65,12 @@ impl Signals for MovingAverageConvergenceDivergenceSignals {
     }
 }
 
+#[cfg(test)]
 mod tests {
     use super::MovingAverageConvergenceDivergenceSignals;
     use super::Signals;
     use ta::indicators::MovingAverageConvergenceDivergence;
     // use crate::util::nearly_equal;
-    use gnuplot::Figure;
 
     struct Close {
         price: f64,

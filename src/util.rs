@@ -35,6 +35,7 @@ pub fn nearly_equal(a: f64, b: f64) -> bool {
     (a - b) < 0.000001
 }
 
+#[cfg(test)]
 mod tests {
     use super::clamp;
 

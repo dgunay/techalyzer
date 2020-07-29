@@ -41,6 +41,7 @@ impl Signals for RelativeStrengthIndexSignals<'_> {
     }
 }
 
+#[cfg(test)]
 mod tests {
     use super::*;
     use crate::util::nearly_equal;
