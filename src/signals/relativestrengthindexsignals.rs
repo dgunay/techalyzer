@@ -1,7 +1,9 @@
 use crate::signals::signals::Signals;
 use ta::indicators::RelativeStrengthIndex;
 use ta::Next;
+use serde::{Serialize};
 
+#[derive(Serialize)]
 struct RelativeStrengthIndexSignals<'a> {
     outputs: Vec<f64>,
     prices: &'a Vec<f64>,
@@ -32,6 +34,10 @@ impl<'a> RelativeStrengthIndexSignals<'a> {
             prices: prices,
             signals: signals,
         }
+    }
+
+    pub fn to_json(&self) -> String {
+        serde_json::to_string(self).unwrap()
     }
 }
 
@@ -74,5 +80,17 @@ mod tests {
         assert!(nearly_equal(signals.signals()[3], 0.21141421392677695));
         assert!(nearly_equal(signals.signals()[4], 0.1081504306316774));
         assert!(nearly_equal(signals.signals()[5], -0.3031110904761263));
+    }
+
+    /// This test is mostly just to see if to_json worked
+    #[test]
+    fn test_json() {
+        let prices = vec![1.9, 2.0, 2.1, 2.2, 2.1, 1.5];
+
+        let mut signals =
+            RelativeStrengthIndexSignals::new(&prices, RelativeStrengthIndex::new(14).unwrap());
+
+        let _ = signals.to_json();
+        // print!("{}", s);
     }
 }

@@ -1,9 +1,10 @@
 use crate::signals::signals::Signals;
 use crate::util::clamp;
-use gnuplot::Figure;
 use ta::indicators::MovingAverageConvergenceDivergence;
 use ta::Next;
+use serde::Serialize;
 
+#[derive(Serialize)]
 struct MovingAverageConvergenceDivergenceSignals {
     // outputs: Vec<ta::Next::Output<MovingAverageConvergenceDivergence>, &'a f64>,
     outputs: Vec<(f64, f64, f64)>,
@@ -56,6 +57,10 @@ impl MovingAverageConvergenceDivergenceSignals {
             // prices: prices,
             signals: signals,
         }
+    }
+
+    pub fn to_json(&self) -> String {
+        serde_json::to_string(self).unwrap()
     }
 }
 

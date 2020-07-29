@@ -33,6 +33,9 @@ This will involve implementing or sourcing:
 
 Other annoying subproblems that may crop up:
 * Dealing with time series data effectively (including gaps)
+* Having a good plotting solution to sanity check the trading bot
+  * For this I think I'll just go with serializing to JSON via `serde_json` and
+    then using matplotlib with a quick Python script.
 
 
 The basic idea:
