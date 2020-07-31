@@ -1,8 +1,11 @@
-# Technical Analysis Experiments
+Neither the outputs of Techalyzer nor the views of its contributors constitutes
+professional or financial advice.
+
+# Techalyzer
 
 After taking Machine Learning for Trading at Georgia Tech, I wanted to try
-computational investing on my own time, with unrestricted tooling. This repo
-contains that work.
+computational investing/algorithmic trading on my own time, with unrestricted 
+tooling. This repo contains that work.
 
 A few goals:
 
@@ -64,3 +67,9 @@ it in WSL. To get it for Windows, [install it from here][netcdf] and then add
 it to your PATH.
 
 [netcdf]: https://www.unidata.ucar.edu/software/netcdf/docs/winbin.html
+
+## Random Backlog
+
+* Integration tests to write in techalyzer.rs:
+  * TODO: `--file file` doesn't exist
+  * TODO: `--file file` isn't valid JSON/CSV/etc.
