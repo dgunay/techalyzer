@@ -4,6 +4,7 @@ use crate::datasources::datasource::{DataSource, Error};
 use crate::output::TechalyzerPrintOutput;
 use crate::Prices;
 use chrono::NaiveDate;
+use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
@@ -26,9 +27,16 @@ impl TechalyzerJson {
 impl DataSource for TechalyzerJson {
     fn get(self, symbol: &str, start: NaiveDate, end: NaiveDate) -> Result<Prices, Error> {
         let reader = BufReader::new(self.file);
-        let a: TechalyzerPrintOutput = serde_json::from_reader(reader).unwrap(); // FIXME: don't unwrap
-                                                                                 // let slice = get_dates_between_inclusive(a, start, end);
-        Ok(a.into())
+        let data: TechalyzerPrintOutput = serde_json::from_reader(reader).unwrap(); // FIXME: don't unwrap
+        let slice: BTreeMap<NaiveDate, f64> = data
+            .map
+            .range(start..=end)
+            .map(|e| (e.0.clone(), e.1.price))
+            .collect();
+        Ok(Prices {
+            map: slice,
+            symbol: data.symbol,
+        })
     }
 }
 
@@ -86,14 +94,9 @@ mod tests {
         let p = tj.get("jpm", begin, end).unwrap();
 
         let mut m = BTreeMap::new();
-        // signals: vec![0.0, -0.7847682119205301, -0.9142871633615662,],
-        // prices: vec![100.7, 95.96, 88.05,]
         m.insert(
             NaiveDate::parse_from_str("2020-03-10", "%Y-%m-%d").unwrap(),
-            // TechalyzerEntry {
-            // price: 100.7,
             100.7,
-            // signal: 0.0
         );
         m.insert(
             NaiveDate::parse_from_str("2020-03-11", "%Y-%m-%d").unwrap(),
@@ -108,10 +111,6 @@ mod tests {
             Prices {
                 symbol: "jpm".to_string(),
                 map: m
-                // outputs: Outputs::new(
-                //     vec![[50.0], [10.761589403973495], [4.28564183192169],],
-                //     vec!["rsi"]
-                // ),
             }
         );
     }
