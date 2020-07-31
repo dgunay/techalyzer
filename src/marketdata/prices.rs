@@ -1,30 +1,16 @@
 use alphavantage::time_series::TimeSeries;
 use chrono::NaiveDate;
-use chrono_tz::Tz;
-use ndarray::prelude::*;
+
+
 use serde::Deserialize;
 use crate::output::TechalyzerPrintOutput;
 
 /// Contains a time series prices data
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct Prices {
-    // TODO: maybe use a map of dates to prices, or a map to indices on the
-    // prices array?
-    // pub dates: Array1<DateTime<Tz>>,
-    // pub prices: Array1<f64>,
     pub map: std::collections::BTreeMap<NaiveDate, f64>,
-    // pub dates: Vec<NaiveDate>,
-    // pub prices: Vec<f64>,
     pub symbol: String,
 }
-
-// impl Deserialize for Tz {
-//     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-//     where
-//         D: serde::Deserializer<'de> {
-//         todo!()
-//     }
-// }
 
 impl From<TimeSeries> for Prices {
     fn from(t: TimeSeries) -> Self {

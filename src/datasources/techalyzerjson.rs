@@ -25,7 +25,7 @@ impl TechalyzerJson {
 }
 
 impl DataSource for TechalyzerJson {
-    fn get(self, symbol: &str, start: NaiveDate, end: NaiveDate) -> Result<Prices, Error> {
+    fn get(self, _symbol: &str, start: NaiveDate, end: NaiveDate) -> Result<Prices, Error> {
         let reader = BufReader::new(self.file);
         let data: TechalyzerPrintOutput = serde_json::from_reader(reader).unwrap(); // FIXME: don't unwrap
         let slice: BTreeMap<NaiveDate, f64> = data
@@ -40,45 +40,11 @@ impl DataSource for TechalyzerJson {
     }
 }
 
-// TODO: this should really be solved by just using a more sensible data structure
-// in the first place like, idk, a map of date => value ordered by insertion or
-// sorted by date.
-// fn prices_from_date_range(t: TechalyzerPrintOutput,
-//     start: NaiveDate,
-//     end: NaiveDate,
-// ) {
-//     let mut dates = vec![];
-//     let mut start_ix = 0;
-//     let mut end_ix = t.dates.len() - 1;
-//     for (i, date) in t.dates.iter().enumerate() {
-//         if date == start {
-//             start_ix = i;
-//         }
-
-//         if date == end {
-//             end_ix = i;
-//         }
-
-//         // if date >= &start && date <= &end {
-//         //     dates.push(date.clone());
-//         //     if t.outputs.is_some() {
-//         //         outputs.push(t.outputs.unwrap().);
-//         //     }
-//         // }
-//     }
-//     let dates = t.dates[start_ix..end_ix].to_vec();
-//     let outputs =  if t.outputs.is_some() {
-//         t.outputs.
-//     } else { None };
-//     let prices = t.prices[start_ix..end_ix].to_vec();
-//     let signals = t.signals[start_ix..end_ix].to_vec();
-// }
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::output::TechalyzerEntry;
-    use crate::signals::signals::Outputs;
+    
+    
     use std::collections::BTreeMap;
 
     use std::env::current_dir;

@@ -98,11 +98,11 @@ mod tests {
 
     #[test]
     fn test_signals_from_bollinger_bands() {
-        let mut bb = BollingerBands::new(5, 2.0).unwrap();
+        let _bb = BollingerBands::new(5, 2.0).unwrap();
 
         let prices = vec![&1.9, &2.0, &2.1, &2.2, &2.1, &1.5];
         let l = prices.len();
-        let mut signals = BollingerBandsSignals::new(prices, BollingerBands::new(5, 2.0).unwrap());
+        let signals = BollingerBandsSignals::new(prices, BollingerBands::new(5, 2.0).unwrap());
 
         assert_eq!(signals.signals().len(), l);
         assert!(nearly_equal(signals.signals()[1], 0.5));

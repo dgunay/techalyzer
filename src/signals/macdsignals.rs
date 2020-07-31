@@ -7,7 +7,6 @@ use ta::Next;
 
 #[derive(Serialize)]
 pub struct MovingAverageConvergenceDivergenceSignals {
-    // outputs: Vec<ta::Next::Output<MovingAverageConvergenceDivergence>, &'a f64>,
     pub outputs: Vec<(f64, f64, f64)>,
     signals: Vec<f64>,
 }
@@ -26,7 +25,7 @@ impl MovingAverageConvergenceDivergenceSignals {
             // FIXME: for some reason I have to clone the price or next() won't
             // work - maybe an upstream PR is necessary
             let tuple = macd.next(*price.clone());
-            let (macd_line, signal_line, histo) = tuple;
+            let (macd_line, signal_line, _histo) = tuple;
 
             // FIXME: I can't think of a great way to do a normalized -1.0 to 1.0
             // scale on the MACD, so for now I'll go with having above/below be
@@ -89,7 +88,6 @@ mod tests {
     use super::MovingAverageConvergenceDivergenceSignals;
     use super::Signals;
     use ta::indicators::MovingAverageConvergenceDivergence;
-    // use crate::util::nearly_equal;
 
     struct Close {
         price: f64,
@@ -101,26 +99,14 @@ mod tests {
         }
     }
 
-    // struct SignalFloat {
-    //     f: f64
-    // }
-
-    // impl PartialOrd for SignalFloat {
-
-    // }
-
     #[test]
     fn test_signals_from_macd() {
         let prices = vec![&1.9, &2.0, &2.1, &2.2, &2.1, &1.5, &1.3, &1.2, &1.1, &1.0];
 
-        let mut signals = MovingAverageConvergenceDivergenceSignals::new(
+        let signals = MovingAverageConvergenceDivergenceSignals::new(
             prices,
             MovingAverageConvergenceDivergence::new(12, 26, 9).unwrap(),
         );
-
-        // println!("{:?}", signals.signals());
-        // println!("{:?}", signals.outputs);
-        // println!("{:?}", prices);
 
         // TODO: test more specific values/calculations after plotting is
         // implemented

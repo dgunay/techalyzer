@@ -14,7 +14,7 @@ impl AlphaVantage {
 }
 
 impl DataSource for AlphaVantage {
-    fn get(self, symbol: &str, start: NaiveDate, end: NaiveDate) -> Result<Prices, Error> {
+    fn get(self, symbol: &str, _start: NaiveDate, _end: NaiveDate) -> Result<Prices, Error> {
         match self.client.get_time_series_daily(symbol) {
             Ok(t) => Ok(t.into()),
             Err(e) => Err(Error::AlphaVantageError(e.to_string())),

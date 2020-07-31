@@ -1,5 +1,5 @@
 use chrono::NaiveDate;
-use serde::Serialize;
+
 use structopt::StructOpt;
 use ta::indicators::*;
 use ta_experiments::error::TechalyzerError;
@@ -10,7 +10,7 @@ use ta_experiments::secret::Secret;
 use ta_experiments::signals::{
     bollingerbandssignals::BollingerBandsSignals,
     macdsignals::MovingAverageConvergenceDivergenceSignals,
-    relativestrengthindexsignals::RelativeStrengthIndexSignals, signals::Outputs, signals::Signals,
+    relativestrengthindexsignals::RelativeStrengthIndexSignals, signals::Signals,
 };
 use ta_experiments::source::Source;
 use ta_experiments::output::TechalyzerEntry;
@@ -86,7 +86,7 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
     match opts.cmd {
         SubCommands::Print {
             indicator,
-            print_signals,
+            print_signals: _,
         } => {
             // TODO: evaluate/benchmark signal generation using ndarray vs Vec<f64>
             let prices: Vec<&f64> = data.map.values().collect();
@@ -146,10 +146,6 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
 
     Ok(())
 }
-
-// fn new_techalyzer_data(prices: Vec<f64>, signals: Box<dyn Signals>) -> TechalyzerPrintOutput {
-
-// }
 
 /// Outputs a string to an output buffer, Stdout by default.
 fn print_techalyzer_json(output: &TechalyzerPrintOutput) {
