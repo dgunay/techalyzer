@@ -1,12 +1,13 @@
-# TODO: ingest JSON, plot
-
 # Output objects are usually like this, with some exceptions:
 # {
-#   "symbol"  : string
-#   "dates"   : [array of date strings]
-#   "outputs" : [array of floats],
-#   "prices"  : [array of floats],
-#   "signals" : [array of floats]
+#   "map": {
+#     "2020-03-10": {
+#       "signal": 0.0,
+#       "price": 100.7
+#     },
+#   },
+#  "symbol": "jpm",
+#  "indicator": "RelativeStrengthIndex"
 # }
 
 import fileinput
