@@ -166,6 +166,7 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
                     None
                 },
                 dates: data.prices.dates.map(|d| d.naive_local().date()).to_vec(),
+                prices: data.prices.prices.to_vec()
             };
 
             print_techalyzer_json(&output);
@@ -186,6 +187,7 @@ struct TechalyzerPrintOutput<'a> {
     dates: Vec<NaiveDate>,
     signals: &'a Vec<f64>,
     outputs: Option<Outputs>,
+    prices: Vec<f64>
 }
 
 /// Outputs a string to an output buffer, Stdout by default.
@@ -200,7 +202,7 @@ fn print_techalyzer_json(output: &TechalyzerPrintOutput) {
 #[cfg(test)]
 mod tests {
     #[allow(unused_imports)] // TODO: remove this when tests are written
-    use super::{run_program, Opts, SubCommands};
+    use super::{run_program, Opts};
 
     #[test]
     fn test_print() {
