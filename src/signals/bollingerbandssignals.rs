@@ -24,24 +24,23 @@ impl From<&BollingerBandsOutput> for BBOutput {
 }
 
 #[derive(Serialize)]
-pub struct BollingerBandsSignals<'a> {
+pub struct BollingerBandsSignals {
     pub outputs: Vec<BBOutput>,
-    pub prices: &'a Vec<f64>,
     pub signals: Vec<f64>,
 }
 
-impl<'a> BollingerBandsSignals<'a> {
-    pub fn new(prices: &'a Vec<f64>, mut bb: BollingerBands) -> Self {
+impl BollingerBandsSignals {
+    pub fn new(prices: Vec<&f64>, mut bb: BollingerBands) -> Self {
         // Generate signals as %BB
         // [(Price – Lower Band) / (Upper Band – Lower Band)] * 100
         // https://www.fidelity.com/learning-center/trading-investing/technical-analysis/technical-indicator-guide/percent-b
         let mut signals = Vec::<f64>::new();
         let mut outputs = Vec::new();
         for price in prices.iter() {
-            let o = bb.next(*price);
+            let o = bb.next(**price);
 
             // how far along from the average to the bounds is the price?
-            let signal = 2.0 * (((price - o.lower) / (o.upper - o.lower)) - 0.5);
+            let signal = 2.0 * (((**price - o.lower) / (o.upper - o.lower)) - 0.5);
 
             signals.push(signal);
             outputs.push(o);
@@ -49,7 +48,6 @@ impl<'a> BollingerBandsSignals<'a> {
 
         Self {
             outputs: outputs.iter().map(|o| BBOutput::from(o)).collect(),
-            prices: prices,
             signals: signals,
         }
     }
@@ -59,7 +57,7 @@ impl<'a> BollingerBandsSignals<'a> {
     }
 }
 
-impl Signals for BollingerBandsSignals<'_> {
+impl Signals for BollingerBandsSignals {
     fn signals(&self) -> &Vec<f64> {
         &self.signals
     }
@@ -102,11 +100,11 @@ mod tests {
     fn test_signals_from_bollinger_bands() {
         let mut bb = BollingerBands::new(5, 2.0).unwrap();
 
-        let prices = vec![1.9, 2.0, 2.1, 2.2, 2.1, 1.5];
+        let prices = vec![&1.9, &2.0, &2.1, &2.2, &2.1, &1.5];
+        let l = prices.len();
+        let mut signals = BollingerBandsSignals::new(prices, BollingerBands::new(5, 2.0).unwrap());
 
-        let mut signals = BollingerBandsSignals::new(&prices, BollingerBands::new(5, 2.0).unwrap());
-
-        assert_eq!(signals.signals().len(), prices.len());
+        assert_eq!(signals.signals().len(), l);
         assert!(nearly_equal(signals.signals()[1], 0.5));
         assert!(nearly_equal(signals.signals()[5], -0.96698));
     }

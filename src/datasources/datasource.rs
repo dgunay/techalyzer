@@ -1,4 +1,4 @@
-use crate::StubMarketData;
+use crate::Prices;
 use chrono::NaiveDate;
 use derive_more::Display;
 
@@ -10,5 +10,5 @@ pub enum Error {
 }
 
 pub trait DataSource {
-    fn get(self, symbol: &str, start: NaiveDate, end: NaiveDate) -> Result<StubMarketData, Error>;
+    fn get(self, symbol: &str, start: NaiveDate, end: NaiveDate) -> Result<Prices, Error>;
 }

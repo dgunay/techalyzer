@@ -1,9 +1,11 @@
 use chrono::NaiveDate;
-use derive_more::Display;
 use serde::Serialize;
 use structopt::StructOpt;
 use ta::indicators::*;
+use ta_experiments::error::TechalyzerError;
 use ta_experiments::get_market_data;
+use ta_experiments::output::SupportedIndicators;
+use ta_experiments::output::TechalyzerPrintOutput;
 use ta_experiments::secret::Secret;
 use ta_experiments::signals::{
     bollingerbandssignals::BollingerBandsSignals,
@@ -11,6 +13,7 @@ use ta_experiments::signals::{
     relativestrengthindexsignals::RelativeStrengthIndexSignals, signals::Outputs, signals::Signals,
 };
 use ta_experiments::source::Source;
+use ta_experiments::output::TechalyzerEntry;
 
 // FIXME: we probably don't need the overhead of structopt, look into switching
 // to pico-args (https://github.com/RazrFalcon/pico-args)
@@ -51,39 +54,6 @@ enum SubCommands {
     Suggest {},
 }
 
-#[derive(Debug)]
-enum SupportedIndicators {
-    BollingerBands,
-    RelativeStrengthIndex,
-    MACD,
-}
-
-impl std::str::FromStr for SupportedIndicators {
-    type Err = TechalyzerError;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "bollinger-bands" => Ok(SupportedIndicators::BollingerBands),
-            "rsi" => Ok(SupportedIndicators::RelativeStrengthIndex),
-            "macd" => Ok(SupportedIndicators::MACD),
-            _ => Err(TechalyzerError::Generic(format!(
-                "{} is not a supported technical indicator",
-                s
-            ))),
-        }
-    }
-}
-
-/// Dynamically dispatch to a ta::indicators::* from our enum
-// impl From<SupportedIndicators> for Box<dyn ta::Next<f64, Output = f64>> {
-//     fn from(s: SupportedIndicators) -> Self {
-//         match s {
-//             SupportedIndicators::BollingerBands => Box::new(ta::indicators::BollingerBands::new(14, 2.0).unwrap()),
-//             SupportedIndicators::RelativeStrengthIndex => {}
-//             SupportedIndicators::MACD => {}
-//         }
-//     }
-// }
-
 fn main() {
     let opts = Opts::from_args();
     match run_program(opts) {
@@ -93,12 +63,6 @@ fn main() {
             std::process::exit(1);
         }
     }
-}
-
-#[derive(Debug, Display)]
-enum TechalyzerError {
-    #[display(fmt = "{}", _0)]
-    Generic(String),
 }
 
 /// Wrapper function for Techalyzer to make it easier to test.
@@ -125,25 +89,25 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
             print_signals,
         } => {
             // TODO: evaluate/benchmark signal generation using ndarray vs Vec<f64>
-            let prices: Vec<f64> = data.prices.prices.to_vec();
+            let prices: Vec<&f64> = data.map.values().collect();
 
             // Calculate the technical indicator outputs and signals
             // TODO: allow parameters for each indicator
             // FIXME: is there any way we can avoid heap allocating/dynamic dispatch?
             let sigs: Box<dyn Signals> = match indicator {
                 SupportedIndicators::BollingerBands => Box::new(BollingerBandsSignals::new(
-                    &prices,
+                    prices,
                     BollingerBands::new(20, 2.0).expect("invalid Bollinger Bands"),
                 )),
                 SupportedIndicators::RelativeStrengthIndex => {
                     Box::new(RelativeStrengthIndexSignals::new(
-                        &prices,
+                        prices,
                         RelativeStrengthIndex::new(14).expect("invalid RSI params"),
                     ))
                 }
                 SupportedIndicators::MACD => {
                     Box::new(MovingAverageConvergenceDivergenceSignals::new(
-                        &prices,
+                        prices,
                         MovingAverageConvergenceDivergence::new(12, 26, 9)
                             .expect("Invalid MACD params"),
                     ))
@@ -155,18 +119,23 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
             // a single f64 per data point. Can this be reconciled in a pretty way
             // before printing it?
 
+            let mut m = std::collections::BTreeMap::new();
+            let mut i = 0;
+            for (date, price) in data.map.iter() {
+                m.insert(date.clone(), TechalyzerEntry {
+                    // output: sigs.outputs().outputs
+                    price: price.clone(),
+                    signal: sigs.signals()[i],
+                });
+                i += 1;
+            }
+
             // TODO: factor out this ugliness or change the datastructures
             // involved to be less gross
             let output = TechalyzerPrintOutput {
-                symbol: data.prices.symbol,
-                signals: sigs.signals(),
-                outputs: if print_signals {
-                    Some(sigs.outputs())
-                } else {
-                    None
-                },
-                dates: data.prices.dates.map(|d| d.naive_local().date()).to_vec(),
-                prices: data.prices.prices.to_vec()
+                symbol: data.symbol,
+                indicator: indicator,
+                map: m
             };
 
             print_techalyzer_json(&output);
@@ -178,17 +147,9 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
     Ok(())
 }
 
-// TODO: a map structure of date => [price, signals, outputs] would be very useful
-// for charting and otherwise using the data.
-/// Organizes our data the way we want before printing.
-#[derive(Serialize)]
-struct TechalyzerPrintOutput<'a> {
-    symbol: String,
-    dates: Vec<NaiveDate>,
-    signals: &'a Vec<f64>,
-    outputs: Option<Outputs>,
-    prices: Vec<f64>
-}
+// fn new_techalyzer_data(prices: Vec<f64>, signals: Box<dyn Signals>) -> TechalyzerPrintOutput {
+
+// }
 
 /// Outputs a string to an output buffer, Stdout by default.
 fn print_techalyzer_json(output: &TechalyzerPrintOutput) {
@@ -201,18 +162,22 @@ fn print_techalyzer_json(output: &TechalyzerPrintOutput) {
 
 #[cfg(test)]
 mod tests {
+    use super::SupportedIndicators;
     #[allow(unused_imports)] // TODO: remove this when tests are written
-    use super::{run_program, Opts};
+    use super::{run_program, Opts, SubCommands};
 
     #[test]
     fn test_print() {
-        todo!("Implement getting price data from a file for test fixtures");
         // Basic smoke test that print functionality works
-        let res = run_program(Opts {
+        let _res = run_program(Opts {
             secret: None,
             symbol: "JPM".to_string(),
             start_date: None,
             end_date: None,
+            cmd: SubCommands::Print {
+                indicator: SupportedIndicators::RelativeStrengthIndex,
+                print_signals: true,
+            },
         });
     }
 }

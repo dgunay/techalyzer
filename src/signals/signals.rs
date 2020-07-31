@@ -1,5 +1,5 @@
 use derive_more::Display;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 /// buy/sell signals given by a technical indicator.
 pub trait Signals {
@@ -13,12 +13,13 @@ pub trait Signals {
 
 /// Represents the outputs of a ta technical indicactor. Usually a sequence of
 /// floats, sometimes a sequence of float tuples depending on the indicator.
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct Outputs {
     /// Outputs of a rust-ta technical indicator.
-    pub outputs: Vec<Vec<f64>>,
     // TODO: is there a way we can make all the float arrays the same size
     // without a runtime check/const generics being unavailable?
+    pub outputs: Vec<Vec<f64>>,
+
     /// Name of what is at each index of the inner vector. e.g., for bollinger bands,
     /// might be:
     /// ["upper", "lower", "average"]
@@ -26,6 +27,10 @@ pub struct Outputs {
     /// whereas for RSI, it would just be a single string like:
     /// ["rsi_val"]
     pub mapping: Vec<String>,
+}
+
+pub struct Output {
+    pub data: std::collections::HashMap<String, f64>
 }
 
 #[derive(Debug, Display)]

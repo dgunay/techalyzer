@@ -9,12 +9,11 @@ use ta::Next;
 pub struct MovingAverageConvergenceDivergenceSignals {
     // outputs: Vec<ta::Next::Output<MovingAverageConvergenceDivergence>, &'a f64>,
     pub outputs: Vec<(f64, f64, f64)>,
-    // prices: &'a Vec<f64>,
     signals: Vec<f64>,
 }
 
 impl MovingAverageConvergenceDivergenceSignals {
-    pub fn new(prices: &Vec<f64>, mut macd: MovingAverageConvergenceDivergence) -> Self {
+    pub fn new(prices: Vec<&f64>, mut macd: MovingAverageConvergenceDivergence) -> Self {
         // TODO: should I check prices not empty?
 
         // Generate signals from MACD
@@ -26,7 +25,7 @@ impl MovingAverageConvergenceDivergenceSignals {
         for price in prices.iter() {
             // FIXME: for some reason I have to clone the price or next() won't
             // work - maybe an upstream PR is necessary
-            let tuple = macd.next(price.clone());
+            let tuple = macd.next(*price.clone());
             let (macd_line, signal_line, histo) = tuple;
 
             // FIXME: I can't think of a great way to do a normalized -1.0 to 1.0
@@ -112,10 +111,10 @@ mod tests {
 
     #[test]
     fn test_signals_from_macd() {
-        let prices = vec![1.9, 2.0, 2.1, 2.2, 2.1, 1.5, 1.3, 1.2, 1.1, 1.0];
+        let prices = vec![&1.9, &2.0, &2.1, &2.2, &2.1, &1.5, &1.3, &1.2, &1.1, &1.0];
 
         let mut signals = MovingAverageConvergenceDivergenceSignals::new(
-            &prices,
+            prices,
             MovingAverageConvergenceDivergence::new(12, 26, 9).unwrap(),
         );
 

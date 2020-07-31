@@ -5,19 +5,18 @@ use ta::indicators::RelativeStrengthIndex;
 use ta::Next;
 
 #[derive(Serialize)]
-pub struct RelativeStrengthIndexSignals<'a> {
+pub struct RelativeStrengthIndexSignals {
     outputs: Vec<f64>,
-    prices: &'a Vec<f64>,
     signals: Vec<f64>,
 }
 
-impl<'a> RelativeStrengthIndexSignals<'a> {
-    pub fn new(prices: &'a Vec<f64>, mut rsi: RelativeStrengthIndex) -> Self {
+impl RelativeStrengthIndexSignals {
+    pub fn new(prices: Vec<&f64>, mut rsi: RelativeStrengthIndex) -> Self {
         // Generate signals from RSI
         let mut signals = Vec::<f64>::new();
         let mut outputs = Vec::new();
         for price in prices.iter() {
-            let rsi_val = rsi.next(*price);
+            let rsi_val = rsi.next(**price);
 
             // TODO: we can create a "Signals" object that simply takes the math
             // to calculate signal
@@ -30,11 +29,7 @@ impl<'a> RelativeStrengthIndexSignals<'a> {
             outputs.push(rsi_val);
         }
 
-        Self {
-            outputs: outputs,
-            prices: prices,
-            signals: signals,
-        }
+        Self { outputs, signals }
     }
 
     pub fn to_json(&self) -> String {
@@ -42,7 +37,7 @@ impl<'a> RelativeStrengthIndexSignals<'a> {
     }
 }
 
-impl Signals for RelativeStrengthIndexSignals<'_> {
+impl Signals for RelativeStrengthIndexSignals {
     fn signals(&self) -> &Vec<f64> {
         &self.signals
     }
@@ -70,16 +65,16 @@ mod tests {
 
     #[test]
     fn test_signals_from_rsi() {
-        let prices = vec![1.9, 2.0, 2.1, 2.2, 2.1, 1.5];
+        let prices = vec![&1.9, &2.0, &2.1, &2.2, &2.1, &1.5];
+        let l = prices.len(); // pacify the borrow checker
+        let signals =
+            RelativeStrengthIndexSignals::new(prices, RelativeStrengthIndex::new(14).unwrap());
 
-        let mut signals =
-            RelativeStrengthIndexSignals::new(&prices, RelativeStrengthIndex::new(14).unwrap());
+        // println!("{:?}", signals.signals());
+        // println!("{:?}", signals.outputs);
+        // println!("{:?}", prices);
 
-        println!("{:?}", signals.signals());
-        println!("{:?}", signals.outputs);
-        println!("{:?}", prices);
-
-        assert_eq!(signals.signals().len(), prices.len());
+        assert_eq!(signals.signals().len(), l);
         assert!(nearly_equal(signals.signals()[0], 0.0));
         assert!(nearly_equal(signals.signals()[1], 0.0714285714285714));
         assert!(nearly_equal(signals.signals()[2], 0.14213197969543168));
@@ -91,10 +86,10 @@ mod tests {
     /// This test is mostly just to see if to_json worked
     #[test]
     fn test_json() {
-        let prices = vec![1.9, 2.0, 2.1, 2.2, 2.1, 1.5];
+        let prices = vec![&1.9, &2.0, &2.1, &2.2, &2.1, &1.5];
 
-        let mut signals =
-            RelativeStrengthIndexSignals::new(&prices, RelativeStrengthIndex::new(14).unwrap());
+        let signals =
+            RelativeStrengthIndexSignals::new(prices, RelativeStrengthIndex::new(14).unwrap());
 
         let _ = signals.to_json();
         // print!("{}", s);

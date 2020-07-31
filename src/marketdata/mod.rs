@@ -1,1 +1,1 @@
-pub mod stubmarketdata;
+pub mod prices;
