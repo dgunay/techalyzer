@@ -203,14 +203,14 @@ mod tests {
     use super::{run_program, Opts, SubCommands};
 
     #[test]
-    fn test_main() {
-        todo!("write some kind of integration tests for the whole program");
-        // ()
-        // let res = run_program(Opts {
-        //     secret: None,
-        //     symbol: "JPM".to_string(),
-        //     start_date: None,
-        //     end_date: None,
-        // });
+    fn test_print() {
+        todo!("Implement getting price data from a file for test fixtures");
+        // Basic smoke test that print functionality works
+        let res = run_program(Opts {
+            secret: None,
+            symbol: "JPM".to_string(),
+            start_date: None,
+            end_date: None,
+        });
     }
 }
