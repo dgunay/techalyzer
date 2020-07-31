@@ -1,3 +1,4 @@
+use super::signals::Outputs;
 use crate::signals::signals::Signals;
 use serde::Serialize;
 use ta::indicators::{BollingerBands, BollingerBandsOutput};
@@ -6,7 +7,7 @@ use ta::Next;
 /// basically a carbon copy of BollingerBandsOutput because Serializing a vector
 /// of remote types is way too hard for me right now
 #[derive(Serialize)]
-struct BBOutput {
+pub struct BBOutput {
     pub average: f64,
     pub upper: f64,
     pub lower: f64,
@@ -23,7 +24,7 @@ impl From<&BollingerBandsOutput> for BBOutput {
 }
 
 #[derive(Serialize)]
-struct BollingerBandsSignals<'a> {
+pub struct BollingerBandsSignals<'a> {
     pub outputs: Vec<BBOutput>,
     pub prices: &'a Vec<f64>,
     pub signals: Vec<f64>,
@@ -59,8 +60,26 @@ impl<'a> BollingerBandsSignals<'a> {
 }
 
 impl Signals for BollingerBandsSignals<'_> {
-    fn signals(&mut self) -> &Vec<f64> {
+    fn signals(&self) -> &Vec<f64> {
         &self.signals
+    }
+
+    fn outputs(&self) -> Outputs {
+        let outputs = self
+            .outputs
+            .iter()
+            .map(|o| vec![o.average, o.upper, o.lower])
+            .collect();
+
+        Outputs::new(
+            outputs,
+            vec![
+                "average".to_string(),
+                "upper".to_string(),
+                "lower".to_string(),
+            ],
+        )
+        .unwrap()
     }
 }
 

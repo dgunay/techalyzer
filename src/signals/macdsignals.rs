@@ -1,13 +1,14 @@
+use super::signals::Outputs;
 use crate::signals::signals::Signals;
 use crate::util::clamp;
+use serde::Serialize;
 use ta::indicators::MovingAverageConvergenceDivergence;
 use ta::Next;
-use serde::Serialize;
 
 #[derive(Serialize)]
-struct MovingAverageConvergenceDivergenceSignals {
+pub struct MovingAverageConvergenceDivergenceSignals {
     // outputs: Vec<ta::Next::Output<MovingAverageConvergenceDivergence>, &'a f64>,
-    outputs: Vec<(f64, f64, f64)>,
+    pub outputs: Vec<(f64, f64, f64)>,
     // prices: &'a Vec<f64>,
     signals: Vec<f64>,
 }
@@ -65,8 +66,22 @@ impl MovingAverageConvergenceDivergenceSignals {
 }
 
 impl Signals for MovingAverageConvergenceDivergenceSignals {
-    fn signals(&mut self) -> &Vec<f64> {
+    fn signals(&self) -> &Vec<f64> {
         &self.signals
+    }
+
+    fn outputs(&self) -> Outputs {
+        let outputs = self.outputs.iter().map(|m| vec![m.0, m.1, m.2]).collect();
+
+        Outputs::new(
+            outputs,
+            vec![
+                "macd_line".to_string(),
+                "signal_line".to_string(),
+                "histo".to_string(),
+            ],
+        )
+        .unwrap()
     }
 }
 

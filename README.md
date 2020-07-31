@@ -32,11 +32,13 @@ This will involve implementing or sourcing:
   trading strategy
 
 Other annoying subproblems that may crop up:
-* Dealing with time series data effectively (including gaps)
+* Dealing with time series data effectively (including gaps). The [`bdays`][bdays] 
+  crate may help with that.
 * Having a good plotting solution to sanity check the trading bot
   * For this I think I'll just go with serializing to JSON via `serde_json` and
     then using matplotlib with a quick Python script.
 
+[bdays]: https://docs.rs/bdays/0.1.1/bdays/index.html
 
 The basic idea:
 

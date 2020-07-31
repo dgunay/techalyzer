@@ -2,23 +2,22 @@ use alphavantage::time_series::TimeSeries;
 use chrono::DateTime;
 use chrono_tz::Tz;
 use ndarray::prelude::*;
-use std::iter::FromIterator;
 
 /// TODO: This is only here because I haven't figured out my standard MarketData
 /// object yet
 pub struct StubMarketData {
-    prices: Prices,
+    pub prices: Prices,
 }
 
 impl From<TimeSeries> for StubMarketData {
     /// Builds from an alphavantage TimeSeries object
     fn from(t: TimeSeries) -> Self {
-        t.into()
+        Self { prices: t.into() }
     }
 }
 
 /// Wraps DataFrame to enable conversion from various data sources.
-struct Prices {
+pub struct Prices {
     // TODO: it is not clear to me yet how to efficiently implement a
     // date-indexed series of prices like pandas, so I'll just use two ndarrays
     // instead
@@ -31,11 +30,11 @@ struct Prices {
 
 impl Into<Prices> for TimeSeries {
     fn into(self) -> Prices {
-        print!("Converting from TimeSeries into Prices");
-        // FIXME: this might be causing stack overflows
+        let dates: Vec<DateTime<Tz>> = self.entries.iter().map(|entry| entry.date).collect();
+        let prices: Vec<f64> = self.entries.iter().map(|entry| entry.close).collect();
         Prices {
-            dates: Array::from_iter(self.entries.iter().map(|entry| entry.date)),
-            prices: Array::from_iter(self.entries.iter().map(|entry| entry.close)),
+            dates: Array::from(dates),
+            prices: Array::from(prices),
             symbol: self.symbol,
         }
     }

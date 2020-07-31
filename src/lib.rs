@@ -37,7 +37,7 @@ pub fn get_market_data(
             let key = secret.data.unwrap_or("".to_string());
             let cl = ::alphavantage::blocking::Client::new(key.as_str());
             let av = alphavantage::AlphaVantage::new(cl);
-            av.get(symbol.as_str(), start, end)?.into()
+            av.get(symbol.as_str(), start, end)?
         }
     };
 

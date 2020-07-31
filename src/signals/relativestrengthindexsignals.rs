@@ -1,10 +1,11 @@
+use super::signals::Outputs;
 use crate::signals::signals::Signals;
+use serde::Serialize;
 use ta::indicators::RelativeStrengthIndex;
 use ta::Next;
-use serde::{Serialize};
 
 #[derive(Serialize)]
-struct RelativeStrengthIndexSignals<'a> {
+pub struct RelativeStrengthIndexSignals<'a> {
     outputs: Vec<f64>,
     prices: &'a Vec<f64>,
     signals: Vec<f64>,
@@ -42,8 +43,13 @@ impl<'a> RelativeStrengthIndexSignals<'a> {
 }
 
 impl Signals for RelativeStrengthIndexSignals<'_> {
-    fn signals(&mut self) -> &Vec<f64> {
+    fn signals(&self) -> &Vec<f64> {
         &self.signals
+    }
+
+    fn outputs(&self) -> Outputs {
+        let outputs = self.outputs.iter().map(|o| vec![o.clone()]).collect();
+        Outputs::new(outputs, vec!["rsi".to_string()]).unwrap()
     }
 }
 

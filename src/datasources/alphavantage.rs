@@ -9,7 +9,7 @@ pub struct AlphaVantage {
 
 impl AlphaVantage {
     pub fn new(client: Client) -> AlphaVantage {
-        AlphaVantage { client: client }
+        AlphaVantage { client }
     }
 }
 

@@ -8,7 +8,10 @@ edition = "2018"
 
 [dependencies]
 ta = "0.1.5"
-alphavantage = { version = "0.6.0", features = ["blocking"] }
+# TODO: if/when alphavantage merges my PR for full output, switch back to 
+# alphavantage instead of my own fork.
+# alphavantage = { version = "0.6.0", features = ["blocking"] }
+alphavantage = { git = "https://github.com/dgunay/alphavantage", features = ["blocking"] }
 chrono = "0.4"
 chrono-tz = "0.4"
 structopt = "0.3"
@@ -16,4 +19,4 @@ ndarray = "0.13"
 ndarray-stats = "0.3"
 derive_more = "0.99"
 serde_json = "1.0"
-serde = "1.0"
+serde = { version = "1.0", features = ["derive"] }
