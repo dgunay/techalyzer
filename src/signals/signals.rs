@@ -30,7 +30,7 @@ pub struct Outputs {
 }
 
 pub struct Output {
-    pub data: std::collections::HashMap<String, f64>
+    pub data: std::collections::HashMap<String, f64>,
 }
 
 #[derive(Debug, Display)]

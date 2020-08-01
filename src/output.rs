@@ -1,10 +1,9 @@
-
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 
 // use strum;
-use strum_macros::EnumString;
 use std::collections::BTreeMap;
+use strum_macros::EnumString;
 
 #[derive(Debug, Serialize, Deserialize, EnumString)]
 // #[serde(untagged)]
@@ -20,7 +19,7 @@ pub struct TechalyzerEntry {
     // date: NaiveDate,
     pub signal: f64,
     // pub output: Outputs, // TODO: Outputs needs to be restructed to fit this model better
-    pub price: f64
+    pub price: f64,
 }
 
 // TODO: a map structure of date => [price, signals, outputs] would be very useful

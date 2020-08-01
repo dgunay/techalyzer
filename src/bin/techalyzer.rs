@@ -62,7 +62,7 @@ enum SubCommands {
     /// technical indicators.
     Train {},
 
-    /// Suggests a trading course of action given recent developments in a 
+    /// Suggests a trading course of action given recent developments in a
     /// security's price action.
     Suggest {},
 }

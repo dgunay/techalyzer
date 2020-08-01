@@ -1,9 +1,8 @@
 use alphavantage::time_series::TimeSeries;
 use chrono::NaiveDate;
 
-
-use serde::Deserialize;
 use crate::output::TechalyzerPrintOutput;
+use serde::Deserialize;
 
 /// Contains a time series prices data
 #[derive(Deserialize, Debug, PartialEq)]
@@ -23,7 +22,7 @@ impl From<TimeSeries> for Prices {
             // dates: t.entries.iter().map(|e| e.date.naive_local().date()).collect(),
             // prices: t.entries.iter().map(|e| e.close).collect(),
             symbol: t.symbol,
-            map: m
+            map: m,
         }
     }
 }
@@ -32,7 +31,7 @@ impl From<TechalyzerPrintOutput> for Prices {
     fn from(t: TechalyzerPrintOutput) -> Self {
         Prices {
             symbol: t.symbol,
-            map: t.map.iter().map(|e| (e.0.clone(), e.1.price)).collect()
+            map: t.map.iter().map(|e| (e.0.clone(), e.1.price)).collect(),
         }
     }
 }

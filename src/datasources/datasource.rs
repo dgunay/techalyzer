@@ -12,7 +12,7 @@ pub enum Error {
     FileNotFound(String),
 
     #[display(fmt = "Symbol mismatch (expected {}, found {})", expected, actual)]
-    SymbolMismatch { expected: String, actual: String},
+    SymbolMismatch { expected: String, actual: String },
 
     #[display(fmt = "Other error: {} (context: {})", _0, _1)]
     Other(String, String),
