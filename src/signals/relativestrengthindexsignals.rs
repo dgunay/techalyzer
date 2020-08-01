@@ -23,7 +23,7 @@ impl RelativeStrengthIndexSignals {
             // and abstracts out all this looping over prices and stuff
 
             // Instead of 0 to 100, signal is -1.0 to 1.0
-            let signal = (rsi_val / 50.0) - 1.0;
+            let signal = -((rsi_val / 50.0) - 1.0);
 
             signals.push(signal);
             outputs.push(rsi_val);
@@ -76,11 +76,11 @@ mod tests {
 
         assert_eq!(signals.signals().len(), l);
         assert!(nearly_equal(signals.signals()[0], 0.0));
-        assert!(nearly_equal(signals.signals()[1], 0.0714285714285714));
-        assert!(nearly_equal(signals.signals()[2], 0.14213197969543168));
-        assert!(nearly_equal(signals.signals()[3], 0.21141421392677695));
-        assert!(nearly_equal(signals.signals()[4], 0.1081504306316774));
-        assert!(nearly_equal(signals.signals()[5], -0.3031110904761263));
+        assert!(nearly_equal(signals.signals()[1], -0.0714285714285714));
+        assert!(nearly_equal(signals.signals()[2], -0.14213197969543168));
+        assert!(nearly_equal(signals.signals()[3], -0.21141421392677695));
+        assert!(nearly_equal(signals.signals()[4], -0.1081504306316774));
+        assert!(nearly_equal(signals.signals()[5], 0.3031110904761263));
     }
 
     /// This test is mostly just to see if to_json worked
