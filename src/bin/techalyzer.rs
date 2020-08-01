@@ -35,10 +35,12 @@ struct Opts {
     symbol: String,
 
     /// Start date of the analysis. Leave out to go to the earliest possible date.
+    #[structopt(long, short)]
     start_date: Option<NaiveDate>,
-
+    
     /// End date of the analysis. Leave out to go to the latest possible date
     /// (usually today).
+    #[structopt(long, short)]
     end_date: Option<NaiveDate>,
 
     #[structopt(subcommand)]
