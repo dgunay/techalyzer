@@ -5,6 +5,7 @@ pub mod alphavantage;
 pub mod datasource;
 pub mod techalyzerjson;
 
+// TODO: this should probably be shared with Source
 /// Data sources supported by Techalyzer
 #[derive(Debug)]
 pub enum SupportedDataSources {
