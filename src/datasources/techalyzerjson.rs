@@ -30,7 +30,12 @@ impl DataSource for TechalyzerJson {
         let reader = BufReader::new(self.file);
         let data: TechalyzerPrintOutput = match serde_json::from_reader(reader) {
             Ok(d) => d,
-            Err(e) => return Err(Error::Other("Failed to deserialize from file as JSON".to_string(), e.to_string()))
+            Err(e) => {
+                return Err(Error::Other(
+                    "Failed to deserialize from file as JSON".to_string(),
+                    e.to_string(),
+                ))
+            }
         };
 
         // Slice from start to end date inclusive
@@ -49,8 +54,7 @@ impl DataSource for TechalyzerJson {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
-    
+
     use std::collections::BTreeMap;
 
     use std::env::current_dir;
