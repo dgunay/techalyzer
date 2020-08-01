@@ -28,13 +28,11 @@ for line in fileinput.input():
 
 try:
   data = json.loads(json_str)
-except e:
+except Exception as e:
   print("Exception decoding JSON: {}".format(e))
 
-outputs = list(map(lambda a: a[0], data['outputs']['outputs']))
-prices = data['prices']
-dates = list(map(lambda d: dt.datetime.strptime(d, "%Y-%m-%d"), data['dates']))
-df = pd.DataFrame(data={'price':prices, 'rsi': outputs}, index=dates)
+df = pd.DataFrame.from_dict(data['map'], orient='index')
+df.index = pd.to_datetime(df.index)
 
 plt.figure()
 plt.xlabel("Date")
