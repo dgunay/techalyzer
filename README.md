@@ -77,6 +77,9 @@ it to your PATH.
 * Integration tests to write in techalyzer.rs:
   * TODO: `--file file` doesn't exist
   * TODO: `--file file` isn't valid JSON/CSV/etc.
+* TODO: Benchmarking
+* TODO: Fuzzing, if any functions seem appropriate to fuzz
+* 
 
 ### For funsies:
 
