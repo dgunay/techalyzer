@@ -7,10 +7,15 @@ use derive_more::Display;
 pub enum Error {
     #[display(fmt = "{}", _0)]
     AlphaVantageError(String),
+
     #[display(fmt = "File {} not found", _0)]
     FileNotFound(String),
+
+    #[display(fmt = "Symbol mismatch (expected {}, found {})", expected, actual)]
+    SymbolMismatch { expected: String, actual: String},
+
     #[display(fmt = "Other error: {} (context: {})", _0, _1)]
-    Other(String, String)
+    Other(String, String),
 }
 
 pub trait DataSource {

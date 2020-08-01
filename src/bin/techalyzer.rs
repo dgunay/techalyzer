@@ -63,15 +63,9 @@ enum SubCommands {
     Suggest {},
 }
 
-fn main() {
+fn main() -> Result<(), TechalyzerError> {
     let opts = Opts::from_args();
-    match run_program(opts) {
-        Ok(_) => std::process::exit(0),
-        Err(e) => {
-            println!("{}", e);
-            std::process::exit(1);
-        }
-    }
+    run_program(opts)
 }
 
 /// Wrapper function for Techalyzer to make it easier to test.
