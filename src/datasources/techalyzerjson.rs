@@ -38,7 +38,8 @@ impl DataSource for TechalyzerJson {
             }
         };
 
-        if data.symbol != symbol {
+        // TODO: does this hold up to UTF-8?
+        if data.symbol.to_lowercase() != symbol.to_lowercase() {
             return Err(Error::SymbolMismatch {
                 expected: symbol.to_string(),
                 actual: data.symbol,
