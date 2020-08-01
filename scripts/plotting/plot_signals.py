@@ -20,6 +20,7 @@ import pandas as pd
 # TODO: security symbol in title
 # TODO: chart security and indicator in subplots
 # TODO: buy/sell signals beyond some threshold as vertical lines
+# TODO: schema validation of input https://python-jsonschema.readthedocs.io/en/stable/validate/
 
 json_str = ''
 for line in fileinput.input():
