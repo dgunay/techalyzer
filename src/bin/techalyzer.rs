@@ -155,8 +155,8 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
 
             print_techalyzer_json(&output);
         }
-        SubCommands::Suggest {} => todo!(),
-        SubCommands::Train {} => todo!(),
+        SubCommands::Suggest {} => todo!("Suggest not yet implemented"),
+        SubCommands::Train {} => todo!("Train not yet implemented"),
     }
 
     Ok(())
