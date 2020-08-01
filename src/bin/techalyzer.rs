@@ -57,9 +57,13 @@ enum SubCommands {
         #[structopt(short, long)]
         print_signals: bool,
     },
-    /// Trains a machine learning model on stock data.
+
+    /// Trains a machine learning model on stock data to make trades based on
+    /// technical indicators.
     Train {},
-    ///
+
+    /// Suggests a trading course of action given recent developments in a 
+    /// security's price action.
     Suggest {},
 }
 
