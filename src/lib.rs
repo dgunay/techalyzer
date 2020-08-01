@@ -1,14 +1,15 @@
 pub mod datasources;
+pub mod error;
 pub mod marketdata;
+pub mod output;
 pub mod secret;
 pub mod signals;
 pub mod source;
 pub mod util;
-pub mod output;
-pub mod error;
 
 use crate::datasources::alphavantage;
 use crate::datasources::datasource::{DataSource, Error};
+use crate::datasources::techalyzerjson::TechalyzerJson;
 use crate::marketdata::prices::Prices;
 use crate::source::Source;
 use chrono::NaiveDate;
@@ -40,6 +41,24 @@ pub fn get_market_data(
             let cl = ::alphavantage::blocking::Client::new(key.as_str());
             let av = alphavantage::AlphaVantage::new(cl);
             av.get(symbol.as_str(), start, end)?
+        }
+        Source::TechalyzerJson(path) => {
+            if !path.exists() {
+                // FIXME: don't unwrap
+                return Err(Error::FileNotFound(
+                    path.into_os_string().into_string().unwrap(),
+                ));
+            }
+
+            match TechalyzerJson::new(path.as_path()) {
+                Ok(t) => t.get(symbol.as_str(), start, end)?,
+                Err(io_err) => {
+                    return Err(Error::Other(
+                        io_err.to_string(),
+                        format!("Tried to open {:?}", path),
+                    ))
+                }
+            }
         }
     };
 

@@ -26,8 +26,14 @@ impl TechalyzerJson {
 
 impl DataSource for TechalyzerJson {
     fn get(self, _symbol: &str, start: NaiveDate, end: NaiveDate) -> Result<Prices, Error> {
+        // Read in the JSON and deserialize in a stream
         let reader = BufReader::new(self.file);
-        let data: TechalyzerPrintOutput = serde_json::from_reader(reader).unwrap(); // FIXME: don't unwrap
+        let data: TechalyzerPrintOutput = match serde_json::from_reader(reader) {
+            Ok(d) => d,
+            Err(e) => return Err(Error::Other("Failed to deserialize from file as JSON".to_string(), e.to_string()))
+        };
+
+        // Slice from start to end date inclusive
         let slice: BTreeMap<NaiveDate, f64> = data
             .map
             .range(start..=end)
