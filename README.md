@@ -15,31 +15,31 @@ A few goals:
 
 ## Design
 
-The basic story I guess:
-
 I want to be able to automatically fetch daily market data (maybe even minute to
 minute data if possible) from one or more APIs, and then for a given stock:
 
 * Backtest and optimize a trading strategy using several indicators and either a 
   handwritten algorithm or a machine learning model.
 * Using a trained model or algorithm, recommend a course of action given new 
-  data.
+  data each day.
 
 This will involve implementing or sourcing:
 
 * A market simulator (how portfolio value changes depending on when you trade a
   given security)
+* Implementing a buy-and-hold benchmark
 * Implementations of several technical indicators (at least RSI, BB, MAC, etc)
 * One or more ML algorithms well-suited to maximizing portfolio return given
   technical signals, or an optimizer that can tune the signals for a handwritten
   trading strategy
 
 Other annoying subproblems that may crop up:
-* Dealing with time series data effectively (including gaps). The [`bdays`][bdays] 
-  crate may help with that.
+* Dealing with time series data effectively (including gaps introduced by holidays,
+  weekends, etc). The [`bdays`][bdays] crate may help with that.
 * Having a good plotting solution to sanity check the trading bot
-  * For this I think I'll just go with serializing to JSON via `serde_json` and
-    then using matplotlib with a quick Python script.
+  * Currently Techalyzer serializes to JSON via `serde_json` and then uses 
+    matplotlib (see [`plot_signals.py`](scripts/plotting/plot_signals.py))
+* 
 
 [bdays]: https://docs.rs/bdays/0.1.1/bdays/index.html
 
@@ -53,9 +53,8 @@ The basic idea:
 
 ```
 
-For funsies:
-
-* Integrate a sentiment analyzer for r/wallstreetbets or various investing forums
+There is no initial intent to make this a highly scalable or distributed 
+architecture, it is simply a CLI app for now.
 
 ## Known Issues
 
@@ -68,8 +67,17 @@ it to your PATH.
 
 [netcdf]: https://www.unidata.ucar.edu/software/netcdf/docs/winbin.html
 
+## Things of Interest
+
+* [Polars DataFrame](https://github.com/ritchie46/polars) looks like a great
+  fit as a competitor to pandas, should the need arise.
+
 ## Random Backlog
 
 * Integration tests to write in techalyzer.rs:
   * TODO: `--file file` doesn't exist
   * TODO: `--file file` isn't valid JSON/CSV/etc.
+
+### For funsies:
+
+* Integrate a sentiment analyzer for r/wallstreetbets or various investing forums
