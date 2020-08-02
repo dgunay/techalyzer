@@ -1148,7 +1148,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "ta_experiments"
+name = "techalyzer"
 version = "0.1.0"
 dependencies = [
  "alphavantage",

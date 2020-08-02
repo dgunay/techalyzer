@@ -2,19 +2,19 @@ use chrono::NaiveDate;
 
 use structopt::StructOpt;
 use ta::indicators::*;
-use ta_experiments::datasources::SupportedDataSources;
-use ta_experiments::error::TechalyzerError;
-use ta_experiments::get_market_data;
-use ta_experiments::output::SupportedIndicators;
-use ta_experiments::output::TechalyzerEntry;
-use ta_experiments::output::TechalyzerPrintOutput;
-use ta_experiments::secret::Secret;
-use ta_experiments::signals::{
+use techalyzer::datasources::SupportedDataSources;
+use techalyzer::error::TechalyzerError;
+use techalyzer::get_market_data;
+use techalyzer::output::SupportedIndicators;
+use techalyzer::output::TechalyzerEntry;
+use techalyzer::output::TechalyzerPrintOutput;
+use techalyzer::secret::Secret;
+use techalyzer::signals::{
     bollingerbandssignals::BollingerBandsSignals,
     macdsignals::MovingAverageConvergenceDivergenceSignals,
     relativestrengthindexsignals::RelativeStrengthIndexSignals, signals::Signals,
 };
-use ta_experiments::source::Source;
+use techalyzer::source::Source;
 
 // FIXME: we probably don't need the overhead of structopt, look into switching
 // to pico-args (https://github.com/RazrFalcon/pico-args)
@@ -74,7 +74,7 @@ fn main() -> Result<(), TechalyzerError> {
     run_program(opts)
 }
 
-/// Wrapper function for Techalyzer to make it easier to test.
+/// Wrappable main function to make it easier to test.
 fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
     // Date range for the data
     let start = opts.start_date;
