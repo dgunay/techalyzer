@@ -84,8 +84,8 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
     let secret = Secret { data: opts.secret };
 
     let source = match opts.data_source {
-        SupportedDataSources::File(path) => Source::TechalyzerJson(path),
         SupportedDataSources::AlphaVantage => Source::AlphaVantage,
+        SupportedDataSources::File(path) => Source::TechalyzerJson(path),
     };
 
     // Get market data
@@ -142,6 +142,7 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
                         // output: sigs.outputs().outputs
                         price: price.clone(),
                         signal: sigs.signals()[i],
+                        output: sigs.outputs()[i].clone()
                     },
                 );
                 i += 1;

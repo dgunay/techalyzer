@@ -1,5 +1,6 @@
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
+use crate::signals::signals::Output;
 
 // use strum;
 use std::collections::BTreeMap;
@@ -16,10 +17,9 @@ pub enum SupportedIndicators {
 /// An entry at some date with price, signal, and technical indicator data
 #[derive(Serialize, Deserialize)]
 pub struct TechalyzerEntry {
-    // date: NaiveDate,
     pub signal: f64,
-    // pub output: Outputs, // TODO: Outputs needs to be restructed to fit this model better
     pub price: f64,
+    pub output: Output
 }
 
 // TODO: a map structure of date => [price, signals, outputs] would be very useful

@@ -14,9 +14,10 @@ pub trait Signals {
 
 /// Represents a single point output of a ta technical indicactor. Usually a
 /// float, sometimes a float tuple depending on the indicator.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Output {
     /// Outputs of a rust-ta technical indicator.
+    #[serde(flatten)]
     pub output: HashMap<String, f64>,
     // TODO: is there a way we can make all the float arrays the same size
     // without a runtime check/const generics being unavailable?
