@@ -1,13 +1,22 @@
-use super::signals::Outputs;
+use super::signals::Output;
 use crate::signals::signals::Signals;
 use serde::Serialize;
+
 use ta::indicators::RelativeStrengthIndex;
 use ta::Next;
 
 #[derive(Serialize)]
 pub struct RelativeStrengthIndexSignals {
-    outputs: Vec<f64>,
+    outputs: Vec<Output>,
     signals: Vec<f64>,
+}
+
+impl From<f64> for Output {
+    fn from(f: f64) -> Self {
+        Output {
+            output: [("rsi".to_string(), f)].iter().cloned().collect(),
+        }
+    }
 }
 
 impl RelativeStrengthIndexSignals {
@@ -25,8 +34,8 @@ impl RelativeStrengthIndexSignals {
             // Instead of 0 to 100, signal is -1.0 to 1.0
             let signal = -((rsi_val / 50.0) - 1.0);
 
-            signals.push(signal);
-            outputs.push(rsi_val);
+            signals.push(signal.into());
+            outputs.push(rsi_val.into());
         }
 
         Self { outputs, signals }
@@ -42,9 +51,8 @@ impl Signals for RelativeStrengthIndexSignals {
         &self.signals
     }
 
-    fn outputs(&self) -> Outputs {
-        let outputs = self.outputs.iter().map(|o| vec![o.clone()]).collect();
-        Outputs::new(outputs, vec!["rsi".to_string()]).unwrap()
+    fn outputs(&self) -> &Vec<Output> {
+        &self.outputs
     }
 }
 

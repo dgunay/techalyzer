@@ -1141,8 +1141,7 @@ dependencies = [
 [[package]]
 name = "ta"
 version = "0.1.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7ac24971ba937bd20ac591204c349879b76fd364110739a73ab573b447f4ddfa"
+source = "git+https://github.com/dgunay/ta-rs?branch=macd-output#1b4afebebc060b63d71adaa4ad14d1c69819ccce"
 dependencies = [
  "error-chain",
 ]

@@ -1,31 +1,13 @@
-use super::signals::Outputs;
+use super::signals::Output;
 use crate::signals::signals::Signals;
 use serde::Serialize;
+use std::collections::HashMap;
 use ta::indicators::{BollingerBands, BollingerBandsOutput};
 use ta::Next;
 
-/// basically a carbon copy of BollingerBandsOutput because Serializing a vector
-/// of remote types is way too hard for me right now
-#[derive(Serialize)]
-pub struct BBOutput {
-    pub average: f64,
-    pub upper: f64,
-    pub lower: f64,
-}
-
-impl From<&BollingerBandsOutput> for BBOutput {
-    fn from(b: &BollingerBandsOutput) -> BBOutput {
-        Self {
-            average: b.average,
-            upper: b.upper,
-            lower: b.lower,
-        }
-    }
-}
-
 #[derive(Serialize)]
 pub struct BollingerBandsSignals {
-    pub outputs: Vec<BBOutput>,
+    pub outputs: Vec<Output>,
     pub signals: Vec<f64>,
 }
 
@@ -43,17 +25,29 @@ impl BollingerBandsSignals {
             let signal = 2.0 * (((**price - o.lower) / (o.upper - o.lower)) - 0.5);
 
             signals.push(signal);
-            outputs.push(o);
+            outputs.push(o.into());
         }
 
-        Self {
-            outputs: outputs.iter().map(|o| BBOutput::from(o)).collect(),
-            signals: signals,
-        }
+        Self { outputs, signals }
     }
 
     pub fn to_json(&self) -> String {
         serde_json::to_string(self).unwrap()
+    }
+}
+
+impl From<BollingerBandsOutput> for Output {
+    fn from(b: BollingerBandsOutput) -> Self {
+        let map: HashMap<String, f64> = [
+            ("average".to_string(), b.average),
+            ("upper".to_string(), b.upper),
+            ("lower".to_string(), b.lower),
+        ]
+        .iter()
+        .cloned()
+        .collect();
+
+        Output { output: map }
     }
 }
 
@@ -62,22 +56,8 @@ impl Signals for BollingerBandsSignals {
         &self.signals
     }
 
-    fn outputs(&self) -> Outputs {
-        let outputs = self
-            .outputs
-            .iter()
-            .map(|o| vec![o.average, o.upper, o.lower])
-            .collect();
-
-        Outputs::new(
-            outputs,
-            vec![
-                "average".to_string(),
-                "upper".to_string(),
-                "lower".to_string(),
-            ],
-        )
-        .unwrap()
+    fn outputs(&self) -> &Vec<Output> {
+        &self.outputs
     }
 }
 

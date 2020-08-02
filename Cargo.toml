@@ -7,7 +7,9 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-ta = "0.1.5"
+# TODO: if/when my PR is merged, switch back to ta instead of my fork.
+# ta = "0.1.5"
+ta = { git = "https://github.com/dgunay/ta-rs", branch="macd-output" }
 # TODO: if/when alphavantage merges my PR for full output, switch back to 
 # alphavantage instead of my own fork.
 # alphavantage = { version = "0.6.0", features = ["blocking"] }

@@ -1,13 +1,15 @@
-use super::signals::Outputs;
+use super::signals::Output;
 use crate::signals::signals::Signals;
 use crate::util::clamp;
 use serde::Serialize;
+use std::collections::HashMap;
 use ta::indicators::MovingAverageConvergenceDivergence;
+use ta::indicators::MovingAverageConvergenceDivergenceOutput;
 use ta::Next;
 
 #[derive(Serialize)]
 pub struct MovingAverageConvergenceDivergenceSignals {
-    pub outputs: Vec<(f64, f64, f64)>,
+    pub outputs: Vec<Output>,
     signals: Vec<f64>,
 }
 
@@ -24,15 +26,15 @@ impl MovingAverageConvergenceDivergenceSignals {
         for price in prices.iter() {
             // FIXME: for some reason I have to clone the price or next() won't
             // work - maybe an upstream PR is necessary
-            let tuple = macd.next(*price.clone());
-            let (macd_line, signal_line, _histo) = tuple;
+            let output = macd.next(*price.clone());
+            // let (macd_line, signal_line, _histo) = tuple;
 
             // FIXME: I can't think of a great way to do a normalized -1.0 to 1.0
             // scale on the MACD, so for now I'll go with having above/below be
             // 0.5/-0.5, and then just add the slope of the MACD.
-            let above_or_below = if macd_line > signal_line {
+            let above_or_below = if output.macd > output.signal {
                 0.5
-            } else if macd_line < signal_line {
+            } else if output.macd < output.signal {
                 -0.5
             } else {
                 0.0
@@ -41,19 +43,17 @@ impl MovingAverageConvergenceDivergenceSignals {
             // slope is normalized and clamped to 0.5/-0.5 (with 0.5 being a 45
             // degree angle trending upwards)
             // FIXME: ensure no div by zero
-            let slope = macd_line - macd_line_prev;
+            let slope = output.macd - macd_line_prev;
             let norm_macd_slope = (slope / macd_line_prev) / 2.0;
             let signal = clamp(norm_macd_slope, -0.5, 0.5).unwrap() + above_or_below;
 
+            macd_line_prev = output.macd;
             signals.push(signal);
-            outputs.push(tuple);
-
-            macd_line_prev = macd_line;
+            outputs.push(output.into());
         }
 
         Self {
             outputs: outputs,
-            // prices: prices,
             signals: signals,
         }
     }
@@ -63,23 +63,28 @@ impl MovingAverageConvergenceDivergenceSignals {
     }
 }
 
+impl From<MovingAverageConvergenceDivergenceOutput> for Output {
+    fn from(m: MovingAverageConvergenceDivergenceOutput) -> Self {
+        let map: HashMap<String, f64> = [
+            ("macd".to_string(), m.macd),
+            ("signal".to_string(), m.signal),
+            ("histogram".to_string(), m.histogram),
+        ]
+        .iter()
+        .cloned()
+        .collect();
+
+        Output { output: map }
+    }
+}
+
 impl Signals for MovingAverageConvergenceDivergenceSignals {
     fn signals(&self) -> &Vec<f64> {
         &self.signals
     }
 
-    fn outputs(&self) -> Outputs {
-        let outputs = self.outputs.iter().map(|m| vec![m.0, m.1, m.2]).collect();
-
-        Outputs::new(
-            outputs,
-            vec![
-                "macd_line".to_string(),
-                "signal_line".to_string(),
-                "histo".to_string(),
-            ],
-        )
-        .unwrap()
+    fn outputs(&self) -> &Vec<Output> {
+        &self.outputs
     }
 }
 
