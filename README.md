@@ -58,12 +58,7 @@ architecture, it is simply a CLI app for now.
 
 ## Known Issues
 
-Compiling in Windows is a bit of a pain in the ass because the `peroxide` crate's
-`dataframe` feature uses `netcdf`, 
-[which has a linking bug at the moment](https://github.com/Axect/Peroxide/issues/16). 
-Can be solved by either manually adding it to the linking path, or by building 
-it in WSL. To get it for Windows, [install it from here][netcdf] and then add
-it to your PATH.
+TBD
 
 [netcdf]: https://www.unidata.ucar.edu/software/netcdf/docs/winbin.html
 
@@ -79,7 +74,10 @@ it to your PATH.
   * TODO: `--file file` isn't valid JSON/CSV/etc.
 * TODO: Benchmarking
 * TODO: Fuzzing, if any functions seem appropriate to fuzz
-* 
+* Determine if the name Techalyzer is ok (not trademarked/no bad connotations) 
+  or if a different name is necessary.
+* TODO: make the readme and documentation more instructional when the app 
+  frontend is more set in stone.
 
 ### For funsies:
 
