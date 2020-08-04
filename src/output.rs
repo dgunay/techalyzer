@@ -22,8 +22,6 @@ pub struct TechalyzerEntry {
     pub output: Output,
 }
 
-// TODO: a map structure of date => [price, signals, outputs] would be very useful
-// for charting and otherwise using the data.
 /// Organizes our data the way we want before printing.
 #[derive(Serialize, Deserialize)]
 pub struct TechalyzerPrintOutput {
