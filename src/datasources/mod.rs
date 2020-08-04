@@ -5,12 +5,11 @@ pub mod alphavantage;
 pub mod datasource;
 pub mod techalyzerjson;
 
-// TODO: this should probably be shared with Source
-/// Data sources supported by Techalyzer
+/// Data sources supported by Techalyzer, be they APIs or otherwise.
 #[derive(Debug)]
 pub enum SupportedDataSources {
     /// Get a file locally
-    File(PathBuf),
+    TechalyzerJson(PathBuf),
 
     /// Download data from the Alpha Vantage API
     AlphaVantage,
@@ -38,7 +37,7 @@ impl FromStr for SupportedDataSources {
             possible_file => {
                 // FIXME: is it ok to unwrap if the err type is Infallible?
                 let buf = PathBuf::from_str(possible_file).unwrap();
-                Ok(SupportedDataSources::File(buf))
+                Ok(SupportedDataSources::TechalyzerJson(buf))
             }
         }
     }

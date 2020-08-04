@@ -14,8 +14,6 @@ use techalyzer::signals::{
     macdsignals::MovingAverageConvergenceDivergenceSignals,
     relativestrengthindexsignals::RelativeStrengthIndexSignals, signals::Signals,
 };
-use techalyzer::source::Source;
-
 // FIXME: we probably don't need the overhead of structopt, look into switching
 // to pico-args (https://github.com/RazrFalcon/pico-args)
 
@@ -83,14 +81,14 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
     // API keys if necessary
     let secret = Secret { data: opts.secret };
 
-    let source = match opts.data_source {
-        SupportedDataSources::AlphaVantage => Source::AlphaVantage,
-        SupportedDataSources::File(path) => Source::TechalyzerJson(path),
-    };
+    // let source = match opts.data_source {
+    //     SupportedDataSources::AlphaVantage => Source::AlphaVantage,
+    //     SupportedDataSources::File(path) => Source::TechalyzerJson(path),
+    // };
 
     // Get market data
     // TODO: parameterize the data source
-    let data = match get_market_data(source, opts.symbol, start, end, secret) {
+    let data = match get_market_data(opts.data_source, opts.symbol, start, end, secret) {
         Ok(d) => d,
         Err(e) => {
             return Err(TechalyzerError::Generic(format!("{}", e)));
@@ -183,7 +181,7 @@ mod tests {
     fn end_to_end_print_rsi() {
         // Basic smoke test that the program can go end to end
         let res = run_program(Opts {
-            data_source: SupportedDataSources::File("test/json/jpm_rsi.json".into()),
+            data_source: SupportedDataSources::TechalyzerJson("test/json/jpm_rsi.json".into()),
             secret: None,
             symbol: "JPM".to_string(),
             start_date: None,
