@@ -33,9 +33,8 @@ pub fn get_market_data(
         }
         Source::TechalyzerJson(path) => {
             if !path.exists() {
-                // FIXME: don't unwrap
                 return Err(Error::FileNotFound(
-                    path.into_os_string().into_string().unwrap(),
+                    path.into_os_string().into_string().expect("invalid string"),
                 ));
             }
 
