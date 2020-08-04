@@ -19,5 +19,10 @@ pub enum Error {
 }
 
 pub trait DataSource {
-    fn get(self, symbol: &str, start: NaiveDate, end: NaiveDate) -> Result<Prices, Error>;
+    fn get(
+        self,
+        symbol: &str,
+        start: Option<NaiveDate>,
+        end: Option<NaiveDate>,
+    ) -> Result<Prices, Error>;
 }

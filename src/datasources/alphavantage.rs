@@ -16,13 +16,22 @@ impl AlphaVantage {
 }
 
 impl DataSource for AlphaVantage {
-    fn get(self, symbol: &str, start: NaiveDate, end: NaiveDate) -> Result<Prices, Error> {
+    fn get(
+        self,
+        symbol: &str,
+        start: Option<NaiveDate>,
+        end: Option<NaiveDate>,
+    ) -> Result<Prices, Error> {
         // TODO: if start is in the last 100 market days, don't request the full
         // time series datas
         match self.client.get_time_series_daily_full(symbol) {
             Ok(t) => {
                 // Slice from start to end date inclusive
-                let slice: BTreeMap<NaiveDate, f64> = filter_entries(t.entries, start, end);
+                let slice: BTreeMap<NaiveDate, f64> = filter_entries(
+                    &t.entries,
+                    start.ok_or(entry_to_naivedate(t.entries.first())).unwrap(),
+                    end.ok_or(entry_to_naivedate(t.entries.last())).unwrap(),
+                );
                 Ok(Prices {
                     map: slice,
                     symbol: symbol.to_string(),
@@ -33,12 +42,17 @@ impl DataSource for AlphaVantage {
     }
 }
 
+/// Helper function to convert the date of an Entry into a NaiveDate
+fn entry_to_naivedate(entry: Option<&Entry>) -> NaiveDate {
+    entry.expect("No first Entry").date.naive_local().date()
+}
+
 // Slices the entries from start to end date inclusive
 // TODO: can we extract the date filtering logic and generalize it across
 // data sources? The consumer of that API need only specific where the date and
 // close price of each entry is.
 fn filter_entries(
-    entries: Vec<Entry>,
+    entries: &Vec<Entry>,
     start: NaiveDate,
     end: NaiveDate,
 ) -> BTreeMap<NaiveDate, f64> {
@@ -90,7 +104,7 @@ mod tests {
         };
 
         let res = filter_entries(
-            ts.entries,
+            &ts.entries,
             NaiveDate::from_ymd(2012, 1, 15),
             NaiveDate::from_ymd(2012, 1, 16),
         );

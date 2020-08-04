@@ -1,5 +1,7 @@
 // TODO: make this private to the crate (control exported symbols in general)
 
+use std::collections::BTreeMap;
+
 #[derive(Debug)]
 pub struct ClampError {
     min: f64,
@@ -35,6 +37,10 @@ pub fn clamp(a: f64, min: f64, max: f64) -> Result<f64, ClampError> {
 
 pub fn nearly_equal(a: f64, b: f64) -> bool {
     (a - b) < 0.000001
+}
+
+pub fn first_key<K, V>(map: &BTreeMap<K, V>) -> Option<&K> {
+    return map.keys().nth(0);
 }
 
 #[cfg(test)]
