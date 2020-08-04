@@ -9,8 +9,8 @@ pub mod util;
 use crate::datasources::alphavantage;
 use crate::datasources::datasource::{DataSource, Error};
 use crate::datasources::techalyzerjson::TechalyzerJson;
-use crate::marketdata::prices::Prices;
 use crate::datasources::SupportedDataSources;
+use crate::marketdata::prices::Prices;
 use chrono::NaiveDate;
 use secret::Secret;
 

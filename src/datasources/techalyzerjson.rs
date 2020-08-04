@@ -52,7 +52,7 @@ impl DataSource for TechalyzerJson {
             });
         }
 
-        // Resolve our date range as the provided ones or the start/end of the 
+        // Resolve our date range as the provided ones or the start/end of the
         // series.
         let sd = start
             .or(first_key(&data.map).cloned())

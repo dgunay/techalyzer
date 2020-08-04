@@ -20,14 +20,12 @@ impl MovingAverageConvergenceDivergenceSignals {
         // Generate signals from MACD
         let mut signals = Vec::<f64>::new();
 
-        // FIXME: can't get outputs to work - do we even need them?
         let mut outputs = Vec::new();
         let mut macd_line_prev = 0.0;
         for price in prices.iter() {
             // FIXME: for some reason I have to clone the price or next() won't
             // work - maybe an upstream PR is necessary
             let output = macd.next(*price.clone());
-            // let (macd_line, signal_line, _histo) = tuple;
 
             // FIXME: I can't think of a great way to do a normalized -1.0 to 1.0
             // scale on the MACD, so for now I'll go with having above/below be
@@ -52,10 +50,7 @@ impl MovingAverageConvergenceDivergenceSignals {
             outputs.push(output.into());
         }
 
-        Self {
-            outputs: outputs,
-            signals: signals,
-        }
+        Self { outputs, signals }
     }
 
     pub fn to_json(&self) -> String {
