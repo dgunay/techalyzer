@@ -78,6 +78,11 @@ TBD
   or if a different name is necessary.
 * TODO: make the readme and documentation more instructional when the app 
   frontend is more set in stone.
+* TODO: actually hold onto high/low/open/close info instead of doing everything
+  using only closing price
+* TODO: add capability to process hourly/minute-to-minute data
+* TODO: add crypto (requires processing 24/7 data, maybe stop using NaiveDates)
+* TODO: server that can maybe push notifications somehow when it finds a good time to buy or sell.
 
 ### For funsies:
 
