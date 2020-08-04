@@ -49,14 +49,12 @@ impl Output {
                 mapping_len: mapping.len(),
             });
         }
-        
+
         let mut map = HashMap::new();
         for i in 0..outputs.len() {
             map.insert(mapping[i].clone(), outputs[i]);
         }
 
-        Ok(Self {
-            output: map,
-        })
+        Ok(Self { output: map })
     }
 }

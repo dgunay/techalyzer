@@ -37,7 +37,7 @@ struct Opts {
     /// Start date of the analysis. Leave out to go to the earliest possible date.
     #[structopt(long, short)]
     start_date: Option<NaiveDate>,
-    
+
     /// End date of the analysis. Leave out to go to the latest possible date
     /// (usually today).
     #[structopt(long, short)]
@@ -142,7 +142,7 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
                         // output: sigs.outputs().outputs
                         price: price.clone(),
                         signal: sigs.signals()[i],
-                        output: sigs.outputs()[i].clone()
+                        output: sigs.outputs()[i].clone(),
                     },
                 );
                 i += 1;
