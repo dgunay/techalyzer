@@ -15,7 +15,8 @@ use crate::source::Source;
 use chrono::NaiveDate;
 use secret::Secret;
 
-/// TODO: document
+/// Gets stock price time series data from a given Source, from start to end
+/// date. A Secret is used to access the data source, if necessary.
 pub fn get_market_data(
     source: Source,
     symbol: String,
