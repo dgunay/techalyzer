@@ -81,13 +81,7 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
     // API keys if necessary
     let secret = Secret { data: opts.secret };
 
-    // let source = match opts.data_source {
-    //     SupportedDataSources::AlphaVantage => Source::AlphaVantage,
-    //     SupportedDataSources::File(path) => Source::TechalyzerJson(path),
-    // };
-
     // Get market data
-    // TODO: parameterize the data source
     let data = match get_market_data(opts.data_source, opts.symbol, start, end, secret) {
         Ok(d) => d,
         Err(e) => {
