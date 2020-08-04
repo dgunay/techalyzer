@@ -1,3 +1,5 @@
+// TODO: make this private to the crate (control exported symbols in general)
+
 #[derive(Debug)]
 pub struct ClampError {
     min: f64,
