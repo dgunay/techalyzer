@@ -5,6 +5,7 @@ pub mod output;
 pub mod secret;
 pub mod signals;
 pub mod util;
+pub mod backtester;
 
 use crate::datasources::alphavantage;
 use crate::datasources::datasource::{DataSource, Error};
