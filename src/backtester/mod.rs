@@ -94,7 +94,7 @@ impl BackTester {
                 Position::Out => {
                     self.current_shares = 0;
                     0.0
-                },
+                }
                 Position::Hold => unreachable!(), // FIXME: dead code
             };
 
@@ -132,6 +132,8 @@ impl BackTester {
 mod tests {
     use super::*;
     use crate::util::nearly_equal;
+
+    // TODO: less copypasted code for fixtures
 
     #[test]
     fn buy_and_hold_backtest() {
