@@ -66,7 +66,6 @@ impl BackTester {
     // TODO: can we do backtesting immutably?
     /// Runs the backtest and returns portfolio value at each day of the period.
     pub fn backtest(&mut self) -> BTreeMap<NaiveDate, f64> {
-        let mut portval = self.cash;
         let mut portvals = BTreeMap::new();
 
         // For every day in the series
@@ -83,21 +82,24 @@ impl BackTester {
             }
 
             // Calculate portfolio value (equity plus cash)
-            portval = match trade {
+            let equity_value = match trade {
                 Position::Long(shares) => {
                     self.current_shares = shares as i32;
-                    (shares as f64 * *price) + self.cash
+                    (shares as f64 * *price)
                 }
                 Position::Short(shares) => {
                     self.current_shares = -(shares as i32);
-                    (-(shares as f64) * *price) + self.cash
+                    (-(shares as f64) * *price)
                 }
-                Position::Out => todo!("Implement and test Out"),
-                Position::Hold => portval, // FIXME: dead code
+                Position::Out => {
+                    self.current_shares = 0;
+                    0.0
+                },
+                Position::Hold => unreachable!(), // FIXME: dead code
             };
 
             // Store
-            portvals.insert(day.clone(), portval);
+            portvals.insert(day.clone(), equity_value + self.cash);
         }
 
         portvals
@@ -244,5 +246,47 @@ mod tests {
         assert!(nearly_equal(result[&day2], 105.0));
         assert!(nearly_equal(result[&day3], 110.0));
         assert!(nearly_equal(result[&day3], 115.0));
+    }
+
+    #[test]
+    fn buy_then_out() {
+        let day1 = NaiveDate::from_ymd(2012, 1, 1);
+        let day2 = NaiveDate::from_ymd(2012, 1, 2);
+        let day3 = NaiveDate::from_ymd(2012, 1, 3);
+        let day4 = NaiveDate::from_ymd(2012, 1, 4);
+
+        // Buy and hold 1000 shares for the duration of a few days
+        let strat: BTreeMap<NaiveDate, Position> = vec![
+            (day1, Position::Long(1)),
+            (day2, Position::Hold),
+            (day3, Position::Out),
+            (day4, Position::Hold),
+        ]
+        .iter()
+        .cloned()
+        .collect();
+
+        let prices: BTreeMap<NaiveDate, f64> =
+            vec![(day1, 100.0), (day2, 105.0), (day3, 110.0), (day4, 105.0)]
+                .iter()
+                .cloned()
+                .collect();
+
+        let mut bt = BackTester::new(
+            Strategy { map: strat },
+            Prices {
+                map: prices,
+                symbol: "TLZR".to_string(),
+            },
+            100.0,
+        )
+        .unwrap();
+
+        let result = bt.backtest();
+        print!("{:?}", result);
+        assert!(nearly_equal(result[&day1], 100.0));
+        assert!(nearly_equal(result[&day2], 105.0));
+        assert!(nearly_equal(result[&day3], 110.0));
+        assert!(nearly_equal(result[&day3], 110.0));
     }
 }
