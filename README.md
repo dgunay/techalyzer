@@ -69,6 +69,7 @@ TBD
 
 ## Random Backlog
 
+* TODO: documentation needs to be written, then updated, and double checked for rot
 * Integration tests to write in techalyzer.rs:
   * TODO: `--file file` doesn't exist
   * TODO: `--file file` isn't valid JSON/CSV/etc.

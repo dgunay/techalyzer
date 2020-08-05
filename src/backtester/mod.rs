@@ -85,11 +85,11 @@ impl BackTester {
             let equity_value = match trade {
                 Position::Long(shares) => {
                     self.current_shares = shares as i32;
-                    (shares as f64 * *price)
+                    shares as f64 * *price
                 }
                 Position::Short(shares) => {
                     self.current_shares = -(shares as i32);
-                    (-(shares as f64) * *price)
+                    -(shares as f64) * *price
                 }
                 Position::Out => {
                     self.current_shares = 0;

@@ -14,6 +14,7 @@ use techalyzer::signals::{
     macdsignals::MovingAverageConvergenceDivergenceSignals,
     relativestrengthindexsignals::RelativeStrengthIndexSignals, signals::Signals,
 };
+use std::str::FromStr;
 // FIXME: we probably don't need the overhead of structopt, look into switching
 // to pico-args (https://github.com/RazrFalcon/pico-args)
 
@@ -59,12 +60,35 @@ enum SubCommands {
     },
 
     /// Trains a machine learning model on stock data to make trades based on
-    /// technical indicators.
+    /// technical indicators, then serializes it for later use.
     Train {},
 
     /// Suggests a trading course of action given recent developments in a
     /// security's price action.
-    Suggest {},
+    Suggest {
+        /// See [SupportedTradingModel](enum.SupportedTradingModel.html)
+        model: SupportedTradingModel,
+    },
+
+    /// Backtests a strategy through a given dataset
+    BackTest {
+
+    }
+}
+
+/// Can be an ML model or a handwritten algorithm.
+#[derive(Debug)]
+pub enum SupportedTradingModel {
+    ManualTradingAlgo,
+    MachineLearningModel
+}
+
+impl FromStr for SupportedTradingModel {
+    type Err = TechalyzerError;
+    fn from_str(_s: &str) -> Result<Self, Self::Err> {
+        todo!()
+    }
+    
 }
 
 fn main() -> Result<(), TechalyzerError> {
@@ -150,8 +174,9 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
 
             print_techalyzer_json(&output);
         }
-        SubCommands::Suggest {} => todo!("Suggest not yet implemented"),
+        SubCommands::Suggest { model: _} => todo!("Suggest not yet implemented"),
         SubCommands::Train {} => todo!("Train not yet implemented"),
+        SubCommands::BackTest {  } => todo!("Backtest not yet implement")
     }
 
     Ok(())
