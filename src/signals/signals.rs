@@ -16,14 +16,11 @@ pub trait Signals {
 /// float, sometimes a float tuple depending on the indicator.
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Output {
-    /// Outputs of a rust-ta technical indicator.
+    /// Keys are the name of the indicator feature, value is the value. e.g.
+    /// BollingerBands may have "upper", "lower", and "average" values for each
+    /// point on a time series.
     #[serde(flatten)]
     pub output: HashMap<String, f64>,
-    // TODO: is there a way we can make all the float arrays the same size
-    // without a runtime check/const generics being unavailable?
-    // pub outputs: Vec<f64>,
-
-    // pub mapping: Vec<String>,
 }
 
 #[derive(Debug, Display)]

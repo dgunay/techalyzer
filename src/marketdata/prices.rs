@@ -3,12 +3,28 @@ use chrono::NaiveDate;
 
 use crate::output::TechalyzerPrintOutput;
 use serde::Deserialize;
+use std::ops::RangeBounds;
 
 /// Contains a time series prices data
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct Prices {
     pub map: std::collections::BTreeMap<NaiveDate, f64>,
     pub symbol: String,
+}
+
+impl Prices {
+    pub fn date_range(&self, range: impl RangeBounds<NaiveDate>) -> Prices {
+        let slice = self
+            .map
+            .range(range)
+            .map(|e| (e.0.clone(), e.1.clone()))
+            .collect();
+
+        Prices {
+            map: slice,
+            symbol: self.symbol.clone(),
+        }
+    }
 }
 
 impl From<TimeSeries> for Prices {
@@ -40,14 +56,13 @@ impl From<TechalyzerPrintOutput> for Prices {
 mod tests {
     use super::*;
     use alphavantage::time_series::Entry;
-    use chrono::prelude::*;
+    use chrono::{Duration, NaiveDate, TimeZone};
     use chrono_tz::US::Eastern;
+    use std::collections::BTreeMap;
 
     #[test]
     fn create_prices_from_alphavantage_time_series() {
         let dt = Eastern.ymd(2012, 2, 2).and_hms(12, 0, 0);
-        // let dt = Eastern.ymd(2012, 2, 2);
-        // let dt = NaiveDate::from_ymd(2012, 2, 2);
         let entry = Entry {
             date: dt,
             open: 30.0,
@@ -65,8 +80,34 @@ mod tests {
 
         let p: Prices = ts.into();
 
-        // assert!(p..price == 30.0);
         assert!(p.map[&dt.naive_local().date()] == 30.0);
         assert!(p.map.iter().next().unwrap().0 == &dt.date().naive_local());
+    }
+
+    /// Creates a month of Prices
+    fn fixture_setup() -> Prices {
+        let start = NaiveDate::from_ymd(2012, 1, 2);
+        let end = NaiveDate::from_ymd(2012, 2, 2);
+        let mut dt = start;
+        let mut entries = BTreeMap::new();
+        while dt <= end {
+            entries.insert(dt, 30.0);
+            // dt = dt.and_hms(1, 1, 1) + Duration::days(1);
+            dt = dt + Duration::days(1);
+        }
+
+        Prices {
+            map: entries,
+            symbol: "jpm".to_string(),
+        }
+    }
+
+    #[test]
+    fn prices_date_range() {
+        let p = fixture_setup();
+        let start = NaiveDate::from_ymd(2012, 1, 5);
+        let end = NaiveDate::from_ymd(2012, 1, 6);
+        let result = p.date_range(start..=end);
+        assert_eq!(result.map.len(), 2);
     }
 }

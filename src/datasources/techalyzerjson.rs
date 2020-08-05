@@ -2,10 +2,10 @@
 /// get data.
 use crate::datasources::datasource::{DataSource, Error};
 use crate::output::TechalyzerPrintOutput;
-use crate::util::first_key;
+
 use crate::Prices;
-use chrono::NaiveDate;
-use std::collections::BTreeMap;
+
+
 use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
@@ -27,13 +27,13 @@ impl TechalyzerJson {
 
 impl DataSource for TechalyzerJson {
     fn get(
-        self,
+        &self,
         symbol: &str,
-        start: Option<NaiveDate>,
-        end: Option<NaiveDate>,
+        // start: Option<NaiveDate>,
+        // end: Option<NaiveDate>,
     ) -> Result<Prices, Error> {
         // Read in the JSON and deserialize in a stream
-        let reader = BufReader::new(self.file);
+        let reader = BufReader::new(&self.file);
         let data: TechalyzerPrintOutput = match serde_json::from_reader(reader) {
             Ok(d) => d,
             Err(e) => {
@@ -52,23 +52,8 @@ impl DataSource for TechalyzerJson {
             });
         }
 
-        // Resolve our date range as the provided ones or the start/end of the
-        // series.
-        let sd = start
-            .or(first_key(&data.map).cloned())
-            .expect("No valid start date found");
-        let ed = end
-            .or(first_key(&data.map).cloned())
-            .expect("No valid start date found");
-
-        // Slice from start to end date inclusive
-        let slice: BTreeMap<NaiveDate, f64> = data
-            .map
-            .range(sd..=ed)
-            .map(|e| (e.0.clone(), e.1.price))
-            .collect();
         Ok(Prices {
-            map: slice,
+            map: data.map.iter().map(|e| (e.0.clone(), e.1.price)).collect(),
             symbol: data.symbol,
         })
     }
@@ -81,6 +66,14 @@ mod tests {
     use std::collections::BTreeMap;
 
     use std::env::current_dir;
+    use chrono::NaiveDate;
+
+    #[test]
+    fn test_full_time_series() {
+        let tj = TechalyzerJson::new(Path::new("./test/json/jpm_rsi.json")).unwrap();
+        let p = tj.get("jpm").unwrap();
+        assert_eq!(p.map.len(), 100);
+    }
 
     #[test]
     fn test_prices_from_json() {
@@ -88,9 +81,9 @@ mod tests {
 
         let path = Path::new("./test/json/jpm_rsi.json");
         let tj = TechalyzerJson::new(path).unwrap();
-        let begin = Some(NaiveDate::from_ymd(2020, 3, 10));
-        let end = Some(NaiveDate::from_ymd(2020, 3, 12));
-        let p = tj.get("jpm", begin, end).unwrap();
+        let begin = NaiveDate::from_ymd(2020, 3, 10);
+        let end = NaiveDate::from_ymd(2020, 3, 12);
+        let p = tj.get_date_range("jpm", begin..=end).unwrap();
 
         let mut m = BTreeMap::new();
         m.insert(

@@ -2,13 +2,15 @@ use crate::Prices;
 use chrono::NaiveDate;
 use derive_more::Display;
 
+use std::ops::RangeBounds;
+
 /// Errors arising from attempts to get data from different data sources
 #[derive(Debug, Display)]
 pub enum Error {
     #[display(fmt = "{}", _0)]
     AlphaVantageError(String),
 
-    #[display(fmt = "File {} not found", _0)]
+    #[display(fmt = "File '{}' not found", _0)]
     FileNotFound(String),
 
     #[display(fmt = "Symbol mismatch (expected {}, found {})", expected, actual)]
@@ -19,10 +21,19 @@ pub enum Error {
 }
 
 pub trait DataSource {
-    fn get(
-        self,
+    /// Gets the full range of price data
+    fn get(&self, symbol: &str) -> Result<Prices, Error>;
+
+    /// Gets price data in a date range.
+    fn get_date_range(
+        &self,
         symbol: &str,
-        start: Option<NaiveDate>,
-        end: Option<NaiveDate>,
-    ) -> Result<Prices, Error>;
+        range: impl RangeBounds<NaiveDate>,
+    ) -> Result<Prices, Error> {
+        let prices = self.get(symbol)?;
+        Ok(prices.date_range(range))
+    }
 }
+
+#[cfg(test)]
+mod tests {}

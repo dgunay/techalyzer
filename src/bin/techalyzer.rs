@@ -1,5 +1,6 @@
 use chrono::NaiveDate;
 
+use std::{ops::RangeInclusive, str::FromStr};
 use structopt::StructOpt;
 use ta::indicators::*;
 use techalyzer::datasources::SupportedDataSources;
@@ -14,7 +15,8 @@ use techalyzer::signals::{
     macdsignals::MovingAverageConvergenceDivergenceSignals,
     relativestrengthindexsignals::RelativeStrengthIndexSignals, signals::Signals,
 };
-use std::str::FromStr;
+use techalyzer::util::today_naive;
+
 // FIXME: we probably don't need the overhead of structopt, look into switching
 // to pico-args (https://github.com/RazrFalcon/pico-args)
 
@@ -26,24 +28,37 @@ struct Opts {
     #[structopt(long)]
     secret: Option<String>,
 
+    // TODO: it'd be better for error display if a data source were
+    // selected as mutually exclusive flags (e.g. --file-data and --api-data)
     /// Where to get stock data from
-    #[structopt(long)]
+    #[structopt(long, short)]
     data_source: SupportedDataSources,
 
     /// The symbol of the security to analyze
     symbol: String,
 
     /// Start date of the analysis. Leave out to go to the earliest possible date.
-    #[structopt(long, short)]
+    #[structopt(long, short, parse(try_from_str = parse_date))]
     start_date: Option<NaiveDate>,
 
     /// End date of the analysis. Leave out to go to the latest possible date
     /// (usually today).
-    #[structopt(long, short)]
+    #[structopt(long, short, parse(try_from_str = parse_date))]
     end_date: Option<NaiveDate>,
 
     #[structopt(subcommand)]
     cmd: SubCommands,
+}
+
+/// Gives us a little more flexibility when parsing dates from the command line
+/// for things like "today"
+fn parse_date(datestr: &str) -> Result<NaiveDate, chrono::ParseError> {
+    match datestr {
+        "today" => Ok(chrono::Utc::now().naive_local().date()),
+        "yesterday" => Ok(chrono::Utc::now().naive_local().date() - chrono::Duration::days(1)),
+        // TODO: maybe implement things like "a year ago", "a month ago", etc
+        s => NaiveDate::from_str(s),
+    }
 }
 
 #[derive(StructOpt, Debug)]
@@ -71,16 +86,14 @@ enum SubCommands {
     },
 
     /// Backtests a strategy through a given dataset
-    BackTest {
-
-    }
+    BackTest {},
 }
 
 /// Can be an ML model or a handwritten algorithm.
 #[derive(Debug)]
 pub enum SupportedTradingModel {
     ManualTradingAlgo,
-    MachineLearningModel
+    MachineLearningModel,
 }
 
 impl FromStr for SupportedTradingModel {
@@ -88,7 +101,6 @@ impl FromStr for SupportedTradingModel {
     fn from_str(_s: &str) -> Result<Self, Self::Err> {
         todo!()
     }
-    
 }
 
 fn main() -> Result<(), TechalyzerError> {
@@ -105,8 +117,18 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
     // API keys if necessary
     let secret = Secret { data: opts.secret };
 
+    // FIXME: this is a hack because I can't figure out how to have both
+    // bounded inclusive ranges and full/unbounded ranges in the same variable.
+    let impossibly_early_date = NaiveDate::from_ymd(1000, 1, 1);
+    let date_range: RangeInclusive<NaiveDate> = match (start, end) {
+        (None, None) => impossibly_early_date..=today_naive(),
+        (None, Some(end)) => impossibly_early_date..=end,
+        (Some(start), None) => start..=today_naive(),
+        (Some(start), Some(end)) => start..=end,
+    };
+
     // Get market data
-    let data = match get_market_data(opts.data_source, opts.symbol, start, end, secret) {
+    let data = match get_market_data(opts.data_source, opts.symbol, date_range, secret) {
         Ok(d) => d,
         Err(e) => {
             return Err(TechalyzerError::Generic(format!("{}", e)));
@@ -174,9 +196,9 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
 
             print_techalyzer_json(&output);
         }
-        SubCommands::Suggest { model: _} => todo!("Suggest not yet implemented"),
+        SubCommands::Suggest { model: _ } => todo!("Suggest not yet implemented"),
         SubCommands::Train {} => todo!("Train not yet implemented"),
-        SubCommands::BackTest {  } => todo!("Backtest not yet implement")
+        SubCommands::BackTest {} => todo!("Backtest not yet implement"),
     }
 
     Ok(())

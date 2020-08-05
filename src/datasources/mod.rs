@@ -1,18 +1,37 @@
 use std::path::PathBuf;
 use std::str::FromStr;
 
+use strum_macros::EnumIter;
+
 pub mod alphavantage;
 pub mod datasource;
 pub mod techalyzerjson;
 
+// TODO: god this is a mess, figure out a better way.
+
 /// Data sources supported by Techalyzer, be they APIs or otherwise.
-#[derive(Debug)]
+#[derive(Debug, EnumIter)]
 pub enum SupportedDataSources {
     /// Get a file locally
     TechalyzerJson(PathBuf),
 
     /// Download data from the Alpha Vantage API
     AlphaVantage,
+}
+
+impl FromStr for SupportedDataSources {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "alphavantage" => Ok(SupportedDataSources::AlphaVantage),
+            "AlphaVantage" => Ok(SupportedDataSources::AlphaVantage),
+            possible_file => {
+                let buf = PathBuf::from_str(possible_file)
+                    .expect("Should never fail (err type is Infallible)");
+                Ok(SupportedDataSources::TechalyzerJson(buf))
+            }
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -29,16 +48,9 @@ impl ToString for Error {
     }
 }
 
-impl FromStr for SupportedDataSources {
-    type Err = Error;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "alphavantage" => Ok(SupportedDataSources::AlphaVantage),
-            possible_file => {
-                // FIXME: is it ok to unwrap if the err type is Infallible?
-                let buf = PathBuf::from_str(possible_file).unwrap();
-                Ok(SupportedDataSources::TechalyzerJson(buf))
-            }
-        }
-    }
+#[cfg(test)]
+mod tests {
+
+    #[test]
+    fn test_display_of_supported_datasources() {}
 }

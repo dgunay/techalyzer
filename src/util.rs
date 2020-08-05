@@ -1,7 +1,7 @@
 // TODO: make this private to the crate (control exported symbols in general)
 
+use chrono::NaiveDate;
 use std::collections::BTreeMap;
-
 #[derive(Debug)]
 pub struct ClampError {
     min: f64,
@@ -41,6 +41,14 @@ pub fn nearly_equal(a: f64, b: f64) -> bool {
 
 pub fn first_key<K, V>(map: &BTreeMap<K, V>) -> Option<&K> {
     return map.keys().nth(0);
+}
+
+pub fn last_key<K, V>(map: &BTreeMap<K, V>) -> Option<&K> {
+    return map.keys().last();
+}
+
+pub fn today_naive() -> NaiveDate {
+    chrono::Utc::now().naive_local().date()
 }
 
 #[cfg(test)]

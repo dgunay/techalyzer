@@ -1,3 +1,4 @@
+#[warn(missing_docs)]
 pub mod backtester;
 pub mod datasources;
 pub mod error;
@@ -14,22 +15,25 @@ use crate::datasources::SupportedDataSources;
 use crate::marketdata::prices::Prices;
 use chrono::NaiveDate;
 use secret::Secret;
+use std::ops::RangeInclusive;
 
-/// Gets stock price time series data from a given Source, from start to end
-/// date. A Secret is used to access the data source, if necessary.
+use ::alphavantage::blocking::Client;
+
+/// Gets stock price time series data from a given Source, within the given
+/// date range. A Secret is used to access the data source, if necessary. For
+/// and open-ended date range, use None as one of the bounds.
 pub fn get_market_data(
     source: SupportedDataSources,
     symbol: String,
-    start_date: Option<NaiveDate>,
-    end_date: Option<NaiveDate>,
+    date_range: RangeInclusive<NaiveDate>,
     secret: Secret,
 ) -> Result<Prices, Error> {
     let market_data: Prices = match source {
         SupportedDataSources::AlphaVantage => {
             let key = secret.data.unwrap_or("".to_string());
-            let cl = ::alphavantage::blocking::Client::new(key.as_str());
+            let cl = Client::new(key.as_str());
             let av = alphavantage::AlphaVantage::new(cl);
-            av.get(symbol.as_str(), start_date, end_date)?
+            av.get_date_range(symbol.as_str(), date_range)?
         }
         SupportedDataSources::TechalyzerJson(path) => {
             if !path.exists() {
@@ -39,7 +43,7 @@ pub fn get_market_data(
             }
 
             match TechalyzerJson::new(path.as_path()) {
-                Ok(t) => t.get(symbol.as_str(), start_date, end_date)?,
+                Ok(t) => t.get_date_range(symbol.as_str(), date_range)?,
                 Err(io_err) => {
                     return Err(Error::Other(
                         io_err.to_string(),
