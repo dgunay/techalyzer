@@ -75,7 +75,7 @@ impl BackTester {
             let mut trade = self.strategy.get(day).cloned().unwrap();
             let cash_difference = BackTester::do_trade(self.current_shares, price, &trade);
             self.cash += cash_difference;
-            
+
             if trade == Position::Hold {
                 trade = self.current_position.clone();
             } else {
