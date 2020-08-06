@@ -5,7 +5,6 @@ use crate::output::TechalyzerPrintOutput;
 
 use crate::Prices;
 
-
 use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
@@ -65,8 +64,8 @@ mod tests {
 
     use std::collections::BTreeMap;
 
-    use std::env::current_dir;
     use chrono::NaiveDate;
+    use std::env::current_dir;
 
     #[test]
     fn test_full_time_series() {

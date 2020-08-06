@@ -6,6 +6,7 @@ pub mod marketdata;
 pub mod output;
 pub mod secret;
 pub mod signals;
+pub mod trading;
 pub mod util;
 
 use crate::datasources::alphavantage;
