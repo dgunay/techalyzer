@@ -1,5 +1,6 @@
 //! TODO: document
 
+use crate::trading::tradingmodel::Trades;
 use crate::Prices;
 use chrono::NaiveDate;
 use std::collections::BTreeMap;
@@ -20,20 +21,10 @@ pub enum Position {
     Hold,
 }
 
-pub struct Strategy {
-    map: BTreeMap<NaiveDate, Position>,
-}
-
-impl Strategy {
-    pub fn get(&self, date: &NaiveDate) -> Option<&Position> {
-        self.map.get(date)
-    }
-}
-
 /// Backtests a strategy given as a map of NaiveDate => Trade
 struct BackTester {
     /// What trade to execute on each day
-    strategy: Strategy,
+    strategy: Trades,
 
     /// price time series data
     prices: Prices,
@@ -46,7 +37,7 @@ struct BackTester {
 }
 
 impl BackTester {
-    pub fn new(strategy: Strategy, prices: Prices, cash: f64) -> Result<Self, BackTesterError> {
+    pub fn new(strategy: Trades, prices: Prices, cash: f64) -> Result<Self, BackTesterError> {
         // For every day in the time series, there must be some Position.
         for day in prices.map.keys() {
             if strategy.get(day).is_none() {
@@ -157,7 +148,7 @@ mod tests {
             .collect();
 
         let mut bt = BackTester::new(
-            Strategy { map: strat },
+            Trades { trades: strat },
             Prices {
                 map: prices,
                 symbol: "TLZR".to_string(),
@@ -194,7 +185,7 @@ mod tests {
             .collect();
 
         let mut bt = BackTester::new(
-            Strategy { map: strat },
+            Trades { trades: strat },
             Prices {
                 map: prices,
                 symbol: "TLZR".to_string(),
@@ -234,7 +225,7 @@ mod tests {
                 .collect();
 
         let mut bt = BackTester::new(
-            Strategy { map: strat },
+            Trades { trades: strat },
             Prices {
                 map: prices,
                 symbol: "TLZR".to_string(),
@@ -275,7 +266,7 @@ mod tests {
                 .collect();
 
         let mut bt = BackTester::new(
-            Strategy { map: strat },
+            Trades { trades: strat },
             Prices {
                 map: prices,
                 symbol: "TLZR".to_string(),
