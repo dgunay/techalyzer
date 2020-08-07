@@ -69,6 +69,8 @@ TBD
 
 ## Random Backlog
 
+* TODO: Program a set of trades, serialize it, then be able to use it on the backtester. Optionally, skip the serialize step and let it go immediately to backtesting. 
+* TODO: Charts + statistics (sharpe ratio, returns, etc) for the backtester
 * TODO: documentation needs to be written, then updated, and double checked for rot
 * Integration tests to write in techalyzer.rs:
   * TODO: `--file file` doesn't exist
