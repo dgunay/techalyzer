@@ -1,2 +1,2 @@
-pub mod tradingmodel;
 pub mod buyandhold;
+pub mod tradingmodel;

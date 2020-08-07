@@ -2,6 +2,7 @@ use chrono::NaiveDate;
 
 use std::{ops::RangeInclusive, str::FromStr};
 use structopt::StructOpt;
+use strum_macros::EnumString;
 use ta::indicators::*;
 use techalyzer::datasources::SupportedDataSources;
 use techalyzer::error::TechalyzerError;
@@ -15,7 +16,11 @@ use techalyzer::signals::{
     macdsignals::MovingAverageConvergenceDivergenceSignals,
     relativestrengthindexsignals::RelativeStrengthIndexSignals, signals::Signals,
 };
-use techalyzer::util::today_naive;
+use techalyzer::{
+    backtester::BackTester,
+    trading::{buyandhold::BuyAndHold, tradingmodel::TradingModel},
+    util::today_naive,
+};
 
 // FIXME: we probably don't need the overhead of structopt, look into switching
 // to pico-args (https://github.com/RazrFalcon/pico-args)
@@ -86,21 +91,19 @@ enum SubCommands {
     },
 
     /// Backtests a strategy through a given dataset
-    BackTest {},
+    BackTest {
+        trading_model: SupportedTradingModel,
+        cash: f64, // TODO: is there a good money type/bignum to avoid possible problems?
+    },
 }
 
+// TODO: move this somewhere else
 /// Can be an ML model or a handwritten algorithm.
-#[derive(Debug)]
+#[derive(Debug, EnumString)]
 pub enum SupportedTradingModel {
     ManualTradingAlgo,
+    BuyAndHold,
     MachineLearningModel,
-}
-
-impl FromStr for SupportedTradingModel {
-    type Err = TechalyzerError;
-    fn from_str(_s: &str) -> Result<Self, Self::Err> {
-        todo!()
-    }
 }
 
 fn main() -> Result<(), TechalyzerError> {
@@ -198,7 +201,36 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
         }
         SubCommands::Suggest { model: _ } => todo!("Suggest not yet implemented"),
         SubCommands::Train {} => todo!("Train not yet implemented"),
-        SubCommands::BackTest {} => todo!("Backtest not yet implement"),
+        SubCommands::BackTest {
+            trading_model,
+            cash,
+        } => {
+            // TODO: again figure out if dynamic dispatch is avoidable
+            let model = match trading_model {
+                SupportedTradingModel::BuyAndHold => Box::new(BuyAndHold::default()),
+                SupportedTradingModel::ManualTradingAlgo => todo!(),
+                SupportedTradingModel::MachineLearningModel => todo!(),
+            };
+
+            let trades = model.get_trades(&data);
+
+            // Pass the model to the backtester
+            let mut backtester = match BackTester::new(trades, data, cash) {
+                Ok(bt) => bt,
+                Err(e) => return Err(TechalyzerError::Generic(e.to_string())),
+            };
+
+            // Run the backtest
+            let result = backtester.backtest();
+
+            // Serialize the backtest
+            match serde_json::to_string(&result) {
+                Ok(string) => print!("{}", string),
+                Err(e) => return Err(TechalyzerError::Generic(e.to_string())),
+            };
+
+            // TODO: other stats like daily return here
+        }
     }
 
     Ok(())

@@ -1,7 +1,7 @@
 use crate::backtester::Position;
 use crate::marketdata::prices::Prices;
 use chrono::NaiveDate;
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, str::FromStr};
 
 pub struct Trades {
     pub trades: BTreeMap<NaiveDate, Position>,
@@ -15,6 +15,7 @@ impl Trades {
 
 /// Given historical price data, comes up with a series of trades to attempt
 /// to turn as much of a profit as possible.
-pub trait TradingModel {
+struct TodoErr;
+pub trait TradingModel: FromStr {
     fn get_trades(&self, prices: &Prices) -> Trades;
 }
