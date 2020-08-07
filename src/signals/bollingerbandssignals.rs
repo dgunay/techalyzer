@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use ta::indicators::{BollingerBands, BollingerBandsOutput};
 use ta::Next;
 
-#[derive(Serialize)]
+#[derive(Debug, Serialize)]
 pub struct BollingerBandsSignals {
     pub outputs: Vec<Output>,
     pub signals: Vec<f64>,
@@ -84,9 +84,8 @@ mod tests {
         let l = prices.len();
         let signals = BollingerBandsSignals::new(prices, BollingerBands::new(5, 2.0).unwrap());
 
-        // FIXME: chart this out and make sure it makes sense or if it's actually failing
         assert_eq!(signals.signals().len(), l);
         assert!(nearly_equal(signals.signals()[1], 0.5));
-        assert!(nearly_equal(signals.signals()[5], -0.96698));
+        assert!(nearly_equal(signals.signals()[5], -0.9669875568304561));
     }
 }

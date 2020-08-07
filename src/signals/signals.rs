@@ -14,7 +14,7 @@ pub trait Signals {
 
 /// Represents a single point output of a ta technical indicactor. Usually a
 /// float, sometimes a float tuple depending on the indicator.
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Output {
     /// Keys are the name of the indicator feature, value is the value. e.g.
     /// BollingerBands may have "upper", "lower", and "average" values for each
