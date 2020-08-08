@@ -1078,6 +1078,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "streaming-stats"
+version = "0.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b0d670ce4e348a2081843569e0f79b21c99c91bb9028b3b3ecb0f050306de547"
+dependencies = [
+ "num-traits",
+]
+
+[[package]]
 name = "strsim"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1168,6 +1177,7 @@ dependencies = [
  "ndarray-stats",
  "serde",
  "serde_json",
+ "streaming-stats",
  "structopt",
  "strum",
  "strum_macros",

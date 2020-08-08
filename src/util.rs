@@ -47,6 +47,14 @@ pub fn last_key<K, V>(map: &BTreeMap<K, V>) -> Option<&K> {
     return map.keys().last();
 }
 
+pub fn first_value<K, V>(map: &BTreeMap<K, V>) -> Option<&V> {
+    return map.values().nth(0);
+}
+
+pub fn last_value<K, V>(map: &BTreeMap<K, V>) -> Option<&V> {
+    return map.values().last();
+}
+
 pub fn today_naive() -> NaiveDate {
     chrono::Utc::now().naive_local().date()
 }

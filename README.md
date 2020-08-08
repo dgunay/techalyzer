@@ -77,9 +77,9 @@ TBD
   * TODO: `--file file` doesn't exist
   * TODO: `--file file` isn't valid JSON/CSV/etc.
 * TODO: Benchmarking
+* TODO: If possible, consider optimizing the amount of copying/cloning
 * TODO: Fuzzing, if any functions seem appropriate to fuzz
-* Determine if the name Techalyzer is ok (not trademarked/no bad connotations) 
-  or if a different name is necessary.
+* TODO: Determine if the name Techalyzer is ok (not trademarked/no bad connotations)
 * TODO: make the readme and documentation more instructional when the app 
   frontend is more set in stone.
 * TODO: actually hold onto high/low/open/close info instead of doing everything

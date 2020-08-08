@@ -1,9 +1,13 @@
 //! TODO: document
 
+pub mod performance;
+
 use crate::trading::tradingmodel::Trades;
+use crate::util::{first_value, last_value};
 use crate::Prices;
 use chrono::NaiveDate;
 use derive_more::Display;
+use performance::{PerformanceError, PortfolioPerformance};
 use serde::Serialize;
 use std::collections::BTreeMap;
 
@@ -39,11 +43,6 @@ pub struct BackTester {
     current_shares: i32,
 }
 
-#[derive(Debug, Serialize)]
-pub struct PortfolioPerformance {
-    pub daily_portvals: BTreeMap<NaiveDate, f64>,
-}
-
 impl BackTester {
     pub fn new(strategy: Trades, prices: Prices, cash: f64) -> Result<Self, BackTesterError> {
         // For every day in the time series, there must be some Position.
@@ -64,7 +63,7 @@ impl BackTester {
 
     // TODO: can we do backtesting immutably?
     /// Runs the backtest and returns portfolio value at each day of the period.
-    pub fn backtest(&mut self) -> PortfolioPerformance {
+    pub fn backtest(&mut self) -> Result<PortfolioPerformance, PerformanceError> {
         let mut portvals = BTreeMap::new();
 
         // For every day in the series
@@ -101,9 +100,7 @@ impl BackTester {
             portvals.insert(day.clone(), equity_value + self.cash);
         }
 
-        PortfolioPerformance {
-            daily_portvals: portvals,
-        }
+        PortfolioPerformance::new(portvals)
     }
 
     /// Returns cash difference from making a trade. Buying stocks costs money,
@@ -167,7 +164,7 @@ mod tests {
         )
         .unwrap();
 
-        let result = bt.backtest();
+        let result = bt.backtest().unwrap();
         assert!(nearly_equal(result.daily_portvals[&day1], 100.0));
         assert!(nearly_equal(result.daily_portvals[&day2], 105.0));
         assert!(nearly_equal(result.daily_portvals[&day3], 110.0));
@@ -204,7 +201,7 @@ mod tests {
         )
         .unwrap();
 
-        let result = bt.backtest();
+        let result = bt.backtest().unwrap();
         assert!(nearly_equal(result.daily_portvals[&day1], 100.0));
         assert!(nearly_equal(result.daily_portvals[&day2], 95.0));
         assert!(nearly_equal(result.daily_portvals[&day3], 90.0));
@@ -244,7 +241,7 @@ mod tests {
         )
         .unwrap();
 
-        let result = bt.backtest();
+        let result = bt.backtest().unwrap();
         assert!(nearly_equal(result.daily_portvals[&day1], 100.0));
         assert!(nearly_equal(result.daily_portvals[&day2], 105.0));
         assert!(nearly_equal(result.daily_portvals[&day3], 110.0));
@@ -285,7 +282,7 @@ mod tests {
         )
         .unwrap();
 
-        let result = bt.backtest();
+        let result = bt.backtest().unwrap();
         assert!(nearly_equal(result.daily_portvals[&day1], 100.0));
         assert!(nearly_equal(result.daily_portvals[&day2], 105.0));
         assert!(nearly_equal(result.daily_portvals[&day3], 110.0));

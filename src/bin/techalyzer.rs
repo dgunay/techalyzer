@@ -221,7 +221,10 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
             };
 
             // Run the backtest
-            let result = backtester.backtest();
+            let result = match backtester.backtest() {
+                Ok(perf) => perf,
+                Err(e) => return Err(TechalyzerError::Generic(e.to_string())),
+            };
 
             // Serialize the backtest
             match serde_json::to_string(&result) {
