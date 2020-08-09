@@ -22,7 +22,7 @@ impl BollingerBandsSignals {
             let o = bb.next(**price);
 
             // how far along from the average to the bounds is the price?
-            let signal = 2.0 * (((**price - o.lower) / (o.upper - o.lower)) - 0.5);
+            let signal = -(2.0 * (((**price - o.lower) / (o.upper - o.lower)) - 0.5));
 
             signals.push(signal);
             outputs.push(o.into());
@@ -85,7 +85,7 @@ mod tests {
         let signals = BollingerBandsSignals::new(prices, BollingerBands::new(5, 2.0).unwrap());
 
         assert_eq!(signals.signals().len(), l);
-        assert!(nearly_equal(signals.signals()[1], 0.5));
-        assert!(nearly_equal(signals.signals()[5], -0.9669875568304561));
+        assert!(nearly_equal(signals.signals()[1], -0.5));
+        assert!(nearly_equal(signals.signals()[5], 0.9669875568304561));
     }
 }
