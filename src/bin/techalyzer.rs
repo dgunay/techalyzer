@@ -180,7 +180,6 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
                 m.insert(
                     date.clone(),
                     TechalyzerEntry {
-                        // output: sigs.outputs().outputs
                         price: price.clone(),
                         signal: sigs.signals()[i],
                         output: sigs.outputs()[i].clone(),
