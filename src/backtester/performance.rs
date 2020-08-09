@@ -3,7 +3,7 @@ use chrono::NaiveDate;
 use derive_more::Display;
 use serde::Serialize;
 use stats::stddev;
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, ops::RangeBounds};
 
 /// Represents portfolio performance.
 #[derive(Debug, Serialize)]
@@ -56,15 +56,18 @@ impl PortfolioPerformance {
         })
     }
 
-    // TODO: maybe add a ranged total return
+    /// Returns the total return in the date range.
+    pub fn range_return(&self, range: impl RangeBounds<NaiveDate>) -> Option<f64> {
+        let mut iter = self.daily_portvals.range(range);
+        let first = iter.next()?.1;
+        let last = iter.last()?.1;
 
-    /// Returns
-    pub fn total_return(&self) -> Option<f64> {
-        let last = last_value(&self.daily_portvals)?;
-        let first = first_value(&self.daily_portvals)?;
-
-        // TODO: what happens if div by zero?
         Some((last / first) - 1.0)
+    }
+
+    /// Returns the total return for the whole time series of portfolio values.
+    pub fn total_return(&self) -> Option<f64> {
+        self.range_return(..)
     }
 }
 
