@@ -9,8 +9,13 @@ use strum_macros::EnumString;
 #[derive(Debug, Serialize, Deserialize, EnumString)]
 // #[serde(untagged)]
 pub enum SupportedIndicators {
+    #[strum(serialize="BollingerBands", serialize="bb")]
     BollingerBands,
+
+    #[strum(serialize="RelativeStrengthIndex", serialize="rsi")]
     RelativeStrengthIndex,
+
+    #[strum(serialize="MACD", serialize="macd")]
     MACD,
 }
 
