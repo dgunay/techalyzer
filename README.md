@@ -87,6 +87,10 @@ TBD
 * TODO: add capability to process hourly/minute-to-minute data
 * TODO: add crypto (requires processing 24/7 data, maybe stop using NaiveDates)
 * TODO: server that can maybe push notifications somehow when it finds a good time to buy or sell.
+* TODO: Making a PR for [this strum issue][strum_issue] would make it possible
+        to show the user what supported indicators there are on a failure to match.
+
+[strum_issue]: https://github.com/Peternator7/strum/issues/13
 
 ### For funsies:
 
