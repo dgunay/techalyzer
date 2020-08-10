@@ -1,6 +1,6 @@
 use super::signals::Output;
 use crate::signals::signals::Signals;
-use crate::util::clamp;
+use crate::{marketdata::prices::Prices, util::clamp};
 use serde::Serialize;
 use std::collections::HashMap;
 use ta::indicators::MovingAverageConvergenceDivergence;
@@ -14,7 +14,7 @@ pub struct MovingAverageConvergenceDivergenceSignals {
 }
 
 impl MovingAverageConvergenceDivergenceSignals {
-    pub fn new(prices: Vec<&f64>, mut macd: MovingAverageConvergenceDivergence) -> Self {
+    pub fn new(prices: &Prices, mut macd: MovingAverageConvergenceDivergence) -> Self {
         // TODO: should I check prices not empty?
 
         // Generate signals from MACD
@@ -22,10 +22,10 @@ impl MovingAverageConvergenceDivergenceSignals {
 
         let mut outputs = Vec::new();
         let mut macd_line_prev = 0.0;
-        for price in prices.iter() {
+        for (_, price) in prices.iter() {
             // FIXME: for some reason I have to clone the price or next() won't
             // work - maybe an upstream PR is necessary
-            let output = macd.next(*price.clone());
+            let output = macd.next(*price);
 
             // FIXME: I can't think of a great way to do a normalized -1.0 to 1.0
             // scale on the MACD, so for now I'll go with having above/below be
@@ -87,6 +87,9 @@ impl Signals for MovingAverageConvergenceDivergenceSignals {
 mod tests {
     use super::MovingAverageConvergenceDivergenceSignals;
     use super::Signals;
+    use crate::marketdata::prices::Prices;
+    use chrono::NaiveDate;
+    use std::collections::BTreeMap;
     use ta::indicators::MovingAverageConvergenceDivergence;
 
     struct Close {
@@ -101,10 +104,28 @@ mod tests {
 
     #[test]
     fn test_signals_from_macd() {
-        let prices = vec![&1.9, &2.0, &2.1, &2.2, &2.1, &1.5, &1.3, &1.2, &1.1, &1.0];
+        let map: BTreeMap<NaiveDate, f64> = vec![
+            (NaiveDate::from_ymd(2020, 03, 1), 1.9),
+            (NaiveDate::from_ymd(2020, 03, 2), 2.0),
+            (NaiveDate::from_ymd(2020, 03, 3), 2.1),
+            (NaiveDate::from_ymd(2020, 03, 4), 2.2),
+            (NaiveDate::from_ymd(2020, 03, 5), 2.1),
+            (NaiveDate::from_ymd(2020, 03, 6), 1.5),
+            (NaiveDate::from_ymd(2020, 03, 7), 1.3),
+            (NaiveDate::from_ymd(2020, 03, 8), 1.2),
+            (NaiveDate::from_ymd(2020, 03, 9), 1.1),
+            (NaiveDate::from_ymd(2020, 03, 10), 1.0),
+        ]
+        .iter()
+        .cloned()
+        .collect();
+        let prices = Prices {
+            map,
+            symbol: "jpm".to_string(),
+        };
 
         let signals = MovingAverageConvergenceDivergenceSignals::new(
-            prices,
+            &prices,
             MovingAverageConvergenceDivergence::new(12, 26, 9).unwrap(),
         );
 

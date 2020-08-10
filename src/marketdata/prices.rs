@@ -3,16 +3,20 @@ use chrono::NaiveDate;
 
 use crate::output::TechalyzerPrintOutput;
 use serde::Deserialize;
-use std::ops::RangeBounds;
+use std::{collections::BTreeMap, ops::RangeBounds};
 
 /// Contains a time series prices data
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct Prices {
-    pub map: std::collections::BTreeMap<NaiveDate, f64>,
+    pub map: BTreeMap<NaiveDate, f64>,
     pub symbol: String,
 }
 
 impl Prices {
+    pub fn iter(&self) -> std::collections::btree_map::Iter<NaiveDate, f64> {
+        self.map.iter()
+    }
+
     pub fn date_range(&self, range: impl RangeBounds<NaiveDate>) -> Prices {
         let slice = self
             .map
@@ -26,6 +30,35 @@ impl Prices {
         }
     }
 }
+
+// // structure helper for non-consuming iterator.
+// struct PriceIterator {
+//     iter: ::std::collections::btree_map::Iter<NaiveDate, f64>,
+// }
+
+// // implement the IntoIterator trait for a non-consuming iterator. Iteration will
+// // borrow the Words structure
+// impl IntoIterator for Prices {
+//     type Item = (NaiveDate, f64);
+//     type IntoIter = PriceIterator;
+
+//     // note that into_iter() is consuming self
+//     fn into_iter(self) -> Self::IntoIter {
+//         PriceIterator {
+//             iter: self.map.iter(),
+//         }
+//     }
+// }
+
+// // now, implements Iterator trait for the helper struct, to be used by adapters
+// impl Iterator for PriceIterator {
+//     type Item = (NaiveDate, f64);
+
+//     // just return the str reference
+//     fn next(&mut self) -> Option<Self::Item> {
+//         self.iter.next()
+//     }
+// }
 
 impl From<TimeSeries> for Prices {
     fn from(t: TimeSeries) -> Self {

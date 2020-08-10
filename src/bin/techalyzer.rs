@@ -18,6 +18,7 @@ use techalyzer::signals::{
 };
 use techalyzer::{
     backtester::BackTester,
+    marketdata::prices::Prices,
     trading::{buyandhold::BuyAndHold, tradingmodel::TradingModel},
     util::today_naive,
 };
@@ -144,25 +145,29 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
             print_signals: _,
         } => {
             // TODO: evaluate/benchmark signal generation using ndarray vs Vec<f64>
-            let prices: Vec<&f64> = data.map.values().collect();
+            let prices = Prices {
+                map: data.map,
+                symbol: data.symbol,
+            };
+            // let prices: Vec<&f64> = data.map.values().collect();
 
             // Calculate the technical indicator outputs and signals
             // TODO: allow parameters for each indicator
             // FIXME: is there any way we can avoid heap allocating/dynamic dispatch?
             let sigs: Box<dyn Signals> = match indicator {
                 SupportedIndicators::BollingerBands => Box::new(BollingerBandsSignals::new(
-                    prices,
+                    &prices,
                     BollingerBands::new(20, 2.0).expect("invalid Bollinger Bands"),
                 )),
                 SupportedIndicators::RelativeStrengthIndex => {
                     Box::new(RelativeStrengthIndexSignals::new(
-                        prices,
+                        &prices,
                         RelativeStrengthIndex::new(14).expect("invalid RSI params"),
                     ))
                 }
                 SupportedIndicators::MACD => {
                     Box::new(MovingAverageConvergenceDivergenceSignals::new(
-                        prices,
+                        &prices,
                         MovingAverageConvergenceDivergence::new(12, 26, 9)
                             .expect("Invalid MACD params"),
                     ))
@@ -176,7 +181,8 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
 
             let mut m = std::collections::BTreeMap::new();
             let mut i = 0;
-            for (date, price) in data.map.iter() {
+            // for (date, price) in data.map.iter() {
+            for (date, price) in prices.iter() {
                 m.insert(
                     date.clone(),
                     TechalyzerEntry {
@@ -191,7 +197,7 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
             // TODO: factor out this ugliness or change the datastructures
             // involved to be less gross
             let output = TechalyzerPrintOutput {
-                symbol: data.symbol,
+                symbol: prices.symbol,
                 indicator: indicator,
                 map: m,
             };

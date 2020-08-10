@@ -1,5 +1,5 @@
 use super::signals::Output;
-use crate::signals::signals::Signals;
+use crate::{marketdata::prices::Prices, signals::signals::Signals};
 use serde::Serialize;
 use std::collections::HashMap;
 use ta::indicators::{BollingerBands, BollingerBandsOutput};
@@ -12,17 +12,17 @@ pub struct BollingerBandsSignals {
 }
 
 impl BollingerBandsSignals {
-    pub fn new(prices: Vec<&f64>, mut bb: BollingerBands) -> Self {
+    pub fn new(prices: &Prices, mut bb: BollingerBands) -> Self {
         // Generate signals as %BB
         // [(Price – Lower Band) / (Upper Band – Lower Band)] * 100
         // https://www.fidelity.com/learning-center/trading-investing/technical-analysis/technical-indicator-guide/percent-b
         let mut signals = Vec::<f64>::new();
         let mut outputs = Vec::new();
-        for price in prices.iter() {
-            let o = bb.next(**price);
+        for (_, price) in prices.iter() {
+            let o = bb.next(*price);
 
             // how far along from the average to the bounds is the price?
-            let signal = -(2.0 * (((**price - o.lower) / (o.upper - o.lower)) - 0.5));
+            let signal = -(2.0 * (((price - o.lower) / (o.upper - o.lower)) - 0.5));
 
             signals.push(signal);
             outputs.push(o.into());
@@ -64,7 +64,9 @@ impl Signals for BollingerBandsSignals {
 #[cfg(test)]
 mod tests {
     use super::{BollingerBands, BollingerBandsSignals, Signals};
-    use crate::util::nearly_equal;
+    use crate::{marketdata::prices::Prices, util::nearly_equal};
+    use chrono::NaiveDate;
+    use std::collections::BTreeMap;
 
     struct Close {
         price: f64,
@@ -80,9 +82,23 @@ mod tests {
     fn test_signals_from_bollinger_bands() {
         let _bb = BollingerBands::new(5, 2.0).unwrap();
 
-        let prices = vec![&1.9, &2.0, &2.1, &2.2, &2.1, &1.5];
-        let l = prices.len();
-        let signals = BollingerBandsSignals::new(prices, BollingerBands::new(5, 2.0).unwrap());
+        let map: BTreeMap<NaiveDate, f64> = vec![
+            (NaiveDate::from_ymd(2020, 03, 1), 1.9),
+            (NaiveDate::from_ymd(2020, 03, 2), 2.0),
+            (NaiveDate::from_ymd(2020, 03, 3), 2.1),
+            (NaiveDate::from_ymd(2020, 03, 4), 2.2),
+            (NaiveDate::from_ymd(2020, 03, 5), 2.1),
+            (NaiveDate::from_ymd(2020, 03, 6), 1.5),
+        ]
+        .iter()
+        .cloned()
+        .collect();
+        let l = map.len();
+        let prices = Prices {
+            map,
+            symbol: "jpm".to_string(),
+        };
+        let signals = BollingerBandsSignals::new(&prices, BollingerBands::new(5, 2.0).unwrap());
 
         assert_eq!(signals.signals().len(), l);
         assert!(nearly_equal(signals.signals()[1], -0.5));

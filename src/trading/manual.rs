@@ -1,6 +1,14 @@
 use super::tradingmodel::{Trades, TradingModel};
-use crate::marketdata::prices::Prices;
+use crate::{
+    marketdata::prices::Prices,
+    signals::{
+        bollingerbandssignals::BollingerBandsSignals,
+        macdsignals::MovingAverageConvergenceDivergenceSignals,
+        relativestrengthindexsignals::RelativeStrengthIndexSignals,
+    },
+};
 use std::str::FromStr;
+use ta::indicators::{BollingerBands, MovingAverageConvergenceDivergence, RelativeStrengthIndex};
 
 pub struct ManualTradingModel {
     shares: u64,
@@ -38,8 +46,36 @@ impl FromStr for ManualTradingModel {
     }
 }
 
+enum MarketState {
+    Trending,
+    Oscillating,
+}
+
+impl ManualTradingModel {
+    fn current_market_state() -> MarketState {
+        todo!("given certain long-term technical indicators, are we trending or sideways?")
+    }
+}
+
 impl TradingModel for ManualTradingModel {
     fn get_trades(&self, prices: &Prices) -> Trades {
+        // Make a bin of technical indicators to use - 2 trending, 2 oscillating.
+
+        let rsi = RelativeStrengthIndexSignals::new(prices, RelativeStrengthIndex::default());
+        let bb = BollingerBandsSignals::new(prices, BollingerBands::default());
+        let macd = MovingAverageConvergenceDivergenceSignals::new(
+            prices,
+            MovingAverageConvergenceDivergence::default(),
+        );
+
+        // let indics = vec![
+        //     RelativeStrengthIndexSignals::new(price, mut rsi)
+        // ]
+
+        for (day, price) in prices.iter() {
+            // Trending or sideways market?
+        }
+
         todo!()
     }
 }

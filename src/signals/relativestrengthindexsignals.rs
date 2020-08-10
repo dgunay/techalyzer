@@ -1,5 +1,5 @@
 use super::signals::Output;
-use crate::signals::signals::Signals;
+use crate::{marketdata::prices::Prices, signals::signals::Signals};
 use serde::Serialize;
 
 use ta::indicators::RelativeStrengthIndex;
@@ -20,12 +20,14 @@ impl From<f64> for Output {
 }
 
 impl RelativeStrengthIndexSignals {
-    pub fn new(prices: Vec<&f64>, mut rsi: RelativeStrengthIndex) -> Self {
+    // TODO: make this use reference to Prices, not vec of f64s
+    pub fn new(prices: &Prices, mut rsi: RelativeStrengthIndex) -> Self {
+        // pub fn new(prices: &Vec<f64>, mut rsi: RelativeStrengthIndex) -> Self {
         // Generate signals from RSI
         let mut signals = Vec::<f64>::new();
         let mut outputs = Vec::new();
-        for price in prices.iter() {
-            let rsi_val = rsi.next(**price);
+        for (_, price) in prices.iter() {
+            let rsi_val = rsi.next(*price);
 
             // TODO: we can create a "Signals" object that simply takes the math
             // to calculate signal
@@ -60,6 +62,8 @@ impl Signals for RelativeStrengthIndexSignals {
 mod tests {
     use super::*;
     use crate::util::nearly_equal;
+    use chrono::NaiveDate;
+    use std::collections::BTreeMap;
 
     struct Close {
         price: f64,
@@ -73,14 +77,10 @@ mod tests {
 
     #[test]
     fn test_signals_from_rsi() {
-        let prices = vec![&1.9, &2.0, &2.1, &2.2, &2.1, &1.5];
-        let l = prices.len(); // pacify the borrow checker
+        let prices = fixture_prices();
+        let l = prices.map.len(); // pacify the borrow checker
         let signals =
-            RelativeStrengthIndexSignals::new(prices, RelativeStrengthIndex::new(14).unwrap());
-
-        // println!("{:?}", signals.signals());
-        // println!("{:?}", signals.outputs);
-        // println!("{:?}", prices);
+            RelativeStrengthIndexSignals::new(&prices, RelativeStrengthIndex::new(14).unwrap());
 
         assert_eq!(signals.signals().len(), l);
         assert!(nearly_equal(signals.signals()[0], 0.0));
@@ -91,13 +91,30 @@ mod tests {
         assert!(nearly_equal(signals.signals()[5], 0.3031110904761263));
     }
 
+    fn fixture_prices() -> Prices {
+        let map: BTreeMap<NaiveDate, f64> = vec![
+            (NaiveDate::from_ymd(2020, 03, 1), 1.9),
+            (NaiveDate::from_ymd(2020, 03, 2), 2.0),
+            (NaiveDate::from_ymd(2020, 03, 3), 2.1),
+            (NaiveDate::from_ymd(2020, 03, 4), 2.2),
+            (NaiveDate::from_ymd(2020, 03, 5), 2.1),
+            (NaiveDate::from_ymd(2020, 03, 6), 1.5),
+        ]
+        .iter()
+        .cloned()
+        .collect();
+        Prices {
+            map,
+            symbol: "jpm".to_string(),
+        }
+    }
+
     /// This test is mostly just to see if to_json worked
     #[test]
     fn test_json() {
-        let prices = vec![&1.9, &2.0, &2.1, &2.2, &2.1, &1.5];
-
+        let prices = fixture_prices();
         let signals =
-            RelativeStrengthIndexSignals::new(prices, RelativeStrengthIndex::new(14).unwrap());
+            RelativeStrengthIndexSignals::new(&prices, RelativeStrengthIndex::new(14).unwrap());
 
         let _ = signals.to_json();
         // print!("{}", s);
