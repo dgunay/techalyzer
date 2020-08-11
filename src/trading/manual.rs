@@ -8,7 +8,6 @@ use crate::{
     },
 };
 use chrono::NaiveDate;
-use derive_more::{From, Into};
 use std::{collections::BTreeMap, ops::Add};
 use ta::indicators::SimpleMovingAverage;
 
@@ -87,6 +86,7 @@ pub enum ManualTradingModelError {
     NotConvertibleFromStr(String),
 }
 
+#[allow(dead_code)]
 enum MarketState {
     Trending,
     Oscillating,
@@ -97,6 +97,7 @@ pub fn average_slope(_prices: &Prices, _sma: SimpleMovingAverage) -> f64 {
 }
 
 impl ManualTradingModel {
+    #[allow(dead_code)]
     fn current_market_state(&self, prices: &Prices, _today: &NaiveDate) -> MarketState {
         // Take the average slope of some N-day moving average, perhaps 75
         // TODO: parameterize trend checker window instead of hardcoding 75
