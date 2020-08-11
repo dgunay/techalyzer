@@ -174,6 +174,40 @@ mod tests {
     }
 
     #[test]
+    fn partial_sell_backtest() {
+        let day1 = NaiveDate::from_ymd(2012, 1, 1);
+        let day2 = NaiveDate::from_ymd(2012, 1, 2);
+        let day3 = NaiveDate::from_ymd(2012, 1, 3);
+
+        // Buy 2 shares, sell 1, hold the other.
+        let strat: BTreeMap<NaiveDate, Position> = vec![
+            (day1, Position::Long(2)),
+            (day2, Position::Long(1)),
+            (day3, Position::Hold),
+        ]
+        .iter()
+        .cloned()
+        .collect();
+
+        let prices: BTreeMap<NaiveDate, f64> = vec![(day1, 100.0), (day2, 105.0), (day3, 110.0)]
+            .iter()
+            .cloned()
+            .collect();
+
+        let p = Prices {
+            map: prices,
+            symbol: "TLZR".to_string(),
+        };
+        let mut bt = BackTester::new(Trades { trades: strat }, &p, 200.0).unwrap();
+
+        let result = bt.backtest().unwrap();
+        // let debug: Vec<f64> = result.daily_portvals.values().into_iter().cloned().collect();
+        assert!(nearly_equal(result.daily_portvals[&day1], 200.0));
+        assert!(nearly_equal(result.daily_portvals[&day2], 210.0));
+        assert!(nearly_equal(result.daily_portvals[&day3], 215.0));
+    }
+
+    #[test]
     fn short_and_hold_backtest() {
         let day1 = NaiveDate::from_ymd(2012, 1, 1);
         let day2 = NaiveDate::from_ymd(2012, 1, 2);
