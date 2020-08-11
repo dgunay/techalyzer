@@ -1,22 +1,34 @@
 use super::tradingmodel::{Trades, TradingModel};
+use crate::{backtester::Position, signals::signals::SignalsIter};
 use crate::{
     marketdata::prices::Prices,
     signals::{
-        bollingerbandssignals::BollingerBandsSignals,
-        macdsignals::MovingAverageConvergenceDivergenceSignals,
-        relativestrengthindexsignals::RelativeStrengthIndexSignals,
+        bollingerbandssignals::{BBSignalsIter, BollingerBandsSignals},
+        macdsignals::{MACDSignalsIter, MovingAverageConvergenceDivergenceSignals},
+        relativestrengthindexsignals::{RSISignalsIter, RelativeStrengthIndexSignals},
+        signals::Signals,
     },
 };
-use std::str::FromStr;
-use ta::indicators::{BollingerBands, MovingAverageConvergenceDivergence, RelativeStrengthIndex};
+use chrono::NaiveDate;
+use std::{collections::BTreeMap, str::FromStr};
+use ta::indicators::SimpleMovingAverage;
+
+pub enum Error {
+    NoSignalAvailable,
+}
 
 pub struct ManualTradingModel {
     shares: u64,
+
+    /// How far the signal needs to be from 0 in order to make a trade. For
+    /// example, if the dead zone is 0.2, only an average signal of less than
+    /// -0.2 or greater than 0.2 will cause the model to go short or long.
+    dead_zone: f64,
 }
 
 impl ManualTradingModel {
-    pub fn new(shares: u64) -> Self {
-        Self { shares }
+    pub fn new(shares: u64, dead_zone: f64) -> Self {
+        Self { shares, dead_zone }
     }
 
     pub fn set_shares(&mut self, shares: u64) {
@@ -26,7 +38,7 @@ impl ManualTradingModel {
 
 impl Default for ManualTradingModel {
     fn default() -> Self {
-        Self::new(1000)
+        Self::new(1000, 0.0)
     }
 }
 
@@ -51,9 +63,19 @@ enum MarketState {
     Oscillating,
 }
 
+pub fn average_slope(_prices: &Prices, _sma: SimpleMovingAverage) -> f64 {
+    todo!()
+}
+
 impl ManualTradingModel {
-    fn current_market_state() -> MarketState {
-        todo!("given certain long-term technical indicators, are we trending or sideways?")
+    fn current_market_state(&self, prices: &Prices, _today: &NaiveDate) -> MarketState {
+        // Take the average slope of some N-day moving average, perhaps 75
+        // TODO: parameterize trend checker window instead of hardcoding 75
+        let sma = SimpleMovingAverage::new(75).expect("Couldn't construct SMA");
+        match average_slope(&prices, sma) {
+            slope if slope >= 0.4 || slope <= -0.4 => MarketState::Trending,
+            _ => MarketState::Oscillating,
+        }
     }
 }
 
@@ -61,21 +83,42 @@ impl TradingModel for ManualTradingModel {
     fn get_trades(&self, prices: &Prices) -> Trades {
         // Make a bin of technical indicators to use - 2 trending, 2 oscillating.
 
-        let rsi = RelativeStrengthIndexSignals::new(prices, RelativeStrengthIndex::default());
-        let bb = BollingerBandsSignals::new(prices, BollingerBands::default());
-        let macd = MovingAverageConvergenceDivergenceSignals::new(
-            prices,
-            MovingAverageConvergenceDivergence::default(),
-        );
+        let mut rsi = RSISignalsIter::default();
+        let mut bb = BBSignalsIter::default();
+        let mut macd = MACDSignalsIter::default();
 
-        // let indics = vec![
-        //     RelativeStrengthIndexSignals::new(price, mut rsi)
-        // ]
-
+        let mut trades = BTreeMap::new();
         for (day, price) in prices.iter() {
-            // Trending or sideways market?
+            // TODO: make the market trend cause the algo to favor trend or
+            // oscillating indicators
+            // let market_state = match self.current_market_state(&prices, &day) {
+            //     MarketState::Trending => todo!("Favor trend indicators"),
+            //     MarketState::Oscillating => todo!("Favor oscillating indicators"),
+            // };
+            let sum: f64 = vec![rsi.next(*price).0, bb.next(*price).0, macd.next(*price).0]
+                .iter()
+                .map(|s| s.val)
+                .sum();
+
+            // Consult the indicators consensus.
+            let trade = match sum / 3.0 {
+                avg if avg >= self.dead_zone => Position::Long(self.shares),
+                avg if avg <= -self.dead_zone => Position::Short(self.shares),
+                _ => Position::Out, // TODO: should I hold instead?
+            };
+
+            // Make a trade.
+            trades.insert(day.clone(), trade);
         }
 
-        todo!()
+        Trades { trades }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_manual_trader() {
+        todo!("write test for manual trader")
     }
 }

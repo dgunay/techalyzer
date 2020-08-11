@@ -1,8 +1,8 @@
-use super::signals::Output;
+use super::signals::{Output, Signal, SignalsIter};
 use crate::signals::signals::Signals;
 use crate::{marketdata::prices::Prices, util::clamp};
 use serde::Serialize;
-use std::collections::HashMap;
+use std::{collections::HashMap, slice::Iter};
 use ta::indicators::MovingAverageConvergenceDivergence;
 use ta::indicators::MovingAverageConvergenceDivergenceOutput;
 use ta::Next;
@@ -10,44 +10,63 @@ use ta::Next;
 #[derive(Serialize)]
 pub struct MovingAverageConvergenceDivergenceSignals {
     pub outputs: Vec<Output>,
-    signals: Vec<f64>,
+    signals: Vec<Signal>,
+}
+
+#[derive(Default)]
+pub struct MACDSignalsIter {
+    macd_line_prev: f64,
+    macd: MovingAverageConvergenceDivergence,
+}
+
+impl SignalsIter for MACDSignalsIter {
+    fn next(&mut self, price: f64) -> (Signal, Output) {
+        // let output: MovingAverageConvergenceDivergenceOutput = indicator_output.into();
+        let o = self.macd.next(price);
+
+        // FIXME: I can't think of a great way to do a normalized -1.0 to 1.0
+        // scale on the MACD, so for now I'll go with having above/below be
+        // 0.5/-0.5, and then just add the slope of the MACD.
+        let above_or_below = if o.macd > o.signal {
+            0.5
+        } else if o.macd < o.signal {
+            -0.5
+        } else {
+            0.0
+        };
+
+        // slope is normalized and clamped to 0.5/-0.5 (with 0.5 being a 45
+        // degree angle trending upwards)
+        // FIXME: ensure no div by zero
+        let slope = o.macd - self.macd_line_prev;
+        let norm_macd_slope = if self.macd_line_prev == 0.0 {
+            0.0
+        } else {
+            (slope / self.macd_line_prev) / 2.0
+        };
+
+        self.macd_line_prev = o.macd;
+        let signal = Signal::new(clamp(norm_macd_slope, -0.5, 0.5).unwrap() + above_or_below);
+        (signal, o.into())
+    }
 }
 
 impl MovingAverageConvergenceDivergenceSignals {
-    pub fn new(prices: &Prices, mut macd: MovingAverageConvergenceDivergence) -> Self {
+    pub fn new(prices: &Prices, macd: MovingAverageConvergenceDivergence) -> Self {
         // TODO: should I check prices not empty?
 
         // Generate signals from MACD
-        let mut signals = Vec::<f64>::new();
+        let mut signals = Vec::new();
 
         let mut outputs = Vec::new();
-        let mut macd_line_prev = 0.0;
+        let mut signal_iterator = MACDSignalsIter {
+            macd,
+            ..Default::default()
+        };
         for (_, price) in prices.iter() {
-            // FIXME: for some reason I have to clone the price or next() won't
-            // work - maybe an upstream PR is necessary
-            let output = macd.next(*price);
-
-            // FIXME: I can't think of a great way to do a normalized -1.0 to 1.0
-            // scale on the MACD, so for now I'll go with having above/below be
-            // 0.5/-0.5, and then just add the slope of the MACD.
-            let above_or_below = if output.macd > output.signal {
-                0.5
-            } else if output.macd < output.signal {
-                -0.5
-            } else {
-                0.0
-            };
-
-            // slope is normalized and clamped to 0.5/-0.5 (with 0.5 being a 45
-            // degree angle trending upwards)
-            // FIXME: ensure no div by zero
-            let slope = output.macd - macd_line_prev;
-            let norm_macd_slope = (slope / macd_line_prev) / 2.0;
-            let signal = clamp(norm_macd_slope, -0.5, 0.5).unwrap() + above_or_below;
-
-            macd_line_prev = output.macd;
+            let (signal, output) = signal_iterator.next(*price);
             signals.push(signal);
-            outputs.push(output.into());
+            outputs.push(output);
         }
 
         Self { outputs, signals }
@@ -73,13 +92,26 @@ impl From<MovingAverageConvergenceDivergenceOutput> for Output {
     }
 }
 
+// impl From<Output> for MovingAverageConvergenceDivergenceOutput {
+//     fn from(o: Output) -> Self {
+//         Self {
+//             macd: o.output["macd"],
+//             signal: o.output["signal"],
+//             histogram: o.output["histogram"],
+//         }
+//     }
+// }
+
 impl Signals for MovingAverageConvergenceDivergenceSignals {
-    fn signals(&self) -> &Vec<f64> {
+    fn signals(&self) -> &Vec<Signal> {
         &self.signals
     }
 
     fn outputs(&self) -> &Vec<Output> {
         &self.outputs
+    }
+    fn iter(&self) -> Iter<Output> {
+        self.outputs.iter()
     }
 }
 
@@ -124,15 +156,16 @@ mod tests {
             symbol: "jpm".to_string(),
         };
 
-        let signals = MovingAverageConvergenceDivergenceSignals::new(
+        let _signals = MovingAverageConvergenceDivergenceSignals::new(
             &prices,
             MovingAverageConvergenceDivergence::new(12, 26, 9).unwrap(),
         );
 
         // TODO: test more specific values/calculations after plotting is
         // implemented
-        let nan = 0. / 0.;
-        assert!(signals.signals().iter().cloned().fold(nan, f64::max) <= 1.0);
-        assert!(signals.signals().iter().cloned().fold(nan, f64::min) >= -1.0);
+        // TODO: maybe no longer necessary with the implementation of Signal struct.
+        // let nan = 0. / 0.;
+        // assert!(signals.signals().iter().cloned().fold(nan, f64::max) <= 1.0);
+        // assert!(signals.signals().iter().cloned().fold(nan, f64::min) >= -1.0);
     }
 }

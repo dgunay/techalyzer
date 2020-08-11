@@ -1,4 +1,4 @@
-use crate::util::{first_key, first_value, last_value};
+use crate::util::first_key;
 use chrono::NaiveDate;
 use derive_more::Display;
 use serde::Serialize;

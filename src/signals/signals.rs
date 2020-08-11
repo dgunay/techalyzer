@@ -1,12 +1,46 @@
 use derive_more::Display;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::{collections::HashMap, slice::Iter};
+
+#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
+#[serde(transparent)]
+pub struct Signal {
+    pub val: f64,
+}
+
+impl From<f64> for Signal {
+    fn from(f: f64) -> Self {
+        Self::new(f)
+    }
+}
+
+#[derive(Debug, Display)]
+pub enum SignalError {
+    #[display(fmt = "Signal value {} is not between -1.0 and 1.0", _0)]
+    InvalidSignalValue(f64),
+}
+
+impl Signal {
+    /// Creates a new Signal. Panics if it is out of range.
+    pub fn new(val: f64) -> Self {
+        match val {
+            -1.0..=1.0 => Self { val },
+            _ => panic!("{}", SignalError::InvalidSignalValue(val)),
+        }
+    }
+}
 
 /// buy/sell signals given by a technical indicator.
 pub trait Signals {
     /// 1.0 for an absolute buy, -1.0 for an absolute short, 0.0 for do nothing.
-    fn signals(&self) -> &Vec<f64>;
+    fn signals(&self) -> &Vec<Signal>;
     fn outputs(&self) -> &Vec<Output>;
+    fn iter(&self) -> Iter<Output>;
+}
+
+/// Buy/sell signals, but done in a lazy fashion
+pub trait SignalsIter {
+    fn next(&mut self, price: f64) -> (Signal, Output);
 }
 
 // TODO: consider making a way to stream serialization to json

@@ -3,12 +3,12 @@
 pub mod performance;
 
 use crate::trading::tradingmodel::Trades;
-use crate::util::{first_value, last_value};
+
 use crate::Prices;
 use chrono::NaiveDate;
 use derive_more::Display;
 use performance::{PerformanceError, PortfolioPerformance};
-use serde::Serialize;
+
 use std::collections::BTreeMap;
 
 #[derive(Debug, Display)]

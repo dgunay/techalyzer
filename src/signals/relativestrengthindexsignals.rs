@@ -1,14 +1,29 @@
-use super::signals::Output;
+use super::signals::{Output, Signal, SignalsIter};
 use crate::{marketdata::prices::Prices, signals::signals::Signals};
 use serde::Serialize;
 
+use std::slice::Iter;
 use ta::indicators::RelativeStrengthIndex;
 use ta::Next;
+
+#[derive(Default)]
+pub struct RSISignalsIter {
+    rsi: RelativeStrengthIndex,
+}
+
+impl SignalsIter for RSISignalsIter {
+    fn next(&mut self, price: f64) -> (Signal, Output) {
+        let rsi_val = self.rsi.next(price);
+
+        // Instead of 0 to 100, signal is -1.0 to 1.0
+        (Signal::new(-((rsi_val / 50.0) - 1.0)), rsi_val.into())
+    }
+}
 
 #[derive(Serialize)]
 pub struct RelativeStrengthIndexSignals {
     outputs: Vec<Output>,
-    signals: Vec<f64>,
+    signals: Vec<Signal>,
 }
 
 impl From<f64> for Output {
@@ -20,23 +35,15 @@ impl From<f64> for Output {
 }
 
 impl RelativeStrengthIndexSignals {
-    // TODO: make this use reference to Prices, not vec of f64s
-    pub fn new(prices: &Prices, mut rsi: RelativeStrengthIndex) -> Self {
-        // pub fn new(prices: &Vec<f64>, mut rsi: RelativeStrengthIndex) -> Self {
+    pub fn new(prices: &Prices, rsi: RelativeStrengthIndex) -> Self {
         // Generate signals from RSI
-        let mut signals = Vec::<f64>::new();
+        let mut signals = Vec::new();
         let mut outputs = Vec::new();
+        let mut signal_iterator = RSISignalsIter { rsi };
         for (_, price) in prices.iter() {
-            let rsi_val = rsi.next(*price);
+            let (signal, rsi_val) = signal_iterator.next(*price);
 
-            // TODO: we can create a "Signals" object that simply takes the math
-            // to calculate signal
-            // and abstracts out all this looping over prices and stuff
-
-            // Instead of 0 to 100, signal is -1.0 to 1.0
-            let signal = -((rsi_val / 50.0) - 1.0);
-
-            signals.push(signal.into());
+            signals.push(signal);
             outputs.push(rsi_val.into());
         }
 
@@ -49,12 +56,16 @@ impl RelativeStrengthIndexSignals {
 }
 
 impl Signals for RelativeStrengthIndexSignals {
-    fn signals(&self) -> &Vec<f64> {
+    fn signals(&self) -> &Vec<Signal> {
         &self.signals
     }
 
     fn outputs(&self) -> &Vec<Output> {
         &self.outputs
+    }
+
+    fn iter(&self) -> Iter<Output> {
+        self.outputs.iter()
     }
 }
 
@@ -83,12 +94,12 @@ mod tests {
             RelativeStrengthIndexSignals::new(&prices, RelativeStrengthIndex::new(14).unwrap());
 
         assert_eq!(signals.signals().len(), l);
-        assert!(nearly_equal(signals.signals()[0], 0.0));
-        assert!(nearly_equal(signals.signals()[1], -0.0714285714285714));
-        assert!(nearly_equal(signals.signals()[2], -0.14213197969543168));
-        assert!(nearly_equal(signals.signals()[3], -0.21141421392677695));
-        assert!(nearly_equal(signals.signals()[4], -0.1081504306316774));
-        assert!(nearly_equal(signals.signals()[5], 0.3031110904761263));
+        assert!(nearly_equal(signals.signals()[0].val, 0.0));
+        assert!(nearly_equal(signals.signals()[1].val, -0.0714285714285714));
+        assert!(nearly_equal(signals.signals()[2].val, -0.14213197969543168));
+        assert!(nearly_equal(signals.signals()[3].val, -0.21141421392677695));
+        assert!(nearly_equal(signals.signals()[4].val, -0.1081504306316774));
+        assert!(nearly_equal(signals.signals()[5].val, 0.3031110904761263));
     }
 
     fn fixture_prices() -> Prices {

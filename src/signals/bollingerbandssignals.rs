@@ -1,31 +1,51 @@
-use super::signals::Output;
+use super::signals::{Output, Signal, SignalsIter};
 use crate::{marketdata::prices::Prices, signals::signals::Signals};
 use serde::Serialize;
-use std::collections::HashMap;
+use std::{collections::HashMap, slice::Iter};
 use ta::indicators::{BollingerBands, BollingerBandsOutput};
 use ta::Next;
+
+#[derive(Default)]
+pub struct BBSignalsIter {
+    bb: BollingerBands,
+}
+
+impl SignalsIter for BBSignalsIter {
+    fn next(&mut self, price: f64) -> (Signal, Output) {
+        let o = self.bb.next(price);
+
+        // how far along from the average to the bounds is the price?
+        let numerator = price - o.lower;
+        let denominator = o.upper - o.lower;
+        if numerator == denominator || denominator == 0.0 {
+            return (Signal::new(0.0), o.into());
+        }
+
+        let calculation = -(2.0 * ((numerator / denominator) - 0.5));
+
+        (Signal::new(calculation), o.into())
+    }
+}
 
 #[derive(Debug, Serialize)]
 pub struct BollingerBandsSignals {
     pub outputs: Vec<Output>,
-    pub signals: Vec<f64>,
+    pub signals: Vec<Signal>,
 }
 
 impl BollingerBandsSignals {
-    pub fn new(prices: &Prices, mut bb: BollingerBands) -> Self {
+    pub fn new(prices: &Prices, bb: BollingerBands) -> Self {
         // Generate signals as %BB
         // [(Price – Lower Band) / (Upper Band – Lower Band)] * 100
         // https://www.fidelity.com/learning-center/trading-investing/technical-analysis/technical-indicator-guide/percent-b
-        let mut signals = Vec::<f64>::new();
+        let mut signals = Vec::new();
         let mut outputs = Vec::new();
+        let mut signal_iterator = BBSignalsIter { bb };
         for (_, price) in prices.iter() {
-            let o = bb.next(*price);
-
-            // how far along from the average to the bounds is the price?
-            let signal = -(2.0 * (((price - o.lower) / (o.upper - o.lower)) - 0.5));
+            let (signal, output) = signal_iterator.next(*price);
 
             signals.push(signal);
-            outputs.push(o.into());
+            outputs.push(output.into());
         }
 
         Self { outputs, signals }
@@ -52,12 +72,16 @@ impl From<BollingerBandsOutput> for Output {
 }
 
 impl Signals for BollingerBandsSignals {
-    fn signals(&self) -> &Vec<f64> {
+    fn signals(&self) -> &Vec<Signal> {
         &self.signals
     }
 
     fn outputs(&self) -> &Vec<Output> {
         &self.outputs
+    }
+
+    fn iter(&self) -> Iter<Output> {
+        self.outputs.iter()
     }
 }
 
@@ -101,7 +125,7 @@ mod tests {
         let signals = BollingerBandsSignals::new(&prices, BollingerBands::new(5, 2.0).unwrap());
 
         assert_eq!(signals.signals().len(), l);
-        assert!(nearly_equal(signals.signals()[1], -0.5));
-        assert!(nearly_equal(signals.signals()[5], 0.9669875568304561));
+        assert!(nearly_equal(signals.signals()[1].val, -0.5));
+        assert!(nearly_equal(signals.signals()[5].val, 0.9669875568304561));
     }
 }
