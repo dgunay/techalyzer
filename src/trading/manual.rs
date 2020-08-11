@@ -10,7 +10,7 @@ use crate::{
     },
 };
 use chrono::NaiveDate;
-use std::{collections::BTreeMap, str::FromStr};
+use std::collections::BTreeMap;
 use ta::indicators::SimpleMovingAverage;
 
 pub enum Error {
@@ -44,18 +44,6 @@ impl Default for ManualTradingModel {
 
 pub enum ManualTradingModelError {
     NotConvertibleFromStr(String),
-}
-
-impl FromStr for ManualTradingModel {
-    type Err = ManualTradingModelError;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.to_lowercase().as_str() {
-            "manual" | "manualtradingmodel" => Ok(ManualTradingModel::default()),
-            _ => Err(ManualTradingModelError::NotConvertibleFromStr(
-                s.to_string(),
-            )),
-        }
-    }
 }
 
 enum MarketState {

@@ -87,7 +87,7 @@ pub fn slope(current: f64, prev: f64, run: f64) -> f64 {
 
 #[cfg(test)]
 mod tests {
-    use super::{clamp, nearly_equal, slope};
+    use super::clamp;
 
     #[test]
     fn test_clamp() {

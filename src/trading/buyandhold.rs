@@ -2,7 +2,7 @@ use super::tradingmodel::{Trades, TradingModel};
 use crate::backtester::Position::*;
 use crate::marketdata::prices::Prices;
 use crate::util::first_key;
-use std::{collections::BTreeMap, convert::Infallible, str::FromStr};
+use std::collections::BTreeMap;
 
 pub struct BuyAndHold {
     shares: u64,
@@ -26,14 +26,6 @@ impl TradingModel for BuyAndHold {
         }
 
         Trades { trades }
-    }
-}
-
-impl FromStr for BuyAndHold {
-    type Err = Infallible;
-    fn from_str(_s: &str) -> Result<Self, Self::Err> {
-        // TODO: how should we make the shares parameterized?
-        Ok(Self { shares: 1000 })
     }
 }
 

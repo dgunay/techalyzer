@@ -131,9 +131,14 @@ if __name__ == "__main__":
 
     # print(json_str[0:40])
     import sys
+    import codecs
+    # import fileinput
+
+    # handle = codecs.getreader("utf_") open(sys.argv[0]) if len(sys.argv) > 0 else sys.stdin
+    handle = open(sys.argv[1]) if len(sys.argv) > 1 else sys.stdin
     
     try:
-        data=json.load(sys.stdin)
+        data=json.load(handle)
     except Exception as e:
         print("Exception decoding JSON: {}".format(e))
 

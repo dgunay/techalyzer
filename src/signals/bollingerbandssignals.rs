@@ -1,5 +1,5 @@
 use super::signals::{Output, Signal, SignalsIter};
-use crate::{marketdata::prices::Prices, signals::signals::Signals};
+use crate::{marketdata::prices::Prices, signals::signals::Signals, util::clamp};
 use serde::Serialize;
 use std::{collections::HashMap, slice::Iter};
 use ta::indicators::{BollingerBands, BollingerBandsOutput};
@@ -15,15 +15,18 @@ impl SignalsIter for BBSignalsIter {
         let o = self.bb.next(price);
 
         // how far along from the average to the bounds is the price?
-        let numerator = price - o.lower;
-        let denominator = o.upper - o.lower;
-        if numerator == denominator || denominator == 0.0 {
-            return (Signal::new(0.0), o.into());
+        // floor the range to 0
+        let calculation = -(2.0 * ((price - o.lower) / (o.upper - o.lower) - 0.5));
+        match calculation {
+            c if c.is_nan() => {
+                // warn!(format!("Computing signal from price {} was NaN", price));
+                (Signal::new(0.0), o.into())
+            }
+            _ => (
+                Signal::new(clamp(calculation, -1.0, 1.0).unwrap()),
+                o.into(),
+            ),
         }
-
-        let calculation = -(2.0 * ((numerator / denominator) - 0.5));
-
-        (Signal::new(calculation), o.into())
     }
 }
 
@@ -125,6 +128,7 @@ mod tests {
         let signals = BollingerBandsSignals::new(&prices, BollingerBands::new(5, 2.0).unwrap());
 
         assert_eq!(signals.signals().len(), l);
+        assert!(nearly_equal(signals.signals()[0].val, 0.0));
         assert!(nearly_equal(signals.signals()[1].val, -0.5));
         assert!(nearly_equal(signals.signals()[5].val, 0.9669875568304561));
     }

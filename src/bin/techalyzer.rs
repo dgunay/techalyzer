@@ -2,14 +2,14 @@ use chrono::NaiveDate;
 
 use std::{ops::RangeInclusive, str::FromStr};
 use structopt::StructOpt;
-use strum_macros::EnumString;
+use strum_macros::{Display, EnumString};
 use ta::indicators::*;
 use techalyzer::datasources::SupportedDataSources;
 use techalyzer::error::TechalyzerError;
 use techalyzer::get_market_data;
 use techalyzer::output::SupportedIndicators;
 use techalyzer::output::TechalyzerEntry;
-use techalyzer::output::TechalyzerPrintOutput;
+use techalyzer::output::{TechalyzerBacktestOutput, TechalyzerPrintOutput};
 use techalyzer::secret::Secret;
 use techalyzer::signals::{
     bollingerbandssignals::BollingerBandsSignals,
@@ -19,7 +19,7 @@ use techalyzer::signals::{
 use techalyzer::{
     backtester::BackTester,
     marketdata::prices::Prices,
-    trading::{buyandhold::BuyAndHold, tradingmodel::TradingModel},
+    trading::{buyandhold::BuyAndHold, manual::ManualTradingModel, tradingmodel::TradingModel},
     util::today_naive,
 };
 
@@ -100,7 +100,7 @@ enum SubCommands {
 
 // TODO: move this somewhere else
 /// Can be an ML model or a handwritten algorithm.
-#[derive(Debug, EnumString)]
+#[derive(Debug, EnumString, Display)]
 pub enum SupportedTradingModel {
     ManualTradingAlgo,
     BuyAndHold,
@@ -211,33 +211,52 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
             cash,
         } => {
             // TODO: again figure out if dynamic dispatch is avoidable
-            let model = match trading_model {
+            let model: Box<dyn TradingModel> = match trading_model {
                 SupportedTradingModel::BuyAndHold => Box::new(BuyAndHold::default()),
-                SupportedTradingModel::ManualTradingAlgo => todo!(),
+                SupportedTradingModel::ManualTradingAlgo => Box::new(ManualTradingModel::default()),
                 SupportedTradingModel::MachineLearningModel => todo!(),
             };
+
+            // TODO: have a way for the model to tell us its signal data
 
             let trades = model.get_trades(&data);
 
             // Pass the model to the backtester
-            let mut backtester = match BackTester::new(trades, data, cash) {
+            let symbol = data.symbol.clone();
+            let mut backtester = match BackTester::new(trades.clone(), &data, cash) {
                 Ok(bt) => bt,
                 Err(e) => return Err(TechalyzerError::Generic(e.to_string())),
             };
 
             // Run the backtest
-            let result = match backtester.backtest() {
+            let performance = match backtester.backtest() {
                 Ok(perf) => perf,
                 Err(e) => return Err(TechalyzerError::Generic(e.to_string())),
             };
 
+            let total_return = performance
+                .total_return()
+                .expect("Couldn't get total return");
+            let output = TechalyzerBacktestOutput {
+                performance,
+                total_return,
+                trades,
+                model_name: trading_model.to_string(),
+                symbol,
+                prices: data,
+            };
+
             // Serialize the backtest
-            match serde_json::to_string(&result) {
-                Ok(string) => print!("{}", string),
+            match serde_json::to_writer(std::io::stdout(), &output) {
+                Ok(_) => (),
                 Err(e) => return Err(TechalyzerError::Generic(e.to_string())),
             };
 
             // TODO: other stats like daily return here
+            // print!(
+            //     "Total return: {}",
+            //     output.total_return
+            // );
         }
     }
 

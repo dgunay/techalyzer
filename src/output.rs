@@ -1,4 +1,9 @@
-use crate::signals::signals::{Output, Signal};
+use crate::{
+    backtester::performance::PortfolioPerformance,
+    marketdata::prices::Prices,
+    signals::signals::{Output, Signal},
+    trading::tradingmodel::Trades,
+};
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 
@@ -33,6 +38,16 @@ pub struct TechalyzerPrintOutput {
     pub map: BTreeMap<NaiveDate, TechalyzerEntry>,
     pub symbol: String,
     pub indicator: SupportedIndicators,
+}
+
+#[derive(Serialize)]
+pub struct TechalyzerBacktestOutput {
+    pub prices: Prices,
+    pub trades: Trades,
+    pub performance: PortfolioPerformance,
+    pub total_return: f64,
+    pub model_name: String,
+    pub symbol: String,
 }
 
 #[cfg(test)]

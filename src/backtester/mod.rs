@@ -8,7 +8,7 @@ use crate::Prices;
 use chrono::NaiveDate;
 use derive_more::Display;
 use performance::{PerformanceError, PortfolioPerformance};
-
+use serde::Serialize;
 use std::collections::BTreeMap;
 
 #[derive(Debug, Display)]
@@ -20,7 +20,7 @@ pub enum BackTesterError {
 
 /// A trade with the position (long/short/out) and number of shares commit to
 /// the trade.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub enum Position {
     Long(u64),
     Short(u64),
@@ -29,12 +29,12 @@ pub enum Position {
 }
 
 /// Backtests a strategy given as a map of NaiveDate => Trade
-pub struct BackTester {
+pub struct BackTester<'a> {
     /// What trade to execute on each day
     strategy: Trades,
 
     /// price time series data
-    prices: Prices,
+    prices: &'a Prices,
 
     /// How much cash the portfolio starts with/has currently
     cash: f64,
@@ -43,8 +43,8 @@ pub struct BackTester {
     current_shares: i32,
 }
 
-impl BackTester {
-    pub fn new(strategy: Trades, prices: Prices, cash: f64) -> Result<Self, BackTesterError> {
+impl<'a> BackTester<'a> {
+    pub fn new(strategy: Trades, prices: &'a Prices, cash: f64) -> Result<Self, BackTesterError> {
         // For every day in the time series, there must be some Position.
         for day in prices.map.keys() {
             if strategy.get(day).is_none() {
@@ -154,15 +154,11 @@ mod tests {
             .cloned()
             .collect();
 
-        let mut bt = BackTester::new(
-            Trades { trades: strat },
-            Prices {
-                map: prices,
-                symbol: "TLZR".to_string(),
-            },
-            100.0,
-        )
-        .unwrap();
+        let p = Prices {
+            map: prices,
+            symbol: "TLZR".to_string(),
+        };
+        let mut bt = BackTester::new(Trades { trades: strat }, &p, 100.0).unwrap();
 
         let result = bt.backtest().unwrap();
         assert!(nearly_equal(result.daily_portvals[&day1], 100.0));
@@ -191,15 +187,11 @@ mod tests {
             .cloned()
             .collect();
 
-        let mut bt = BackTester::new(
-            Trades { trades: strat },
-            Prices {
-                map: prices,
-                symbol: "TLZR".to_string(),
-            },
-            100.0,
-        )
-        .unwrap();
+        let p = Prices {
+            map: prices,
+            symbol: "TLZR".to_string(),
+        };
+        let mut bt = BackTester::new(Trades { trades: strat }, &p, 100.0).unwrap();
 
         let result = bt.backtest().unwrap();
         assert!(nearly_equal(result.daily_portvals[&day1], 100.0));
@@ -231,15 +223,11 @@ mod tests {
                 .cloned()
                 .collect();
 
-        let mut bt = BackTester::new(
-            Trades { trades: strat },
-            Prices {
-                map: prices,
-                symbol: "TLZR".to_string(),
-            },
-            100.0,
-        )
-        .unwrap();
+        let p = Prices {
+            map: prices,
+            symbol: "TLZR".to_string(),
+        };
+        let mut bt = BackTester::new(Trades { trades: strat }, &p, 100.0).unwrap();
 
         let result = bt.backtest().unwrap();
         assert!(nearly_equal(result.daily_portvals[&day1], 100.0));
@@ -272,15 +260,11 @@ mod tests {
                 .cloned()
                 .collect();
 
-        let mut bt = BackTester::new(
-            Trades { trades: strat },
-            Prices {
-                map: prices,
-                symbol: "TLZR".to_string(),
-            },
-            100.0,
-        )
-        .unwrap();
+        let p = Prices {
+            map: prices,
+            symbol: "TLZR".to_string(),
+        };
+        let mut bt = BackTester::new(Trades { trades: strat }, &p, 100.0).unwrap();
 
         let result = bt.backtest().unwrap();
         assert!(nearly_equal(result.daily_portvals[&day1], 100.0));

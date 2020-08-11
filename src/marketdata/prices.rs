@@ -2,11 +2,11 @@ use alphavantage::time_series::TimeSeries;
 use chrono::NaiveDate;
 
 use crate::output::TechalyzerPrintOutput;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::{collections::BTreeMap, ops::RangeBounds};
 
 /// Contains a time series prices data
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Serialize, Debug, PartialEq)]
 pub struct Prices {
     pub map: BTreeMap<NaiveDate, f64>,
     pub symbol: String,
