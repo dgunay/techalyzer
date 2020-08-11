@@ -77,9 +77,19 @@ def plot_separate_indicator(data: dict, df: pd.DataFrame):
 
 
 def plot_backtest(data: dict):
+    trades = {}
+    for k, v in data['trades']['trades'].items():
+        val = ''
+        if v == "Out" or v == "Hold":
+            val = v
+        else:
+            val = list(v.keys())[0]
+        
+        trades[k] = val
+
     # Convert to dataframe with datetime index
     structure = {
-        "trades": {k: list(v.keys())[0] for k, v in data['trades']['trades'].items()},
+        "trades": trades,
         "daily_portvals": data['performance']['daily_portvals'],
         "price": data['prices']['map']
         # "daily_returns" : data['performance']['daily_returns']
@@ -106,6 +116,9 @@ def plot_backtest(data: dict):
     # Buy/sells
     price_xmin, price_xmax, price_ymin, price_ymax = plt.gca().axis()
     for date, trade in df['trades'].iteritems():
+        if trade != 'Long' and trade != 'Short':
+            continue
+
         if trade == 'Long':
             color = 'green'
             ymin = price_ymin
