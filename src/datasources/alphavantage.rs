@@ -27,7 +27,7 @@ impl DataSource for AlphaVantage {
 }
 
 /// Helper function to convert the date of an Entry into a NaiveDate
-fn entry_to_naivedate(entry: Option<&Entry>) -> NaiveDate {
+pub fn entry_to_naivedate(entry: Option<&Entry>) -> NaiveDate {
     entry.expect("No first Entry").date.naive_local().date()
 }
 

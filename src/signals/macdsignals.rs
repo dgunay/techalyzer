@@ -118,7 +118,6 @@ impl Signals for MovingAverageConvergenceDivergenceSignals {
 #[cfg(test)]
 mod tests {
     use super::MovingAverageConvergenceDivergenceSignals;
-    use super::Signals;
     use crate::marketdata::prices::Prices;
     use chrono::NaiveDate;
     use std::collections::BTreeMap;

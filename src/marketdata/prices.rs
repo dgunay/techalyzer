@@ -1,7 +1,7 @@
 use alphavantage::time_series::TimeSeries;
 use chrono::NaiveDate;
 
-use crate::output::TechalyzerPrintOutput;
+use crate::{datasources::alphavantage::entry_to_naivedate, output::TechalyzerPrintOutput};
 use serde::{Deserialize, Serialize};
 use std::{collections::BTreeMap, ops::RangeBounds};
 
@@ -64,7 +64,7 @@ impl From<TimeSeries> for Prices {
     fn from(t: TimeSeries) -> Self {
         let mut m = std::collections::BTreeMap::new();
         for e in t.entries {
-            m.insert(e.date.naive_local().date(), e.close);
+            m.insert(entry_to_naivedate(Some(&e)), e.close);
         }
 
         Prices {

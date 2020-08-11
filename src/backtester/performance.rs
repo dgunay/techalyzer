@@ -1,3 +1,5 @@
+//! Measures portfolio performance as total/daily returns over periods of time.
+
 use crate::util::first_key;
 use chrono::NaiveDate;
 use derive_more::Display;
@@ -8,21 +10,28 @@ use std::{collections::BTreeMap, ops::RangeBounds};
 /// Represents portfolio performance.
 #[derive(Debug, Serialize)]
 pub struct PortfolioPerformance {
+    /// The running total portfolio value in a time series.
     pub daily_portvals: BTreeMap<NaiveDate, f64>,
+
     // pub sharpe_ratio: f64, // TODO: add this
+    /// The daily portfolio returns in a time series.
     pub daily_returns: BTreeMap<NaiveDate, f64>,
 
     /// Standard deviation of daily returns.
     pub volatility: f64,
 }
 
+/// Errors that may occur during portfolio performance calculation.
 #[derive(Debug, Serialize, Display)]
 pub enum PerformanceError {
+    /// Occurs if there is not at least one data point to measure.
     #[display(fmt = "Not enough data points to calculate performance")]
     NotEnoughDataPoints,
 }
 
 impl PortfolioPerformance {
+    /// Constructs a PortfolioPerformance. There must be at least one datapoint
+    /// in `daily_portvals`.
     pub fn new(daily_portvals: BTreeMap<NaiveDate, f64>) -> Result<Self, PerformanceError> {
         // Calculate daily returns
         // TODO: this can be probably done more elegantly either with fold_first once

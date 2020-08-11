@@ -24,6 +24,7 @@ impl Signal {
     /// Creates a new Signal. Panics if it is out of range.
     pub fn new(val: f64) -> Self {
         match val {
+            // FIXME: is this bad? it warns about this
             -1.0..=1.0 => Self { val },
             _ => panic!("{}", SignalError::InvalidSignalValue(val)),
         }

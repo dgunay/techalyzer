@@ -3,10 +3,8 @@ use crate::{backtester::Position, signals::signals::SignalsIter};
 use crate::{
     marketdata::prices::Prices,
     signals::{
-        bollingerbandssignals::{BBSignalsIter, BollingerBandsSignals},
-        macdsignals::{MACDSignalsIter, MovingAverageConvergenceDivergenceSignals},
-        relativestrengthindexsignals::{RSISignalsIter, RelativeStrengthIndexSignals},
-        signals::Signals,
+        bollingerbandssignals::BBSignalsIter, macdsignals::MACDSignalsIter,
+        relativestrengthindexsignals::RSISignalsIter,
     },
 };
 use chrono::NaiveDate;

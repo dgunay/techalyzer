@@ -11,6 +11,7 @@ use performance::{PerformanceError, PortfolioPerformance};
 use serde::Serialize;
 use std::collections::BTreeMap;
 
+/// Errors that can occur while running a backtest.
 #[derive(Debug, Display)]
 pub enum BackTesterError {
     /// No position found for this trading day
@@ -22,16 +23,20 @@ pub enum BackTesterError {
 /// the trade.
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub enum Position {
+    /// Buy N shares.
     Long(u64),
+    /// Short N shares.
     Short(u64),
+    /// Close position and hold nothing.
     Out,
+    /// Hold current position.
     Hold,
 }
 
 /// Backtests a strategy given as a map of NaiveDate => Trade
 pub struct BackTester<'a> {
     /// What trade to execute on each day
-    strategy: Trades,
+    trades: Trades,
 
     /// price time series data
     prices: &'a Prices,
@@ -44,10 +49,12 @@ pub struct BackTester<'a> {
 }
 
 impl<'a> BackTester<'a> {
-    pub fn new(strategy: Trades, prices: &'a Prices, cash: f64) -> Result<Self, BackTesterError> {
+    /// Constructs a BackTester. There must be a Position in `trades` for every
+    /// day in Prices.
+    pub fn new(trades: Trades, prices: &'a Prices, cash: f64) -> Result<Self, BackTesterError> {
         // For every day in the time series, there must be some Position.
         for day in prices.map.keys() {
-            if strategy.get(day).is_none() {
+            if trades.get(day).is_none() {
                 return Err(BackTesterError::NoPositionFound(day.clone()));
             }
         }
@@ -55,7 +62,7 @@ impl<'a> BackTester<'a> {
         Ok(Self {
             cash,
             prices,
-            strategy,
+            trades,
             current_position: Position::Out,
             current_shares: 0,
         })
@@ -69,7 +76,7 @@ impl<'a> BackTester<'a> {
         // For every day in the series
         for (day, price) in self.prices.map.iter() {
             // Execute this position
-            let mut trade = self.strategy.get(day).cloned().unwrap();
+            let mut trade = self.trades.get(day).cloned().unwrap();
             let cash_difference = BackTester::do_trade(self.current_shares, price, &trade);
             self.cash += cash_difference;
 
