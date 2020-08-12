@@ -1,7 +1,11 @@
 use chrono::NaiveDate;
 
 use rustlearn::trees::decision_tree::Hyperparameters;
-use std::{ops::RangeInclusive, str::FromStr};
+use std::{
+    ops::{RangeBounds, RangeInclusive},
+    path::PathBuf,
+    str::FromStr,
+};
 use structopt::StructOpt;
 use strum_macros::{Display, EnumString};
 use ta::indicators::*;
@@ -87,7 +91,9 @@ enum SubCommands {
 
     /// Trains a machine learning model on stock data to make trades based on
     /// technical indicators, then serializes it for later use.
-    Train {},
+    Train {
+        // TODO: decide on common model training parameters
+    },
 
     /// Suggests a trading course of action given recent developments in a
     /// security's price action.
@@ -109,7 +115,27 @@ enum SubCommands {
 pub enum SupportedTradingModel {
     ManualTradingAlgo,
     BuyAndHold,
-    MachineLearningModel,
+    MachineLearningModel { model_file: Option<PathBuf> },
+}
+
+fn train_model<'a>(
+    prices: &Prices,
+    train_dates: impl RangeBounds<NaiveDate>,
+    signal_generators: Vec<&'a mut dyn SignalsIter>,
+) -> DecisionTreeTrader<'a> {
+    let dt = Hyperparameters::new(2).build();
+    // let rsi = &mut RSISignalsIter::default();
+    // let bb = &mut BBSignalsIter::default();
+    // let macd = &mut MACDSignalsIter::default();
+    // let signal_generators: Vec<&mut dyn SignalsIter> = vec![rsi, bb, macd];
+
+    // TODO: either load a model or train a new one right here.
+    let mut model = DecisionTreeTrader::new(dt, signal_generators);
+
+    // Slice the prices into training data
+    let training_p = prices.date_range(train_dates);
+    model.train(&training_p, todo!()).unwrap();
+    model
 }
 
 fn main() -> Result<(), TechalyzerError> {
@@ -223,26 +249,20 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
                 SupportedTradingModel::ManualTradingAlgo => {
                     ManualTradingModel::default().get_trades(&data).unwrap()
                 }
-                SupportedTradingModel::MachineLearningModel => {
-                    // TODO: add cli params
-                    let dt = Hyperparameters::new(2).build();
-                    let rsi = &mut RSISignalsIter::default();
-                    let bb = &mut BBSignalsIter::default();
-                    let macd = &mut MACDSignalsIter::default();
-                    let signal_generators: Vec<&mut dyn SignalsIter> = vec![rsi, bb, macd];
+                SupportedTradingModel::MachineLearningModel { model_file } => {
+                    let model = match model_file {
+                        Some(p) => todo!("deserialize"),
+                        None => train_model(&data, todo!(), todo!()),
+                    };
 
-                    // TODO: either load a model or train a new one right here.
-                    DecisionTreeTrader::new(dt, signal_generators)
-                        .get_trades(&data)
-                        .unwrap()
+                    // TODO: don't unwrap
+                    model.get_trades(&data).unwrap()
                 }
             };
 
             // TODO: have a way for the model to tell us its signal data
 
-            // let trades = model.get_trades(&data);
-
-            // Pass the model to the backtester
+            // Give the backtester the trades
             let symbol = data.symbol.clone();
             let mut backtester = match BackTester::new(trades.clone(), &data, cash) {
                 Ok(bt) => bt,
