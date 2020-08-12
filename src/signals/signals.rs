@@ -14,19 +14,29 @@ impl From<f64> for Signal {
     }
 }
 
-#[derive(Debug, Display)]
-pub enum SignalError {
-    #[display(fmt = "Signal value {} is not between -1.0 and 1.0", _0)]
-    InvalidSignalValue(f64),
+impl From<Signal> for f64 {
+    fn from(s: Signal) -> Self {
+        s.val
+    }
 }
+
+impl From<Signal> for f32 {
+    fn from(s: Signal) -> Self {
+        s.val as f32
+    }
+}
+
+// #[derive(Debug, Display)]
+// pub enum SignalError {
+//     #[display(fmt = "Signal value {} is not between -1.0 and 1.0", _0)]
+//     InvalidSignalValue(f64),
+// }
 
 impl Signal {
     /// Creates a new Signal. Panics if it is out of range.
     pub fn new(val: f64) -> Self {
-        match val {
-            val if (-1.0..=1.0).contains(&val) => Self { val },
-            _ => panic!("{}", SignalError::InvalidSignalValue(val)),
-        }
+        debug_assert!((-1.0..=1.0).contains(&val));
+        Self { val }
     }
 }
 
@@ -42,9 +52,6 @@ pub trait Signals {
 pub trait SignalsIter {
     fn next(&mut self, price: f64) -> (Signal, Output);
 }
-
-// TODO: consider making a way to stream serialization to json
-// https://github.com/serde-rs/json/issues/345
 
 /// Represents a single point output of a ta technical indicactor. Usually a
 /// float, sometimes a float tuple depending on the indicator.

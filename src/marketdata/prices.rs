@@ -29,6 +29,10 @@ impl Prices {
             symbol: self.symbol.clone(),
         }
     }
+
+    pub fn get(&self, date: &NaiveDate) -> Option<&f64> {
+        self.map.get(date)
+    }
 }
 
 // // structure helper for non-consuming iterator.

@@ -17,7 +17,6 @@ impl Trades {
 
 /// Given historical price data, comes up with a series of trades to attempt
 /// to turn as much of a profit as possible.
-// pub trait TradingModel: FromStr {
 pub trait TradingModel {
     fn get_trades(&self, prices: &Prices) -> Trades;
 }

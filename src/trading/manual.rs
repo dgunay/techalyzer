@@ -50,6 +50,8 @@ impl Add<SignalRangedFloat> for f64 {
 }
 
 pub struct ManualTradingModel {
+    // TODO: make this a max and let the bot decide dynamically how many shares
+    // to trade
     shares: u64,
 
     /// How far the signal needs to be from 0 in order to make a trade. For
