@@ -125,7 +125,7 @@ impl Signals for MovingAverageConvergenceDivergenceSignals {
 mod tests {
     use super::MovingAverageConvergenceDivergenceSignals;
     use crate::marketdata::prices::Prices;
-    use chrono::NaiveDate;
+    use crate::Date;
     use std::collections::BTreeMap;
     use ta::indicators::MovingAverageConvergenceDivergence;
 
@@ -141,17 +141,17 @@ mod tests {
 
     #[test]
     fn test_signals_from_macd() {
-        let map: BTreeMap<NaiveDate, f64> = vec![
-            (NaiveDate::from_ymd(2020, 03, 1), 1.9),
-            (NaiveDate::from_ymd(2020, 03, 2), 2.0),
-            (NaiveDate::from_ymd(2020, 03, 3), 2.1),
-            (NaiveDate::from_ymd(2020, 03, 4), 2.2),
-            (NaiveDate::from_ymd(2020, 03, 5), 2.1),
-            (NaiveDate::from_ymd(2020, 03, 6), 1.5),
-            (NaiveDate::from_ymd(2020, 03, 7), 1.3),
-            (NaiveDate::from_ymd(2020, 03, 8), 1.2),
-            (NaiveDate::from_ymd(2020, 03, 9), 1.1),
-            (NaiveDate::from_ymd(2020, 03, 10), 1.0),
+        let map: BTreeMap<Date, f64> = vec![
+            (Date::from_ymd(2020, 03, 1), 1.9),
+            (Date::from_ymd(2020, 03, 2), 2.0),
+            (Date::from_ymd(2020, 03, 3), 2.1),
+            (Date::from_ymd(2020, 03, 4), 2.2),
+            (Date::from_ymd(2020, 03, 5), 2.1),
+            (Date::from_ymd(2020, 03, 6), 1.5),
+            (Date::from_ymd(2020, 03, 7), 1.3),
+            (Date::from_ymd(2020, 03, 8), 1.2),
+            (Date::from_ymd(2020, 03, 9), 1.1),
+            (Date::from_ymd(2020, 03, 10), 1.0),
         ]
         .iter()
         .cloned()

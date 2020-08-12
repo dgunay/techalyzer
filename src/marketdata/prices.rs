@@ -1,23 +1,22 @@
+use crate::Date;
+use crate::{datasources::alphavantage::entry_to_date, output::TechalyzerPrintOutput};
 use alphavantage::time_series::TimeSeries;
-use chrono::NaiveDate;
-
-use crate::{datasources::alphavantage::entry_to_naivedate, output::TechalyzerPrintOutput};
 use serde::{Deserialize, Serialize};
 use std::{collections::BTreeMap, ops::RangeBounds};
 
 /// Contains a time series prices data
 #[derive(Deserialize, Serialize, Debug, PartialEq)]
 pub struct Prices {
-    pub map: BTreeMap<NaiveDate, f64>,
+    pub map: BTreeMap<Date, f64>,
     pub symbol: String,
 }
 
 impl Prices {
-    pub fn iter(&self) -> std::collections::btree_map::Iter<NaiveDate, f64> {
+    pub fn iter(&self) -> std::collections::btree_map::Iter<Date, f64> {
         self.map.iter()
     }
 
-    pub fn date_range(&self, range: impl RangeBounds<NaiveDate>) -> Prices {
+    pub fn date_range(&self, range: impl RangeBounds<Date>) -> Prices {
         let slice = self
             .map
             .range(range)
@@ -30,20 +29,20 @@ impl Prices {
         }
     }
 
-    pub fn get(&self, date: &NaiveDate) -> Option<&f64> {
+    pub fn get(&self, date: &Date) -> Option<&f64> {
         self.map.get(date)
     }
 }
 
 // // structure helper for non-consuming iterator.
 // struct PriceIterator {
-//     iter: ::std::collections::btree_map::Iter<NaiveDate, f64>,
+//     iter: ::std::collections::btree_map::Iter<Date, f64>,
 // }
 
 // // implement the IntoIterator trait for a non-consuming iterator. Iteration will
 // // borrow the Words structure
 // impl IntoIterator for Prices {
-//     type Item = (NaiveDate, f64);
+//     type Item = (Date, f64);
 //     type IntoIter = PriceIterator;
 
 //     // note that into_iter() is consuming self
@@ -56,7 +55,7 @@ impl Prices {
 
 // // now, implements Iterator trait for the helper struct, to be used by adapters
 // impl Iterator for PriceIterator {
-//     type Item = (NaiveDate, f64);
+//     type Item = (Date, f64);
 
 //     // just return the str reference
 //     fn next(&mut self) -> Option<Self::Item> {
@@ -68,7 +67,7 @@ impl From<TimeSeries> for Prices {
     fn from(t: TimeSeries) -> Self {
         let mut m = std::collections::BTreeMap::new();
         for e in t.entries {
-            m.insert(entry_to_naivedate(Some(&e)), e.close);
+            m.insert(entry_to_date(Some(&e)), e.close);
         }
 
         Prices {
@@ -93,7 +92,7 @@ impl From<TechalyzerPrintOutput> for Prices {
 mod tests {
     use super::*;
     use alphavantage::time_series::Entry;
-    use chrono::{Duration, NaiveDate, TimeZone};
+    use chrono::{Duration, TimeZone};
     use chrono_tz::US::Eastern;
     use std::collections::BTreeMap;
 
@@ -116,15 +115,16 @@ mod tests {
         };
 
         let p: Prices = ts.into();
-
-        assert!(p.map[&dt.naive_local().date()] == 30.0);
-        assert!(p.map.iter().next().unwrap().0 == &dt.date().naive_local());
+        
+        let date = Date::from(dt.naive_local().date());
+        assert!(p.map[&date] == 30.0);
+        assert!(p.map.iter().next().unwrap().0 == &date);
     }
 
     /// Creates a month of Prices
     fn fixture_setup() -> Prices {
-        let start = NaiveDate::from_ymd(2012, 1, 2);
-        let end = NaiveDate::from_ymd(2012, 2, 2);
+        let start = Date::from_ymd(2012, 1, 2);
+        let end = Date::from_ymd(2012, 2, 2);
         let mut dt = start;
         let mut entries = BTreeMap::new();
         while dt <= end {
@@ -142,8 +142,8 @@ mod tests {
     #[test]
     fn prices_date_range() {
         let p = fixture_setup();
-        let start = NaiveDate::from_ymd(2012, 1, 5);
-        let end = NaiveDate::from_ymd(2012, 1, 6);
+        let start = Date::from_ymd(2012, 1, 5);
+        let end = Date::from_ymd(2012, 1, 6);
         let result = p.date_range(start..=end);
         assert_eq!(result.map.len(), 2);
     }

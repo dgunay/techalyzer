@@ -21,7 +21,7 @@ use crate::{
         SupportedTradingModel,
     },
 };
-use chrono::NaiveDate;
+use crate::Date;
 use rustlearn::trees::decision_tree::Hyperparameters;
 use std::{fs::File, ops::RangeBounds, path::PathBuf};
 use ta::indicators::{BollingerBands, MovingAverageConvergenceDivergence, RelativeStrengthIndex};
@@ -85,7 +85,7 @@ pub fn print(prices: Prices, indicator: SupportedIndicators) -> Result<(), Techa
 
 pub fn train(
     prices: Prices,
-    train_dates: impl RangeBounds<NaiveDate>,
+    train_dates: impl RangeBounds<Date>,
     signal_generators: Vec<SupportedIndicators>,
     horizon: u32,
     out_path: PathBuf,
@@ -110,7 +110,7 @@ impl From<SupportedIndicators> for Box<dyn SignalsIter> {
 
 fn train_model<'a>(
     prices: &Prices,
-    train_dates: impl RangeBounds<NaiveDate>,
+    train_dates: impl RangeBounds<Date>,
     signal_generators: Vec<Box<dyn SignalsIter>>,
     horizon: u32,
 ) -> Result<DecisionTreeTrader, DecisionTreeError> {

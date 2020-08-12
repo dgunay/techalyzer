@@ -79,7 +79,7 @@ impl Signals for RelativeStrengthIndexSignals {
 mod tests {
     use super::*;
     use crate::util::nearly_equal;
-    use chrono::NaiveDate;
+    use crate::Date;
     use std::collections::BTreeMap;
 
     struct Close {
@@ -109,13 +109,13 @@ mod tests {
     }
 
     fn fixture_prices() -> Prices {
-        let map: BTreeMap<NaiveDate, f64> = vec![
-            (NaiveDate::from_ymd(2020, 03, 1), 1.9),
-            (NaiveDate::from_ymd(2020, 03, 2), 2.0),
-            (NaiveDate::from_ymd(2020, 03, 3), 2.1),
-            (NaiveDate::from_ymd(2020, 03, 4), 2.2),
-            (NaiveDate::from_ymd(2020, 03, 5), 2.1),
-            (NaiveDate::from_ymd(2020, 03, 6), 1.5),
+        let map: BTreeMap<Date, f64> = vec![
+            (Date::from_ymd(2020, 03, 1), 1.9),
+            (Date::from_ymd(2020, 03, 2), 2.0),
+            (Date::from_ymd(2020, 03, 3), 2.1),
+            (Date::from_ymd(2020, 03, 4), 2.2),
+            (Date::from_ymd(2020, 03, 5), 2.1),
+            (Date::from_ymd(2020, 03, 6), 1.5),
         ]
         .iter()
         .cloned()

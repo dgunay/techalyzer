@@ -28,8 +28,8 @@ impl DataSource for TechalyzerJson {
     fn get(
         &self,
         symbol: &str,
-        // start: Option<NaiveDate>,
-        // end: Option<NaiveDate>,
+        // start: Option<Date>,
+        // end: Option<Date>,
     ) -> Result<Prices, Error> {
         // Read in the JSON and deserialize in a stream
         let reader = BufReader::new(&self.file);
@@ -64,7 +64,7 @@ mod tests {
 
     use std::collections::BTreeMap;
 
-    use chrono::NaiveDate;
+    use crate::Date;
     use std::env::current_dir;
 
     #[test]
@@ -80,21 +80,21 @@ mod tests {
 
         let path = Path::new("./test/json/jpm_rsi.json");
         let tj = TechalyzerJson::new(path).unwrap();
-        let begin = NaiveDate::from_ymd(2020, 3, 10);
-        let end = NaiveDate::from_ymd(2020, 3, 12);
+        let begin = Date::from_ymd(2020, 3, 10);
+        let end = Date::from_ymd(2020, 3, 12);
         let p = tj.get_date_range("jpm", begin..=end).unwrap();
 
         let mut m = BTreeMap::new();
         m.insert(
-            NaiveDate::parse_from_str("2020-03-10", "%Y-%m-%d").unwrap(),
+            Date::parse_from_str("2020-03-10", "%Y-%m-%d").unwrap(),
             100.7,
         );
         m.insert(
-            NaiveDate::parse_from_str("2020-03-11", "%Y-%m-%d").unwrap(),
+            Date::parse_from_str("2020-03-11", "%Y-%m-%d").unwrap(),
             95.96,
         );
         m.insert(
-            NaiveDate::parse_from_str("2020-03-12", "%Y-%m-%d").unwrap(),
+            Date::parse_from_str("2020-03-12", "%Y-%m-%d").unwrap(),
             88.05,
         );
         assert_eq!(

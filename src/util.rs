@@ -1,6 +1,5 @@
 // TODO: make this private to the crate (control exported symbols in general)
 
-use chrono::NaiveDate;
 use std::collections::BTreeMap;
 #[derive(Debug)]
 pub struct ClampError {
@@ -53,10 +52,6 @@ pub fn first_value<K, V>(map: &BTreeMap<K, V>) -> Option<&V> {
 
 pub fn last_value<K, V>(map: &BTreeMap<K, V>) -> Option<&V> {
     return map.values().last();
-}
-
-pub fn today_naive() -> NaiveDate {
-    chrono::Utc::now().naive_local().date()
 }
 
 /// Computes the slope between two floating point values. Normalized to a scale

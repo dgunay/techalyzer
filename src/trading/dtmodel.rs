@@ -1,6 +1,6 @@
 use super::tradingmodel::{Trades, TradingModel};
 use crate::{marketdata::prices::Prices, signals::signals::SignalsIter};
-use chrono::NaiveDate;
+use crate::Date;
 use derive_more::Display;
 use rustlearn::prelude::*;
 use rustlearn::trees::decision_tree::DecisionTree;
@@ -26,7 +26,7 @@ pub struct DecisionTreeTrader {
 #[derive(Display, Debug)]
 pub enum DecisionTreeError {
     #[display(fmt = "No price information found looking ahead at day {}", _0)]
-    NoLookAheadPriceData(NaiveDate),
+    NoLookAheadPriceData(Date),
 
     #[display(fmt = "Error while fitting model: {}", _0)]
     TrainingError(String),

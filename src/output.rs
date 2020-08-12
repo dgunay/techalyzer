@@ -9,7 +9,7 @@ use crate::{
     },
     trading::tradingmodel::Trades,
 };
-use chrono::NaiveDate;
+use crate::Date;
 use serde::{Deserialize, Serialize};
 
 // use strum;
@@ -50,7 +50,7 @@ pub struct TechalyzerEntry {
 /// Organizes our data the way we want before printing.
 #[derive(Serialize, Deserialize)]
 pub struct TechalyzerPrintOutput {
-    pub map: BTreeMap<NaiveDate, TechalyzerEntry>,
+    pub map: BTreeMap<Date, TechalyzerEntry>,
     pub symbol: String,
     pub indicator: SupportedIndicators,
 }

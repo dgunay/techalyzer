@@ -1,4 +1,5 @@
 use super::tradingmodel::{Trades, TradingModel};
+use crate::Date;
 use crate::{backtester::Position, signals::signals::SignalsIter};
 use crate::{
     marketdata::prices::Prices,
@@ -7,7 +8,6 @@ use crate::{
         relativestrengthindexsignals::RSISignalsIter,
     },
 };
-use chrono::NaiveDate;
 use derive_more::Display;
 use std::{collections::BTreeMap, ops::Add};
 use ta::indicators::SimpleMovingAverage;
@@ -102,7 +102,7 @@ pub fn average_slope(_prices: &Prices, _sma: SimpleMovingAverage) -> f64 {
 
 impl ManualTradingModel {
     #[allow(dead_code)]
-    fn current_market_state(&self, prices: &Prices, _today: &NaiveDate) -> MarketState {
+    fn current_market_state(&self, prices: &Prices, _today: &Date) -> MarketState {
         // Take the average slope of some N-day moving average, perhaps 75
         // TODO: parameterize trend checker window instead of hardcoding 75
         let sma = SimpleMovingAverage::new(75).expect("Couldn't construct SMA");
@@ -156,13 +156,14 @@ mod tests {
     use crate::{
         backtester::Position, marketdata::prices::Prices, trading::tradingmodel::TradingModel,
     };
-    use chrono::{Duration, NaiveDate};
+    use chrono::Duration;
+    use crate::Date;
     use std::collections::BTreeMap;
 
     /// Creates a month of flat Prices
     fn fixture_setup() -> Prices {
-        let start = NaiveDate::from_ymd(2012, 1, 2);
-        let end = NaiveDate::from_ymd(2012, 2, 2);
+        let start = Date::from_ymd(2012, 1, 2);
+        let end = Date::from_ymd(2012, 2, 2);
         let mut dt = start;
         let mut entries = BTreeMap::new();
         while dt <= end {
@@ -180,7 +181,7 @@ mod tests {
     // TODO: a good macro would really help make things easier
     // macro_rules! date_series_from_vec {
     //     ($y:literal, $m:literal, $d:literal, $items:tt) => {
-    //         let mut start = NaiveDate::from_ymd($y, $m, $d);
+    //         let mut start = Date::from_ymd($y, $m, $d);
     //         // let mut dt = start;
     //         let mut entries = BTreeMap::new();
     //         // for i in vec![$items] {
@@ -195,19 +196,19 @@ mod tests {
     // }
 
     // TODO: consider using this everywhere
-    type TimeSeries<T> = BTreeMap<NaiveDate, T>;
+    type TimeSeries<T> = BTreeMap<Date, T>;
 
     #[test]
     fn test_manual_trader() {
         let map: TimeSeries<f64> = vec![
-            (NaiveDate::from_ymd(2020, 1, 1), 1.0),
-            (NaiveDate::from_ymd(2020, 1, 2), 2.0),
-            (NaiveDate::from_ymd(2020, 1, 3), 3.0),
-            (NaiveDate::from_ymd(2020, 1, 4), 4.0),
-            (NaiveDate::from_ymd(2020, 1, 5), 5.0),
-            (NaiveDate::from_ymd(2020, 1, 6), 6.0),
-            (NaiveDate::from_ymd(2020, 1, 7), 7.0),
-            (NaiveDate::from_ymd(2020, 1, 8), 8.0),
+            (Date::from_ymd(2020, 1, 1), 1.0),
+            (Date::from_ymd(2020, 1, 2), 2.0),
+            (Date::from_ymd(2020, 1, 3), 3.0),
+            (Date::from_ymd(2020, 1, 4), 4.0),
+            (Date::from_ymd(2020, 1, 5), 5.0),
+            (Date::from_ymd(2020, 1, 6), 6.0),
+            (Date::from_ymd(2020, 1, 7), 7.0),
+            (Date::from_ymd(2020, 1, 8), 8.0),
         ]
         .iter()
         .cloned()

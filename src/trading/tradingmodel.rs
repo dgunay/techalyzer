@@ -1,16 +1,17 @@
 use crate::backtester::Position;
+use crate::Date;
 use crate::{error::TechalyzerError, marketdata::prices::Prices};
-use chrono::NaiveDate;
+
 use serde::Serialize;
 use std::collections::BTreeMap;
 
 #[derive(Serialize, Clone)]
 pub struct Trades {
-    pub trades: BTreeMap<NaiveDate, Position>,
+    pub trades: BTreeMap<Date, Position>,
 }
 
 impl Trades {
-    pub fn get(&self, k: &NaiveDate) -> Option<&Position> {
+    pub fn get(&self, k: &Date) -> Option<&Position> {
         self.trades.get(k)
     }
 }

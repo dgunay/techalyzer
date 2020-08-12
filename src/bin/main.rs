@@ -1,4 +1,3 @@
-use chrono::NaiveDate;
 use std::{ops::RangeInclusive, path::PathBuf, str::FromStr};
 use structopt::StructOpt;
 use techalyzer::datasources::SupportedDataSources;
@@ -7,7 +6,10 @@ use techalyzer::get_market_data;
 use techalyzer::output::SupportedIndicators;
 use techalyzer::secret::Secret;
 use techalyzer::subcommands::*;
-use techalyzer::{trading::SupportedTradingModel, util::today_naive};
+use techalyzer::{
+    date::{today, Date},
+    trading::SupportedTradingModel,
+};
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "Techalyzer", author = "Devin Gunay")]
@@ -27,12 +29,12 @@ struct Opts {
 
     /// Start date of the analysis. Leave out to go to the earliest possible date.
     #[structopt(long, short, parse(try_from_str = parse_date))]
-    start_date: Option<NaiveDate>,
+    start_date: Option<Date>,
 
     /// End date of the analysis. Leave out to go to the latest possible date
     /// (usually today).
     #[structopt(long, short, parse(try_from_str = parse_date))]
-    end_date: Option<NaiveDate>,
+    end_date: Option<Date>,
 
     #[structopt(subcommand)]
     cmd: SubCommands,
@@ -40,12 +42,12 @@ struct Opts {
 
 /// Gives us a little more flexibility when parsing dates from the command line
 /// for things like "today"
-fn parse_date(datestr: &str) -> Result<NaiveDate, chrono::ParseError> {
+fn parse_date(datestr: &str) -> Result<Date, chrono::ParseError> {
     match datestr {
-        "today" => Ok(chrono::Utc::now().naive_local().date()),
-        "yesterday" => Ok(chrono::Utc::now().naive_local().date() - chrono::Duration::days(1)),
+        "today" => Ok(today()),
+        "yesterday" => Ok(today() - chrono::Duration::days(1)),
         // TODO: maybe implement things like "a year ago", "a month ago", etc
-        s => NaiveDate::from_str(s),
+        s => Date::from_str(s),
     }
 }
 
@@ -102,11 +104,12 @@ enum SubCommands {
 
 #[derive(Debug, StructOpt)]
 struct TrainingParams {
-    signal_generators: Vec<SupportedIndicators>,
-    train_start_date: NaiveDate,
-    train_end_date: NaiveDate,
+    train_start_date: Date,
+    #[structopt(default_value)]
+    train_end_date: Date,
     #[structopt(long, short)]
     horizon: u32,
+    signal_generators: Vec<SupportedIndicators>,
 }
 
 impl Default for TrainingParams {
@@ -118,7 +121,7 @@ impl Default for TrainingParams {
                 SupportedIndicators::MACD,
             ],
             train_start_date: very_early_date(),
-            train_end_date: today_naive(),
+            train_end_date: Date::default(),
             horizon: 10,
         }
     }
@@ -129,8 +132,8 @@ fn main() -> Result<(), TechalyzerError> {
     run_program(opts)
 }
 
-fn very_early_date() -> NaiveDate {
-    NaiveDate::from_ymd(1000, 1, 1)
+fn very_early_date() -> Date {
+    Date::from_ymd(1000, 1, 1).into()
 }
 
 /// Wrappable main function to make it easier to test.
@@ -145,10 +148,10 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
     // FIXME: this is a hack because I can't figure out how to have both
     // bounded inclusive ranges and full/unbounded ranges in the same variable.
     let impossibly_early_date = very_early_date();
-    let date_range: RangeInclusive<NaiveDate> = match (start, end) {
-        (None, None) => impossibly_early_date..=today_naive(),
+    let date_range: RangeInclusive<Date> = match (start, end) {
+        (None, None) => impossibly_early_date..=today(),
         (None, Some(end)) => impossibly_early_date..=end,
-        (Some(start), None) => start..=today_naive(),
+        (Some(start), None) => start..=today(),
         (Some(start), Some(end)) => start..=end,
     };
 

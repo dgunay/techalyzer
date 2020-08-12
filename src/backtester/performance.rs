@@ -1,7 +1,7 @@
 //! Measures portfolio performance as total/daily returns over periods of time.
 
 use crate::util::first_key;
-use chrono::NaiveDate;
+use crate::Date;
 use derive_more::Display;
 use serde::Serialize;
 use stats::stddev;
@@ -11,11 +11,11 @@ use std::{collections::BTreeMap, ops::RangeBounds};
 #[derive(Debug, Serialize)]
 pub struct PortfolioPerformance {
     /// The running total portfolio value in a time series.
-    pub daily_portvals: BTreeMap<NaiveDate, f64>,
+    pub daily_portvals: BTreeMap<Date, f64>,
 
     // pub sharpe_ratio: f64, // TODO: add this
     /// The daily portfolio returns in a time series.
-    pub daily_returns: BTreeMap<NaiveDate, f64>,
+    pub daily_returns: BTreeMap<Date, f64>,
 
     /// Standard deviation of daily returns.
     pub volatility: f64,
@@ -32,7 +32,7 @@ pub enum PerformanceError {
 impl PortfolioPerformance {
     /// Constructs a PortfolioPerformance. There must be at least one datapoint
     /// in `daily_portvals`.
-    pub fn new(daily_portvals: BTreeMap<NaiveDate, f64>) -> Result<Self, PerformanceError> {
+    pub fn new(daily_portvals: BTreeMap<Date, f64>) -> Result<Self, PerformanceError> {
         // Calculate daily returns
         // TODO: this can be probably done more elegantly either with fold_first once
         // stabilized, or through a better pattern I'm not yet aware of. for
@@ -66,7 +66,7 @@ impl PortfolioPerformance {
     }
 
     /// Returns the total return in the date range.
-    pub fn range_return(&self, range: impl RangeBounds<NaiveDate>) -> Result<f64, PerformanceError> {
+    pub fn range_return(&self, range: impl RangeBounds<Date>) -> Result<f64, PerformanceError> {
         let mut iter = self.daily_portvals.range(range);
         let first = iter.next().ok_or(PerformanceError::NotEnoughDataPoints)?.1;
         let last  = iter.last().ok_or(PerformanceError::NotEnoughDataPoints)?.1;
@@ -88,8 +88,8 @@ mod test {
     #[test]
     fn total_return_divide_by_zero() {
         let mut daily_portvals = BTreeMap::new();
-        daily_portvals.insert(NaiveDate::from_ymd(2020, 3, 1), 0.0);
-        daily_portvals.insert(NaiveDate::from_ymd(2020, 3, 2), 10.0);
+        daily_portvals.insert(Date::from_ymd(2020, 3, 1), 0.0);
+        daily_portvals.insert(Date::from_ymd(2020, 3, 2), 10.0);
         let pp = PortfolioPerformance::new(daily_portvals).unwrap();
         assert_eq!(pp.total_return().unwrap(), f64::INFINITY);
     }
@@ -97,8 +97,8 @@ mod test {
     #[test]
     fn daily_returns() {
         let mut daily_portvals = BTreeMap::new();
-        let day1 = NaiveDate::from_ymd(2020, 3, 1);
-        let day2 = NaiveDate::from_ymd(2020, 3, 2);
+        let day1 = Date::from_ymd(2020, 3, 1);
+        let day2 = Date::from_ymd(2020, 3, 2);
         daily_portvals.insert(day1, 10.0);
         daily_portvals.insert(day2, 11.0);
         let pp = PortfolioPerformance::new(daily_portvals).unwrap();

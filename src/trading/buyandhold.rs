@@ -44,15 +44,15 @@ impl TradingModel for BuyAndHold {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::NaiveDate;
+    use crate::Date;
 
     #[test]
     fn test_buy_and_hold() {
-        let day1 = NaiveDate::from_ymd(2020, 1, 1);
-        let day2 = NaiveDate::from_ymd(2020, 1, 2);
-        let day3 = NaiveDate::from_ymd(2020, 1, 3);
+        let day1 = Date::from_ymd(2020, 1, 1);
+        let day2 = Date::from_ymd(2020, 1, 2);
+        let day3 = Date::from_ymd(2020, 1, 3);
         let model = BuyAndHold { shares: 1000 };
-        let map: BTreeMap<NaiveDate, f64> = vec![(day1, 30.0), (day2, 32.0), (day3, 34.0)]
+        let map: BTreeMap<Date, f64> = vec![(day1, 30.0), (day2, 32.0), (day3, 34.0)]
             .iter()
             .cloned()
             .collect();

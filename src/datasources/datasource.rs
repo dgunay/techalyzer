@@ -1,5 +1,5 @@
+use crate::Date;
 use crate::Prices;
-use chrono::NaiveDate;
 use derive_more::Display;
 
 use std::ops::RangeBounds;
@@ -25,11 +25,7 @@ pub trait DataSource {
     fn get(&self, symbol: &str) -> Result<Prices, Error>;
 
     /// Gets price data in a date range.
-    fn get_date_range(
-        &self,
-        symbol: &str,
-        range: impl RangeBounds<NaiveDate>,
-    ) -> Result<Prices, Error> {
+    fn get_date_range(&self, symbol: &str, range: impl RangeBounds<Date>) -> Result<Prices, Error> {
         let prices = self.get(symbol)?;
         Ok(prices.date_range(range))
     }

@@ -1,6 +1,7 @@
 #[warn(missing_docs)]
 pub mod backtester;
 pub mod datasources;
+pub mod date;
 pub mod error;
 pub mod marketdata;
 pub mod output;
@@ -15,11 +16,11 @@ use crate::datasources::datasource::{DataSource, Error};
 use crate::datasources::techalyzerjson::TechalyzerJson;
 use crate::datasources::SupportedDataSources;
 use crate::marketdata::prices::Prices;
-use chrono::NaiveDate;
 use secret::Secret;
 use std::ops::RangeInclusive;
 
 use ::alphavantage::blocking::Client;
+use date::Date;
 
 /// Gets stock price time series data from a given Source, within the given
 /// date range. A Secret is used to access the data source, if necessary. For
@@ -27,7 +28,7 @@ use ::alphavantage::blocking::Client;
 pub fn get_market_data(
     source: SupportedDataSources,
     symbol: String,
-    date_range: RangeInclusive<NaiveDate>,
+    date_range: RangeInclusive<Date>,
     secret: Secret,
 ) -> Result<Prices, Error> {
     let market_data: Prices = match source {

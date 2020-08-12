@@ -5,7 +5,7 @@ pub mod performance;
 use crate::trading::tradingmodel::Trades;
 
 use crate::Prices;
-use chrono::NaiveDate;
+use crate::date::Date;
 use derive_more::Display;
 use performance::{PerformanceError, PortfolioPerformance};
 use serde::Serialize;
@@ -16,7 +16,7 @@ use std::collections::BTreeMap;
 pub enum BackTesterError {
     /// No position found for this trading day
     #[display(fmt = "No Position/trade could be found on date {}", _0)]
-    NoPositionFound(NaiveDate),
+    NoPositionFound(Date),
 }
 
 /// A trade with the position (long/short/out) and number of shares commit to
@@ -33,7 +33,7 @@ pub enum Position {
     Hold,
 }
 
-/// Backtests a strategy given as a map of NaiveDate => Trade
+/// Backtests a strategy given as a map of Date => Trade
 pub struct BackTester<'a> {
     /// What trade to execute on each day
     trades: Trades,
@@ -142,12 +142,12 @@ mod tests {
 
     #[test]
     fn buy_and_hold_backtest() {
-        let day1 = NaiveDate::from_ymd(2012, 1, 1);
-        let day2 = NaiveDate::from_ymd(2012, 1, 2);
-        let day3 = NaiveDate::from_ymd(2012, 1, 3);
+        let day1 = Date::from_ymd(2012, 1, 1);
+        let day2 = Date::from_ymd(2012, 1, 2);
+        let day3 = Date::from_ymd(2012, 1, 3);
 
         // Buy and hold 1000 shares for the duration of a few days
-        let strat: BTreeMap<NaiveDate, Position> = vec![
+        let strat: BTreeMap<Date, Position> = vec![
             (day1, Position::Long(1)),
             (day2, Position::Hold),
             (day3, Position::Hold),
@@ -156,7 +156,7 @@ mod tests {
         .cloned()
         .collect();
 
-        let prices: BTreeMap<NaiveDate, f64> = vec![(day1, 100.0), (day2, 105.0), (day3, 110.0)]
+        let prices: BTreeMap<Date, f64> = vec![(day1, 100.0), (day2, 105.0), (day3, 110.0)]
             .iter()
             .cloned()
             .collect();
@@ -175,12 +175,12 @@ mod tests {
 
     #[test]
     fn partial_sell_backtest() {
-        let day1 = NaiveDate::from_ymd(2012, 1, 1);
-        let day2 = NaiveDate::from_ymd(2012, 1, 2);
-        let day3 = NaiveDate::from_ymd(2012, 1, 3);
+        let day1 = Date::from_ymd(2012, 1, 1);
+        let day2 = Date::from_ymd(2012, 1, 2);
+        let day3 = Date::from_ymd(2012, 1, 3);
 
         // Buy 2 shares, sell 1, hold the other.
-        let strat: BTreeMap<NaiveDate, Position> = vec![
+        let strat: BTreeMap<Date, Position> = vec![
             (day1, Position::Long(2)),
             (day2, Position::Long(1)),
             (day3, Position::Hold),
@@ -189,7 +189,7 @@ mod tests {
         .cloned()
         .collect();
 
-        let prices: BTreeMap<NaiveDate, f64> = vec![(day1, 100.0), (day2, 105.0), (day3, 110.0)]
+        let prices: BTreeMap<Date, f64> = vec![(day1, 100.0), (day2, 105.0), (day3, 110.0)]
             .iter()
             .cloned()
             .collect();
@@ -209,12 +209,12 @@ mod tests {
 
     #[test]
     fn short_and_hold_backtest() {
-        let day1 = NaiveDate::from_ymd(2012, 1, 1);
-        let day2 = NaiveDate::from_ymd(2012, 1, 2);
-        let day3 = NaiveDate::from_ymd(2012, 1, 3);
+        let day1 = Date::from_ymd(2012, 1, 1);
+        let day2 = Date::from_ymd(2012, 1, 2);
+        let day3 = Date::from_ymd(2012, 1, 3);
 
         // Buy and hold 1000 shares for the duration of a few days
-        let strat: BTreeMap<NaiveDate, Position> = vec![
+        let strat: BTreeMap<Date, Position> = vec![
             (day1, Position::Short(1)),
             (day2, Position::Hold),
             (day3, Position::Hold),
@@ -223,7 +223,7 @@ mod tests {
         .cloned()
         .collect();
 
-        let prices: BTreeMap<NaiveDate, f64> = vec![(day1, 100.0), (day2, 105.0), (day3, 110.0)]
+        let prices: BTreeMap<Date, f64> = vec![(day1, 100.0), (day2, 105.0), (day3, 110.0)]
             .iter()
             .cloned()
             .collect();
@@ -242,13 +242,13 @@ mod tests {
 
     #[test]
     fn buy_then_short() {
-        let day1 = NaiveDate::from_ymd(2012, 1, 1);
-        let day2 = NaiveDate::from_ymd(2012, 1, 2);
-        let day3 = NaiveDate::from_ymd(2012, 1, 3);
-        let day4 = NaiveDate::from_ymd(2012, 1, 4);
+        let day1 = Date::from_ymd(2012, 1, 1);
+        let day2 = Date::from_ymd(2012, 1, 2);
+        let day3 = Date::from_ymd(2012, 1, 3);
+        let day4 = Date::from_ymd(2012, 1, 4);
 
         // Buy and hold 1000 shares for the duration of a few days
-        let strat: BTreeMap<NaiveDate, Position> = vec![
+        let strat: BTreeMap<Date, Position> = vec![
             (day1, Position::Long(1)),
             (day2, Position::Hold),
             (day3, Position::Short(1)),
@@ -258,7 +258,7 @@ mod tests {
         .cloned()
         .collect();
 
-        let prices: BTreeMap<NaiveDate, f64> =
+        let prices: BTreeMap<Date, f64> =
             vec![(day1, 100.0), (day2, 105.0), (day3, 110.0), (day4, 105.0)]
                 .iter()
                 .cloned()
@@ -279,13 +279,13 @@ mod tests {
 
     #[test]
     fn buy_then_out() {
-        let day1 = NaiveDate::from_ymd(2012, 1, 1);
-        let day2 = NaiveDate::from_ymd(2012, 1, 2);
-        let day3 = NaiveDate::from_ymd(2012, 1, 3);
-        let day4 = NaiveDate::from_ymd(2012, 1, 4);
+        let day1 = Date::from_ymd(2012, 1, 1);
+        let day2 = Date::from_ymd(2012, 1, 2);
+        let day3 = Date::from_ymd(2012, 1, 3);
+        let day4 = Date::from_ymd(2012, 1, 4);
 
         // Buy and hold 1000 shares for the duration of a few days
-        let strat: BTreeMap<NaiveDate, Position> = vec![
+        let strat: BTreeMap<Date, Position> = vec![
             (day1, Position::Long(1)),
             (day2, Position::Hold),
             (day3, Position::Out),
@@ -295,7 +295,7 @@ mod tests {
         .cloned()
         .collect();
 
-        let prices: BTreeMap<NaiveDate, f64> =
+        let prices: BTreeMap<Date, f64> =
             vec![(day1, 100.0), (day2, 105.0), (day3, 110.0), (day4, 105.0)]
                 .iter()
                 .cloned()
