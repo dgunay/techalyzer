@@ -32,36 +32,27 @@ impl Prices {
     pub fn get(&self, date: &Date) -> Option<&f64> {
         self.map.get(date)
     }
+
+    pub fn get_after(&self, date: &Date, days_after: usize) -> Option<(Date, f64)> {
+        // From the given date, go n days after
+        // TODO: gross and probably inefficient, is there a way we can hash
+        // straight to `date` and then start iterating?
+        let mut i_after = 0;
+        for pair in &self.map {
+            if i_after == 0 && pair.0 == date {
+                i_after += 1;
+            } else if i_after > 0 {
+                if i_after >= days_after {
+                    return Some((*pair.0, *pair.1));
+                }
+
+                i_after += 1;
+            }
+        }
+
+        None
+    }
 }
-
-// // structure helper for non-consuming iterator.
-// struct PriceIterator {
-//     iter: ::std::collections::btree_map::Iter<Date, f64>,
-// }
-
-// // implement the IntoIterator trait for a non-consuming iterator. Iteration will
-// // borrow the Words structure
-// impl IntoIterator for Prices {
-//     type Item = (Date, f64);
-//     type IntoIter = PriceIterator;
-
-//     // note that into_iter() is consuming self
-//     fn into_iter(self) -> Self::IntoIter {
-//         PriceIterator {
-//             iter: self.map.iter(),
-//         }
-//     }
-// }
-
-// // now, implements Iterator trait for the helper struct, to be used by adapters
-// impl Iterator for PriceIterator {
-//     type Item = (Date, f64);
-
-//     // just return the str reference
-//     fn next(&mut self) -> Option<Self::Item> {
-//         self.iter.next()
-//     }
-// }
 
 impl From<TimeSeries> for Prices {
     fn from(t: TimeSeries) -> Self {
@@ -71,8 +62,6 @@ impl From<TimeSeries> for Prices {
         }
 
         Prices {
-            // dates: t.entries.iter().map(|e| e.date.naive_local().date()).collect(),
-            // prices: t.entries.iter().map(|e| e.close).collect(),
             symbol: t.symbol,
             map: m,
         }
@@ -115,7 +104,7 @@ mod tests {
         };
 
         let p: Prices = ts.into();
-        
+
         let date = Date::from(dt.naive_local().date());
         assert!(p.map[&date] == 30.0);
         assert!(p.map.iter().next().unwrap().0 == &date);
@@ -146,5 +135,15 @@ mod tests {
         let end = Date::from_ymd(2012, 1, 6);
         let result = p.date_range(start..=end);
         assert_eq!(result.map.len(), 2);
+    }
+
+    #[test]
+    fn test_get_after() {
+        let p = fixture_setup();
+        let date = Date::from_ymd(2012, 1, 14);
+        let target = Date::from_ymd(2012, 1, 15);
+        let result = p.get_after(&date, 1).unwrap();
+
+        assert_eq!(result.0, target);
     }
 }
