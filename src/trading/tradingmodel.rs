@@ -1,5 +1,5 @@
 use crate::backtester::Position;
-use crate::marketdata::prices::Prices;
+use crate::{error::TechalyzerError, marketdata::prices::Prices};
 use chrono::NaiveDate;
 use serde::Serialize;
 use std::collections::BTreeMap;
@@ -19,7 +19,7 @@ impl Trades {
 /// to turn as much of a profit as possible.
 pub trait TradingModel {
     /// Error type that can happen for our implementation of TradingModel.
-    type Error;
+    type Error: Into<TechalyzerError>;
 
     fn get_trades(self, prices: &Prices) -> Result<Trades, Self::Error>;
 }

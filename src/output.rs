@@ -1,7 +1,12 @@
 use crate::{
     backtester::performance::PortfolioPerformance,
     marketdata::prices::Prices,
-    signals::signals::{Output, Signal},
+    signals::{
+        bollingerbandssignals::BBSignalsIter,
+        macdsignals::MACDSignalsIter,
+        relativestrengthindexsignals::RSISignalsIter,
+        signals::{Output, Signal, SignalsIter},
+    },
     trading::tradingmodel::Trades,
 };
 use chrono::NaiveDate;
@@ -22,6 +27,16 @@ pub enum SupportedIndicators {
 
     #[strum(serialize = "MACD", serialize = "macd")]
     MACD,
+}
+
+impl From<&SupportedIndicators> for Box<dyn SignalsIter> {
+    fn from(s: &SupportedIndicators) -> Self {
+        match s {
+            SupportedIndicators::BollingerBands => Box::new(BBSignalsIter::default()),
+            SupportedIndicators::RelativeStrengthIndex => Box::new(RSISignalsIter::default()),
+            SupportedIndicators::MACD => Box::new(MACDSignalsIter::default()),
+        }
+    }
 }
 
 /// An entry at some date with price, signal, and technical indicator data

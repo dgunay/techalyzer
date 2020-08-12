@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 // https://stackoverflow.com/questions/42036826/using-the-rust-compiler-to-prevent-forgetting-to-call-a-method
 
 #[derive(Serialize, Deserialize)]
-pub struct DecisionTreeTrader<'a> {
+pub struct DecisionTreeTrader {
     model: DecisionTree,
 
     // TODO: solve these problems to have arbitrary injectable signal generators:
@@ -19,29 +19,35 @@ pub struct DecisionTreeTrader<'a> {
     // - TODO: Can we rewrite the TradingModel trait so that we don't have to
     //         cheat with RefCell to mutate our signal generators?
     #[serde(skip)]
-    // signal_generators: RefCell<Vec<&'a mut dyn SignalsIter>>,
-    signal_generators: Vec<&'a mut dyn SignalsIter>,
+    // signal_generators: Vec<&'a mut dyn SignalsIter>,
+    signal_generators: Vec<Box<dyn SignalsIter>>,
 }
 
 #[derive(Display, Debug)]
-pub enum DecisionTreeError<'a> {
+pub enum DecisionTreeError {
     #[display(fmt = "No price information found looking ahead at day {}", _0)]
     NoLookAheadPriceData(NaiveDate),
 
     #[display(fmt = "Error while fitting model: {}", _0)]
-    TrainingError(&'a str),
+    TrainingError(String),
 }
 
-impl<'a> DecisionTreeTrader<'a> {
-    pub fn new(model: DecisionTree, signal_generators: Vec<&'a mut dyn SignalsIter>) -> Self {
+impl DecisionTreeTrader {
+    // pub fn new(model: DecisionTree, signal_generators: Vec<&'a mut dyn SignalsIter>) -> Self {
+    pub fn new(model: DecisionTree, signal_generators: Vec<Box<dyn SignalsIter>>) -> Self {
         Self {
             model,
-            signal_generators: signal_generators.into(),
+            signal_generators,
         }
     }
 
     /// Trains the model using technical indicator signal generators for the
     /// given Prices time series.
+    ///
+    /// ## Arguments
+    ///
+    /// * `train_prices` - Prices time series to train the model on.
+    /// * `horizon` - Uses the returns this many days in the future for Y.
     pub fn train(&mut self, train_prices: &Prices, horizon: u32) -> Result<(), DecisionTreeError> {
         // Get our indicators
         // let signals = Vec::new();
@@ -67,7 +73,7 @@ impl<'a> DecisionTreeTrader<'a> {
         // Construct X train, Y train data out of the prices
         self.model
             .fit(&Array::from(&x), &y.into())
-            .map_err(|msg| DecisionTreeError::TrainingError(msg))
+            .map_err(|msg| DecisionTreeError::TrainingError(msg.to_string()))
     }
 
     /// Gets the next set of signals from the signal generators
@@ -80,8 +86,8 @@ impl<'a> DecisionTreeTrader<'a> {
     }
 }
 
-impl<'a> TradingModel for DecisionTreeTrader<'a> {
-    type Error = DecisionTreeError<'a>;
+impl TradingModel for DecisionTreeTrader {
+    type Error = DecisionTreeError;
 
     fn get_trades(mut self, prices: &Prices) -> Result<Trades, Self::Error> {
         // Reset our technical indicators
@@ -95,7 +101,7 @@ impl<'a> TradingModel for DecisionTreeTrader<'a> {
             // error enums for one thing
             let predicted_return = match self.model.predict(&Array::from(signals)) {
                 Ok(r) => r,
-                Err(msg) => return Err(DecisionTreeError::TrainingError(msg)),
+                Err(msg) => return Err(DecisionTreeError::TrainingError(msg.to_string())),
             };
 
             print!("{:?}", predicted_return);

@@ -8,6 +8,7 @@ use crate::{
     },
 };
 use chrono::NaiveDate;
+use derive_more::Display;
 use std::{collections::BTreeMap, ops::Add};
 use ta::indicators::SimpleMovingAverage;
 
@@ -84,7 +85,7 @@ impl Default for ManualTradingModel {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Display)]
 pub enum ManualTradingModelError {
     NotConvertibleFromStr(String),
 }

@@ -66,16 +66,16 @@ impl PortfolioPerformance {
     }
 
     /// Returns the total return in the date range.
-    pub fn range_return(&self, range: impl RangeBounds<NaiveDate>) -> Option<f64> {
+    pub fn range_return(&self, range: impl RangeBounds<NaiveDate>) -> Result<f64, PerformanceError> {
         let mut iter = self.daily_portvals.range(range);
-        let first = iter.next()?.1;
-        let last = iter.last()?.1;
+        let first = iter.next().ok_or(PerformanceError::NotEnoughDataPoints)?.1;
+        let last  = iter.last().ok_or(PerformanceError::NotEnoughDataPoints)?.1;
 
-        Some((last / first) - 1.0)
+        Ok((last / first) - 1.0)
     }
 
     /// Returns the total return for the whole time series of portfolio values.
-    pub fn total_return(&self) -> Option<f64> {
+    pub fn total_return(&self) -> Result<f64, PerformanceError> {
         self.range_return(..)
     }
 }
