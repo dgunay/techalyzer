@@ -3,11 +3,17 @@ use crate::{marketdata::prices::Prices, signals::signals::Signals, util::clamp};
 use serde::Serialize;
 use std::{collections::HashMap, slice::Iter};
 use ta::indicators::{BollingerBands, BollingerBandsOutput};
-use ta::Next;
+use ta::{Next, Reset};
 
 #[derive(Default)]
 pub struct BBSignalsIter {
     bb: BollingerBands,
+}
+
+impl Reset for BBSignalsIter {
+    fn reset(&mut self) {
+        self.bb.reset()
+    }
 }
 
 impl SignalsIter for BBSignalsIter {

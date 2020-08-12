@@ -4,11 +4,17 @@ use serde::Serialize;
 
 use std::slice::Iter;
 use ta::indicators::RelativeStrengthIndex;
-use ta::Next;
+use ta::{Next, Reset};
 
 #[derive(Default)]
 pub struct RSISignalsIter {
     rsi: RelativeStrengthIndex,
+}
+
+impl Reset for RSISignalsIter {
+    fn reset(&mut self) {
+        self.rsi.reset()
+    }
 }
 
 impl SignalsIter for RSISignalsIter {

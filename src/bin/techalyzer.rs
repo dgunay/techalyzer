@@ -1,5 +1,6 @@
 use chrono::NaiveDate;
 
+use rustlearn::trees::decision_tree::Hyperparameters;
 use std::{ops::RangeInclusive, str::FromStr};
 use structopt::StructOpt;
 use strum_macros::{Display, EnumString};
@@ -12,14 +13,18 @@ use techalyzer::output::TechalyzerEntry;
 use techalyzer::output::{TechalyzerBacktestOutput, TechalyzerPrintOutput};
 use techalyzer::secret::Secret;
 use techalyzer::signals::{
-    bollingerbandssignals::BollingerBandsSignals,
-    macdsignals::MovingAverageConvergenceDivergenceSignals,
-    relativestrengthindexsignals::RelativeStrengthIndexSignals, signals::Signals,
+    bollingerbandssignals::{BBSignalsIter, BollingerBandsSignals},
+    macdsignals::{MACDSignalsIter, MovingAverageConvergenceDivergenceSignals},
+    relativestrengthindexsignals::{RSISignalsIter, RelativeStrengthIndexSignals},
+    signals::{Signals, SignalsIter},
 };
 use techalyzer::{
     backtester::BackTester,
     marketdata::prices::Prices,
-    trading::{buyandhold::BuyAndHold, manual::ManualTradingModel, tradingmodel::TradingModel},
+    trading::{
+        buyandhold::BuyAndHold, dtmodel::DecisionTreeTrader, manual::ManualTradingModel,
+        tradingmodel::TradingModel,
+    },
     util::today_naive,
 };
 
@@ -210,16 +215,32 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
             trading_model,
             cash,
         } => {
-            // TODO: again figure out if dynamic dispatch is avoidable
-            let model: Box<dyn TradingModel> = match trading_model {
-                SupportedTradingModel::BuyAndHold => Box::new(BuyAndHold::default()),
-                SupportedTradingModel::ManualTradingAlgo => Box::new(ManualTradingModel::default()),
-                SupportedTradingModel::MachineLearningModel => todo!(),
+            let trades = match trading_model {
+                // TODO: don't unwrap
+                SupportedTradingModel::BuyAndHold => {
+                    BuyAndHold::default().get_trades(&data).unwrap()
+                }
+                SupportedTradingModel::ManualTradingAlgo => {
+                    ManualTradingModel::default().get_trades(&data).unwrap()
+                }
+                SupportedTradingModel::MachineLearningModel => {
+                    // TODO: add cli params
+                    let dt = Hyperparameters::new(2).build();
+                    let rsi = &mut RSISignalsIter::default();
+                    let bb = &mut BBSignalsIter::default();
+                    let macd = &mut MACDSignalsIter::default();
+                    let signal_generators: Vec<&mut dyn SignalsIter> = vec![rsi, bb, macd];
+
+                    // TODO: either load a model or train a new one right here.
+                    DecisionTreeTrader::new(dt, signal_generators)
+                        .get_trades(&data)
+                        .unwrap()
+                }
             };
 
             // TODO: have a way for the model to tell us its signal data
 
-            let trades = model.get_trades(&data);
+            // let trades = model.get_trades(&data);
 
             // Pass the model to the backtester
             let symbol = data.symbol.clone();
@@ -240,7 +261,7 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
             let output = TechalyzerBacktestOutput {
                 performance,
                 total_return,
-                trades,
+                trades: trades.clone(),
                 model_name: trading_model.to_string(),
                 symbol,
                 prices: data,

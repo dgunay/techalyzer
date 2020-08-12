@@ -5,7 +5,7 @@ use serde::Serialize;
 use std::{collections::HashMap, slice::Iter};
 use ta::indicators::MovingAverageConvergenceDivergence;
 use ta::indicators::MovingAverageConvergenceDivergenceOutput;
-use ta::Next;
+use ta::{Next, Reset};
 
 #[derive(Serialize)]
 pub struct MovingAverageConvergenceDivergenceSignals {
@@ -17,6 +17,12 @@ pub struct MovingAverageConvergenceDivergenceSignals {
 pub struct MACDSignalsIter {
     macd_line_prev: f64,
     macd: MovingAverageConvergenceDivergence,
+}
+
+impl Reset for MACDSignalsIter {
+    fn reset(&mut self) {
+        self.macd.reset()
+    }
 }
 
 impl SignalsIter for MACDSignalsIter {

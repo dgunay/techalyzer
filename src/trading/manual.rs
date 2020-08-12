@@ -84,6 +84,7 @@ impl Default for ManualTradingModel {
     }
 }
 
+#[derive(Debug)]
 pub enum ManualTradingModelError {
     NotConvertibleFromStr(String),
 }
@@ -112,7 +113,9 @@ impl ManualTradingModel {
 }
 
 impl TradingModel for ManualTradingModel {
-    fn get_trades(&self, prices: &Prices) -> Trades {
+    type Error = ManualTradingModelError;
+
+    fn get_trades(self, prices: &Prices) -> Result<Trades, Self::Error> {
         // Make a bin of technical indicators to use - 2 trending, 2 oscillating.
 
         let mut rsi = RSISignalsIter::default();
@@ -142,7 +145,7 @@ impl TradingModel for ManualTradingModel {
             trades.insert(day.clone(), trade);
         }
 
-        Trades { trades }
+        Ok(Trades { trades })
     }
 }
 
@@ -217,6 +220,7 @@ mod tests {
         let algo = ManualTradingModel::default();
         let trades: Vec<Position> = algo
             .get_trades(&prices)
+            .unwrap()
             .trades
             .values()
             .into_iter()
@@ -235,12 +239,12 @@ mod tests {
 
         // set to perma-bear mode
         let algo = ManualTradingModel::new(1, 0.0, -1.0);
-        let trades = algo.get_trades(&prices);
+        let trades = algo.get_trades(&prices).unwrap();
         assert!(trades.trades.iter().all(|t| *t.1 == Position::Short(1)));
 
         // perma-bull mode
         let algo = ManualTradingModel::new(1, 0.0, 1.0);
-        let trades = algo.get_trades(&prices);
+        let trades = algo.get_trades(&prices).unwrap();
         assert!(trades.trades.iter().all(|t| *t.1 == Position::Long(1)));
     }
 

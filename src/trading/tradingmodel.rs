@@ -18,5 +18,8 @@ impl Trades {
 /// Given historical price data, comes up with a series of trades to attempt
 /// to turn as much of a profit as possible.
 pub trait TradingModel {
-    fn get_trades(&self, prices: &Prices) -> Trades;
+    /// Error type that can happen for our implementation of TradingModel.
+    type Error;
+
+    fn get_trades(self, prices: &Prices) -> Result<Trades, Self::Error>;
 }

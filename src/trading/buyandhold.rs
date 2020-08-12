@@ -2,6 +2,7 @@ use super::tradingmodel::{Trades, TradingModel};
 use crate::backtester::Position::*;
 use crate::marketdata::prices::Prices;
 use crate::util::first_key;
+use derive_more::Display;
 use std::collections::BTreeMap;
 
 pub struct BuyAndHold {
@@ -14,10 +15,21 @@ impl Default for BuyAndHold {
     }
 }
 
+#[derive(Display, Debug)]
+pub enum BuyAndHoldError {
+    #[display(techalyzer = "No first day found", _0)]
+    NoFirstDay,
+}
+
 impl TradingModel for BuyAndHold {
-    fn get_trades(&self, prices: &Prices) -> Trades {
+    type Error = BuyAndHoldError;
+
+    fn get_trades(self, prices: &Prices) -> Result<Trades, Self::Error> {
         let mut trades = BTreeMap::new();
-        let first_day = first_key(&prices.map).expect("No first day in prices");
+        let first_day = match first_key(&prices.map) {
+            Some(d) => d,
+            None => return Err(BuyAndHoldError::NoFirstDay),
+        };
         trades.insert(first_day.clone(), Long(self.shares));
         let mut iter = prices.map.iter();
         let _ = iter.next();
@@ -25,7 +37,7 @@ impl TradingModel for BuyAndHold {
             trades.insert(d.clone(), Hold);
         }
 
-        Trades { trades }
+        Ok(Trades { trades })
     }
 }
 
@@ -49,7 +61,7 @@ mod tests {
             map: map,
         };
 
-        let trades = model.get_trades(&prices);
+        let trades = model.get_trades(&prices).unwrap();
         assert_eq!(trades.get(&day1).unwrap(), &Long(1000));
         assert_eq!(trades.get(&day2).unwrap(), &Hold);
         assert_eq!(trades.get(&day3).unwrap(), &Hold);
