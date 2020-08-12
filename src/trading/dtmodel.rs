@@ -6,6 +6,9 @@ use rustlearn::prelude::*;
 use rustlearn::trees::decision_tree::DecisionTree;
 use serde::{Deserialize, Serialize};
 
+// TODO: Try doing this to make forgetting to train the model a compile-time error:
+// https://stackoverflow.com/questions/42036826/using-the-rust-compiler-to-prevent-forgetting-to-call-a-method
+
 #[derive(Serialize, Deserialize)]
 pub struct DecisionTreeTrader<'a> {
     model: DecisionTree,
