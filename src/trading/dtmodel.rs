@@ -1,8 +1,5 @@
 use super::tradingmodel::{Trades, TradingModel};
-use crate::{
-    marketdata::prices::Prices,
-    signals::signals::{Signals, SignalsIter},
-};
+use crate::{marketdata::prices::Prices, signals::signals::SignalsIter};
 use chrono::NaiveDate;
 use derive_more::Display;
 use rustlearn::prelude::*;
@@ -45,7 +42,7 @@ impl<'a> DecisionTreeTrader<'a> {
     pub fn train(&mut self, train_prices: &Prices, horizon: u32) -> Result<(), DecisionTreeError> {
         // Get our indicators
         // let signals = Vec::new();
-        let mut X = Vec::new();
+        let mut x = Vec::new();
         let mut y = Vec::new();
 
         for (day, price) in train_prices.iter() {
@@ -60,13 +57,13 @@ impl<'a> DecisionTreeTrader<'a> {
 
             // X is the signals, Y is the future return
             // TODO: how do we structure it for rustlearn
-            X.push(signals);
+            x.push(signals);
             y.push(future_return);
         }
 
         // Construct X train, Y train data out of the prices
         self.model
-            .fit(&Array::from(&X), &y.into())
+            .fit(&Array::from(&x), &y.into())
             .map_err(|msg| DecisionTreeError::TrainingError(msg))
     }
 
