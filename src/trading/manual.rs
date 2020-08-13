@@ -9,8 +9,8 @@ use crate::{
     },
 };
 use derive_more::Display;
+use dg_ta::indicators::SimpleMovingAverage;
 use std::{collections::BTreeMap, ops::Add};
-use ta::indicators::SimpleMovingAverage;
 
 pub enum Error {
     NoSignalAvailable,

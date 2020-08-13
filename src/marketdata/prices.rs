@@ -2,7 +2,13 @@ use crate::Date;
 use crate::{datasources::alphavantage::entry_to_date, output::TechalyzerPrintOutput};
 use alphavantage::time_series::TimeSeries;
 use serde::{Deserialize, Serialize};
-use std::{collections::BTreeMap, ops::RangeBounds};
+use std::{
+    collections::{
+        btree_map::{Iter, IterMut},
+        BTreeMap,
+    },
+    ops::RangeBounds,
+};
 
 /// Contains a time series prices data
 #[derive(Deserialize, Serialize, Debug, PartialEq)]
@@ -12,8 +18,14 @@ pub struct Prices {
 }
 
 impl Prices {
-    pub fn iter(&self) -> std::collections::btree_map::Iter<Date, f64> {
+    // TODO: implement this using some kind of trait
+    pub fn iter(&self) -> Iter<Date, f64> {
         self.map.iter()
+    }
+
+    // TODO: implement this using some kind of trait
+    pub fn iter_mut(&mut self) -> IterMut<Date, f64> {
+        self.map.iter_mut()
     }
 
     pub fn date_range(&self, range: impl RangeBounds<Date>) -> Prices {

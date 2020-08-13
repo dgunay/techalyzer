@@ -3,7 +3,7 @@
 use crate::datasources::datasource::{DataSource, Error};
 use crate::output::TechalyzerPrintOutput;
 
-use crate::Prices;
+use crate::marketdata::prices::Prices;
 
 use std::fs::File;
 use std::io::BufReader;

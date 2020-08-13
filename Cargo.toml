@@ -8,8 +8,7 @@ edition = "2018"
 
 [dependencies]
 # TODO: if/when my PR is merged, switch back to ta instead of my fork.
-# ta = "0.1.5"
-ta = { git = "https://github.com/dgunay/ta-rs", branch="macd-output" }
+dg_ta = { git = "https://github.com/dgunay/ta-rs", branch="master" }
 # TODO: use a stable release of alphavantage if they bother to tag one
 # alphavantage = { git = "https://github.com/dgunay/alphavantage", features = ["blocking"] }
 alphavantage = { git = "https://github.com/asmarques/alphavantage", features = ["blocking"], rev="57a5414" }

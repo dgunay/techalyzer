@@ -1,5 +1,5 @@
+use crate::marketdata::prices::Prices;
 use crate::Date;
-use crate::Prices;
 use derive_more::Display;
 
 use std::ops::RangeBounds;

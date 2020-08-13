@@ -6,7 +6,6 @@ use rustlearn::prelude::*;
 use rustlearn::trees::decision_tree::DecisionTree;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
-use ta::Next;
 
 // TODO: Try doing this to make forgetting to train the model a compile-time error:
 // https://stackoverflow.com/questions/42036826/using-the-rust-compiler-to-prevent-forgetting-to-call-a-method
@@ -19,27 +18,9 @@ pub struct DecisionTreeTrader {
     // how can we keep runtime polymorphism and have serde work?
     // maybe try
     // signal_generators: Vec<&'a mut dyn SignalsIter>,
-    #[serde(skip)] // FIXME: remove when serde capability is fixed
+    // #[serde(skip)] // FIXME: remove when serde capability is fixed
     signal_generators: Vec<Box<dyn SignalsIter>>,
 }
-
-// struct SerializableSignalsIter<T: Next<f64>> {
-//     indicator: T,
-// }
-
-// impl Serialize for Box<dyn SignalsIter> {
-//     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-//     where
-//         S: serde::Serializer,
-//     {
-//         // Convert the signal generators into enums
-//         // TODO: configuration won't be preserved - how can we do this?
-
-//         // match self {
-
-//         // }
-//     }
-// }
 
 #[derive(Display, Debug)]
 pub enum DecisionTreeError {
@@ -85,12 +66,11 @@ impl DecisionTreeTrader {
         train_prices: &Prices,
         train_dates: Vec<Date>,
         horizon: u32,
-        _threshold: f32,
+        threshold: f32,
     ) -> Result<(), DecisionTreeError> {
         let mut x = Vec::new();
         let mut y = Vec::new();
 
-        // for day in train_prices.iter() {
         for day in train_dates {
             let price = train_prices
                 .get(&day)
@@ -113,8 +93,8 @@ impl DecisionTreeTrader {
             //     _ => OUT
             // };
             let label = match future_return {
-                r if r >= 0.0 => LONG,
-                r if r < 0.0 => SHORT,
+                r if r >= threshold => LONG,
+                r if r < -threshold => SHORT,
                 _ => LONG,
             };
 
@@ -183,7 +163,6 @@ impl TradingModel for DecisionTreeTrader {
                 }
             };
 
-            println!("Day: {} {:?}", day, self.signal_generators);
             trades.insert(*day, position);
         }
 
@@ -198,11 +177,14 @@ mod tests {
         backtester::Position,
         date::Date,
         marketdata::prices::Prices,
-        signals::{relativestrengthindexsignals::RSISignalsIter, signals::SignalsIter},
-        trading::tradingmodel::TradingModel,
+        signals::{
+            macdsignals::MACDSignalsIter, relativestrengthindexsignals::RSISignalsIter,
+            signals::SignalsIter,
+        },
+        trading::tradingmodel::{Trades, TradingModel},
     };
     use chrono::Duration;
-    use rustlearn::trees::decision_tree::{DecisionTree, Hyperparameters};
+    use rustlearn::trees::decision_tree::Hyperparameters;
     use std::collections::BTreeMap;
 
     /// Creates a month of Prices
@@ -224,7 +206,6 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
     fn smoke_test() {
         // Can we make it run and then serialize/deserialize?
 
@@ -243,14 +224,55 @@ mod tests {
         let bytes = bincode::serialize(&dt_trader).unwrap();
         let loaded: DecisionTreeTrader = bincode::deserialize(&bytes).unwrap();
 
-        // Predict something
+        // Predict what trades to make for profit
         let trades = dt_trader.get_trades(&prices).unwrap();
         assert!(trades.trades.iter().all(|p| *p.1 == Position::Long(1)));
 
         // Predict it again from the deserialized copy
-        // FIXME: panics because the Box<dyn SignalsIter> is lost during
-        // serialization/deserialization.
         let again_trades = loaded.get_trades(&prices).unwrap();
         assert_eq!(trades, again_trades);
+    }
+
+    #[test]
+    fn bull_market() {
+        let new_prices: Vec<f64> = (15..55).map(|f| f.into()).collect();
+        let trades = run_trader_test(new_prices, 3, 0.03);
+        assert!(trades.trades.iter().all(|p| *p.1 == Position::Long(1)));
+    }
+
+    // edits the prices used to train the model before running a test over the
+    // fixture_data()
+    fn run_trader_test(new_prices: Vec<f64>, horizon: u32, threshold: f32) -> Trades {
+        let indics: Vec<Box<dyn SignalsIter>> = vec![Box::new(MACDSignalsIter::default())];
+
+        // Construct the model
+        let params = Hyperparameters::new(indics.len());
+        let mut dt_trader = DecisionTreeTrader::new(params.build(), indics);
+
+        // Train it (in a bull market where stonks only go up)
+        let mut prices = fixture_setup();
+        for (i, (_, price)) in prices.iter_mut().enumerate() {
+            *price = new_prices[i];
+        }
+
+        let range = Date::range(Date::from_ymd(2012, 01, 2), Date::from_ymd(2012, 01, 30));
+        dt_trader.train(&prices, range, horizon, threshold).unwrap();
+
+        dt_trader.get_trades(&prices).unwrap()
+    }
+
+    #[test]
+    fn bear_market() {
+        let new_prices: Vec<f64> = (15..55).map(|f| f.into()).rev().collect();
+        let trades = run_trader_test(new_prices, 3, 0.03);
+        assert!(trades.trades.iter().all(|p| *p.1 == Position::Short(1)));
+    }
+
+    #[test]
+    #[should_panic]
+    fn afraid_to_invest() {
+        let new_prices: Vec<f64> = (15..55).map(|f| f.into()).rev().collect();
+        let trades = run_trader_test(new_prices, 3, 1.0);
+        assert!(trades.trades.iter().all(|p| *p.1 == Position::Out));
     }
 }

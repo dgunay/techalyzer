@@ -22,9 +22,11 @@ use crate::{
         SupportedTradingModel,
     },
 };
+use dg_ta::indicators::{
+    BollingerBands, MovingAverageConvergenceDivergence, RelativeStrengthIndex,
+};
 use rustlearn::trees::decision_tree::Hyperparameters;
 use std::{fs::File, path::PathBuf};
-use ta::indicators::{BollingerBands, MovingAverageConvergenceDivergence, RelativeStrengthIndex};
 
 pub fn print(prices: Prices, indicator: SupportedIndicators) -> Result<(), TechalyzerError> {
     // TODO: evaluate/benchmark signal generation using ndarray vs Vec<f64>
@@ -160,7 +162,7 @@ pub fn backtest(
     let output = TechalyzerBacktestOutput {
         performance,
         total_return,
-        trades: trades,
+        trades,
         model_name: trading_model.to_string(),
         symbol,
         prices,

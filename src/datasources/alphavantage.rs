@@ -1,6 +1,6 @@
 use crate::datasources::datasource::{DataSource, Error};
+use crate::marketdata::prices::Prices;
 use crate::Date;
-use crate::Prices;
 use alphavantage::time_series::Entry;
 
 use alphavantage::blocking::Client;

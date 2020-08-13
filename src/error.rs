@@ -41,7 +41,7 @@ macro_rules! impl_techalyzer_error_from_stringable_type {
 }
 
 impl_techalyzer_error_from_stringable_type!(serde_json::Error);
-impl_techalyzer_error_from_stringable_type!(ta::errors::Error);
+impl_techalyzer_error_from_stringable_type!(dg_ta::errors::Error);
 impl_techalyzer_error_from_stringable_type!(PerformanceError);
 impl_techalyzer_error_from_stringable_type!(BuyAndHoldError);
 impl_techalyzer_error_from_stringable_type!(ManualTradingModelError);
@@ -56,8 +56,8 @@ impl_techalyzer_error_from_stringable_type!(bincode::Error);
 //     }
 // }
 
-// impl From<ta::errors::Error> for TechalyzerError {
-//     fn from(e: ta::errors::Error) -> Self {
+// impl From<dg_ta::errors::Error> for TechalyzerError {
+//     fn from(e: dg_ta::errors::Error) -> Self {
 //         e.to_string().into()
 //     }
 // }

@@ -1,11 +1,11 @@
 use super::signals::{Output, Signal, SignalsIter};
 use crate::signals::signals::Signals;
 use crate::{marketdata::prices::Prices, util::clamp};
+use dg_ta::indicators::MovingAverageConvergenceDivergence;
+use dg_ta::indicators::MovingAverageConvergenceDivergenceOutput;
+use dg_ta::{Next, Reset};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, slice::Iter};
-use ta::indicators::MovingAverageConvergenceDivergence;
-use ta::indicators::MovingAverageConvergenceDivergenceOutput;
-use ta::{Next, Reset};
 
 #[derive(Serialize)]
 pub struct MovingAverageConvergenceDivergenceSignals {
@@ -13,7 +13,7 @@ pub struct MovingAverageConvergenceDivergenceSignals {
     signals: Vec<Signal>,
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Serialize, Deserialize)]
 pub struct MACDSignalsIter {
     macd_line_prev: f64,
     macd: MovingAverageConvergenceDivergence,
@@ -25,8 +25,7 @@ impl Reset for MACDSignalsIter {
     }
 }
 
-// TODO: re-enable when ta-rs is serde capable
-// #[typetag::serde]
+#[typetag::serde]
 impl SignalsIter for MACDSignalsIter {
     fn next(&mut self, price: f64) -> (Signal, Output) {
         // let output: MovingAverageConvergenceDivergenceOutput = indicator_output.into();
@@ -128,14 +127,14 @@ mod tests {
     use super::MovingAverageConvergenceDivergenceSignals;
     use crate::marketdata::prices::Prices;
     use crate::Date;
+    use dg_ta::indicators::MovingAverageConvergenceDivergence;
     use std::collections::BTreeMap;
-    use ta::indicators::MovingAverageConvergenceDivergence;
 
     struct Close {
         price: f64,
     }
 
-    impl ta::Close for Close {
+    impl dg_ta::Close for Close {
         fn close(&self) -> f64 {
             self.price
         }

@@ -5,7 +5,7 @@ pub mod performance;
 use crate::trading::tradingmodel::Trades;
 
 use crate::date::Date;
-use crate::Prices;
+use crate::marketdata::prices::Prices;
 use derive_more::Display;
 use performance::{PerformanceError, PortfolioPerformance};
 use serde::Serialize;

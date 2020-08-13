@@ -1,7 +1,7 @@
 use derive_more::Display;
+use dg_ta::Reset;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, fmt::Debug, slice::Iter};
-use ta::Reset;
 
 #[derive(Serialize, Deserialize, Debug, Copy, Clone)]
 #[serde(transparent)]
@@ -50,7 +50,7 @@ pub trait Signals {
 }
 
 /// Buy/sell signals, but done in a lazy fashion
-// #[typetag::serde(tag = "type")]
+#[typetag::serde(tag = "type")]
 pub trait SignalsIter: Reset + Debug {
     fn next(&mut self, price: f64) -> (Signal, Output);
 }
