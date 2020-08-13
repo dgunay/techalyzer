@@ -1,4 +1,6 @@
-Neither the outputs of Techalyzer nor the views of its contributors constitutes
+### Disclaimer
+
+Neither the outputs or source code of Techalyzer nor the views of its contributors constitute
 professional or financial advice.
 
 # Techalyzer
