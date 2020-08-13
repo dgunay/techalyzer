@@ -69,7 +69,7 @@ impl PortfolioPerformance {
     pub fn range_return(&self, range: impl RangeBounds<Date>) -> Result<f64, PerformanceError> {
         let mut iter = self.daily_portvals.range(range);
         let first = iter.next().ok_or(PerformanceError::NotEnoughDataPoints)?.1;
-        let last  = iter.last().ok_or(PerformanceError::NotEnoughDataPoints)?.1;
+        let last = iter.last().ok_or(PerformanceError::NotEnoughDataPoints)?.1;
 
         Ok((last / first) - 1.0)
     }

@@ -1,7 +1,7 @@
 use crate::datasources::datasource::{DataSource, Error};
+use crate::Date;
 use crate::Prices;
 use alphavantage::time_series::Entry;
-use crate::Date;
 
 use alphavantage::blocking::Client;
 
@@ -31,7 +31,12 @@ impl DataSource for AlphaVantage {
 
 /// Helper function to convert the date of an Entry into a Date
 pub fn entry_to_date(entry: Option<&Entry>) -> Date {
-    entry.expect("No first Entry").date.naive_local().date().into()
+    entry
+        .expect("No first Entry")
+        .date
+        .naive_local()
+        .date()
+        .into()
 }
 
 #[cfg(test)]

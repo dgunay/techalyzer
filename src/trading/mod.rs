@@ -3,8 +3,8 @@ pub mod dtmodel;
 pub mod manual;
 pub mod tradingmodel;
 
-use std::{path::PathBuf};
-use strum_macros::{EnumString, Display};
+use std::path::PathBuf;
+use strum_macros::{Display, EnumString};
 
 // TODO: move this somewhere else
 /// Can be an ML model or a handwritten algorithm.

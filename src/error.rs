@@ -37,7 +37,6 @@ macro_rules! impl_techalyzer_error_from_stringable_type {
                 e.to_string().into()
             }
         }
-        
     };
 }
 

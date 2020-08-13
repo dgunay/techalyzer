@@ -1,3 +1,4 @@
+use crate::Date;
 use crate::{
     backtester::performance::PortfolioPerformance,
     marketdata::prices::Prices,
@@ -9,7 +10,6 @@ use crate::{
     },
     trading::tradingmodel::Trades,
 };
-use crate::Date;
 use serde::{Deserialize, Serialize};
 
 // use strum;

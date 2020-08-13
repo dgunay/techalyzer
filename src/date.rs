@@ -20,6 +20,20 @@ impl Date {
     pub fn parse_from_str(s: &str, fmt: &str) -> Result<Self, ParseError> {
         NaiveDate::parse_from_str(s, fmt).map(|ok| ok.into())
     }
+
+    /// Creates an inclusive range of Dates from start to end.
+    // TODO: this is mainly to get around limitations of Range/RangeBounds.
+    // try replacing it with some type that guarantees sorting
+    pub fn range(start: Date, end: Date) -> Vec<Date> {
+        let mut day = start;
+        let mut days = Vec::new();
+        while day != end {
+            days.push(day);
+            day = day + Duration::days(1);
+        }
+
+        days
+    }
 }
 
 pub fn today() -> Date {

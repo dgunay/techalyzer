@@ -89,6 +89,7 @@ TBD
 * TODO: server that can maybe push notifications somehow when it finds a good time to buy or sell.
 * TODO: Making a PR for [this strum issue][strum_issue] would make it possible
         to show the user what supported indicators there are on a failure to match.
+* TODO: Using `cargo clippy` to catch bad practice.
 
 [strum_issue]: https://github.com/Peternator7/strum/issues/13
 

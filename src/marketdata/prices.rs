@@ -33,7 +33,7 @@ impl Prices {
         self.map.get(date)
     }
 
-    pub fn get_after(&self, date: &Date, days_after: usize) -> Option<(Date, f64)> {
+    pub fn get_after(&self, date: &Date, days_after: u32) -> Option<(Date, f64)> {
         // From the given date, go n days after
         // TODO: gross and probably inefficient, is there a way we can hash
         // straight to `date` and then start iterating?

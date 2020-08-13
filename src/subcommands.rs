@@ -1,5 +1,6 @@
 //! Subcommands for the Techalyzer program.
 
+use crate::Date;
 use crate::{
     backtester::BackTester,
     error::TechalyzerError,
@@ -21,9 +22,8 @@ use crate::{
         SupportedTradingModel,
     },
 };
-use crate::Date;
 use rustlearn::trees::decision_tree::Hyperparameters;
-use std::{fs::File, ops::RangeBounds, path::PathBuf};
+use std::{fs::File, path::PathBuf};
 use ta::indicators::{BollingerBands, MovingAverageConvergenceDivergence, RelativeStrengthIndex};
 
 pub fn print(prices: Prices, indicator: SupportedIndicators) -> Result<(), TechalyzerError> {
@@ -85,11 +85,13 @@ pub fn print(prices: Prices, indicator: SupportedIndicators) -> Result<(), Techa
 
 pub fn train(
     prices: Prices,
-    train_dates: impl RangeBounds<Date>,
+    train_dates: Vec<Date>,
     signal_generators: Vec<SupportedIndicators>,
     horizon: u32,
     out_path: PathBuf,
 ) -> Result<(), TechalyzerError> {
+    // Chop off `horizon` days from the train_dates to reserve for lookahead.
+
     let gens = signal_generators.iter().map(|f| f.into()).collect();
     let model = train_model(&prices, train_dates, gens, horizon)?;
 
@@ -110,17 +112,15 @@ impl From<SupportedIndicators> for Box<dyn SignalsIter> {
 
 fn train_model<'a>(
     prices: &Prices,
-    train_dates: impl RangeBounds<Date>,
+    train_dates: Vec<Date>,
     signal_generators: Vec<Box<dyn SignalsIter>>,
     horizon: u32,
 ) -> Result<DecisionTreeTrader, DecisionTreeError> {
-    let dt = Hyperparameters::new(2).build();
+    let dt = Hyperparameters::new(signal_generators.len()).build();
     // TODO: either load a model or train a new one right here.
     let mut model = DecisionTreeTrader::new(dt, signal_generators);
 
-    // Slice the prices into training data
-    let training_p = prices.date_range(train_dates);
-    model.train(&training_p, horizon)?;
+    model.train(prices, train_dates, horizon, 0.03)?;
 
     Ok(model)
 }

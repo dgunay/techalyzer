@@ -97,8 +97,8 @@ impl Signals for BollingerBandsSignals {
 #[cfg(test)]
 mod tests {
     use super::{BollingerBands, BollingerBandsSignals, Signals};
-    use crate::{marketdata::prices::Prices, util::nearly_equal};
     use crate::Date;
+    use crate::{marketdata::prices::Prices, util::nearly_equal};
     use std::collections::BTreeMap;
 
     struct Close {

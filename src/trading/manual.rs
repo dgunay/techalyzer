@@ -153,11 +153,11 @@ impl TradingModel for ManualTradingModel {
 #[cfg(test)]
 mod tests {
     use super::{ManualTradingModel, SignalRangedFloat};
+    use crate::Date;
     use crate::{
         backtester::Position, marketdata::prices::Prices, trading::tradingmodel::TradingModel,
     };
     use chrono::Duration;
-    use crate::Date;
     use std::collections::BTreeMap;
 
     /// Creates a month of flat Prices

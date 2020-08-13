@@ -72,7 +72,7 @@ enum SubCommands {
         params: TrainingParams,
 
         #[structopt(long, short)]
-        out_path: PathBuf,
+        out_path: Option<PathBuf>,
     },
 
     /// Suggests a trading course of action given recent developments in a
@@ -107,7 +107,7 @@ struct TrainingParams {
     train_start_date: Date,
     #[structopt(default_value)]
     train_end_date: Date,
-    #[structopt(long, short)]
+    #[structopt(default_value = "10", long, short)]
     horizon: u32,
     signal_generators: Vec<SupportedIndicators>,
 }
@@ -176,13 +176,19 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
         SubCommands::Train {
             params: p,
             out_path,
-        } => train(
-            prices,
-            p.train_start_date..=p.train_end_date,
-            p.signal_generators,
-            p.horizon,
-            out_path,
-        )?,
+        } => {
+            // Copy our training dates out of the Price data set.
+            let range: Vec<Date> = prices
+                .date_range(p.train_start_date..=p.train_end_date)
+                .map
+                .keys()
+                .cloned()
+                .collect();
+
+            // TODO: include date info
+            let out_path = out_path.unwrap_or(PathBuf::from(format!("{}.bin", &prices.symbol)));
+            train(prices, range, p.signal_generators, p.horizon, out_path)?
+        }
         SubCommands::BackTest {
             trading_model,
             cash,

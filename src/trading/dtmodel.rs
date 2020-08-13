@@ -1,6 +1,6 @@
 use super::tradingmodel::{Trades, TradingModel};
-use crate::{marketdata::prices::Prices, signals::signals::SignalsIter};
 use crate::Date;
+use crate::{marketdata::prices::Prices, signals::signals::SignalsIter};
 use derive_more::Display;
 use rustlearn::prelude::*;
 use rustlearn::trees::decision_tree::DecisionTree;
@@ -25,12 +25,23 @@ pub struct DecisionTreeTrader {
 
 #[derive(Display, Debug)]
 pub enum DecisionTreeError {
-    #[display(fmt = "No price information found looking ahead at day {}", _0)]
-    NoLookAheadPriceData(Date),
+    #[display(
+        fmt = "No price information found looking ahead {} days after {}",
+        _0,
+        _1
+    )]
+    NoLookAheadPriceData(u32, Date),
 
     #[display(fmt = "Error while fitting model: {}", _0)]
     TrainingError(String),
+
+    #[display(fmt = "No price found on date {}", _0)]
+    NoPriceFound(Date),
 }
+
+const LONG: f32 = 1.0;
+const SHORT: f32 = 0.0;
+// const SHORT: f32 = -1.0;
 
 impl DecisionTreeTrader {
     // pub fn new(model: DecisionTree, signal_generators: Vec<&'a mut dyn SignalsIter>) -> Self {
@@ -47,27 +58,52 @@ impl DecisionTreeTrader {
     /// ## Arguments
     ///
     /// * `train_prices` - Prices time series to train the model on.
+    /// * `train_dates` - Range of dates to train on. Should be `horizon` less
+    /// than the dates in `train_prices`.
     /// * `horizon` - Uses the returns this many days in the future for Y.
-    pub fn train(&mut self, train_prices: &Prices, horizon: u32) -> Result<(), DecisionTreeError> {
-        // Get our indicators
-        // let signals = Vec::new();
+    /// * `threshold` - How good (or bad) the returns have to be for the model to go Long or Short.
+    pub fn train(
+        &mut self,
+        train_prices: &Prices,
+        train_dates: Vec<Date>,
+        horizon: u32,
+        _threshold: f32,
+    ) -> Result<(), DecisionTreeError> {
         let mut x = Vec::new();
         let mut y = Vec::new();
 
-        for (day, price) in train_prices.iter() {
+        // for day in train_prices.iter() {
+        for day in train_dates {
+            let price = train_prices
+                .get(&day)
+                .ok_or(DecisionTreeError::NoPriceFound(day))?;
+
             let signals: Vec<f32> = self.next_signals(price);
 
             // look ahead for n-day future return
-            let future_day = *day + chrono::Duration::days(horizon as i64);
             let future_price = train_prices
-                .get(&future_day)
-                .ok_or(DecisionTreeError::NoLookAheadPriceData(future_day))?;
+                .get_after(&day, horizon)
+                .ok_or(DecisionTreeError::NoLookAheadPriceData(horizon, day))?
+                .1;
             let future_return = ((future_price / price) - 1.0) as f32;
 
-            // X is the signals, Y is the future return
+            // Returns above threshold is Long, below is Short, otherwise Out.
+            // TODO: change back to this when we have a multiclass classifier
+            // let label = match future_return {
+            //     r if r >= threshold => LONG,
+            //     r if r <= -threshold => SHORT,
+            //     _ => OUT
+            // };
+            let label = match future_return {
+                r if r >= 0.0 => LONG,
+                r if r < 0.0 => SHORT,
+                _ => LONG,
+            };
+
+            // X is the signals, Y our long/short/out decision based on future return
             // TODO: how do we structure it for rustlearn
             x.push(signals);
-            y.push(future_return);
+            y.push(label);
         }
 
         // Construct X train, Y train data out of the prices
