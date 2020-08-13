@@ -1,6 +1,8 @@
+[![Build Status](https://travis-ci.com/dgunay/techalyzer.svg?token=p1Uesg1pZ93ks38dv7YH&branch=master)](https://travis-ci.com/dgunay/techalyzer)
+
 ### Disclaimer
 
-Neither the outputs or source code of Techalyzer nor the views of its contributors constitute
+Neither the outputs nor source code of Techalyzer nor the views of its contributors constitute
 professional or financial advice.
 
 # Techalyzer
