@@ -54,7 +54,7 @@ impl BollingerBandsSignals {
             let (signal, output) = signal_iterator.next(*price);
 
             signals.push(signal);
-            outputs.push(output.into());
+            outputs.push(output);
         }
 
         Self { outputs, signals }

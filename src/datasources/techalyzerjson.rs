@@ -52,7 +52,7 @@ impl DataSource for TechalyzerJson {
         }
 
         Ok(Prices {
-            map: data.map.iter().map(|e| (e.0.clone(), e.1.price)).collect(),
+            map: data.map.iter().map(|e| (*e.0, e.1.price)).collect(),
             symbol: data.symbol,
         })
     }

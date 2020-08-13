@@ -143,7 +143,7 @@ impl TradingModel for ManualTradingModel {
             };
 
             // Make a trade.
-            trades.insert(day.clone(), trade);
+            trades.insert(*day, trade);
         }
 
         Ok(Trades { trades })

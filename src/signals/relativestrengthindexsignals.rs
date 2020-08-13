@@ -50,7 +50,7 @@ impl RelativeStrengthIndexSignals {
             let (signal, rsi_val) = signal_iterator.next(*price);
 
             signals.push(signal);
-            outputs.push(rsi_val.into());
+            outputs.push(rsi_val);
         }
 
         Self { outputs, signals }

@@ -20,7 +20,7 @@ impl std::fmt::Display for crate::util::ClampError {
 /// Clamps `a` between `min` and `max` inclusive.
 pub fn clamp(a: f64, min: f64, max: f64) -> Result<f64, ClampError> {
     if min > max {
-        return Err(ClampError { min: min, max: max });
+        return Err(ClampError { min, max });
     }
 
     let res = if a > max {
@@ -39,19 +39,19 @@ pub fn nearly_equal(a: f64, b: f64) -> bool {
 }
 
 pub fn first_key<K, V>(map: &BTreeMap<K, V>) -> Option<&K> {
-    return map.keys().nth(0);
+    map.keys().next()
 }
 
 pub fn last_key<K, V>(map: &BTreeMap<K, V>) -> Option<&K> {
-    return map.keys().last();
+    map.keys().last()
 }
 
 pub fn first_value<K, V>(map: &BTreeMap<K, V>) -> Option<&V> {
-    return map.values().nth(0);
+    map.values().next()
 }
 
 pub fn last_value<K, V>(map: &BTreeMap<K, V>) -> Option<&V> {
-    return map.values().last();
+    map.values().last()
 }
 
 /// Computes the slope between two floating point values. Normalized to a scale

@@ -33,7 +33,8 @@ pub fn get_market_data(
 ) -> Result<Prices, Error> {
     let market_data: Prices = match source {
         SupportedDataSources::AlphaVantage => {
-            let key = secret.data.unwrap_or("".to_string());
+            // TODO: just make Secret contain an empty string with the Default trait
+            let key = secret.data.unwrap_or_else(|| "".to_string());
             let cl = Client::new(key.as_str());
             let av = alphavantage::AlphaVantage::new(cl);
             av.get_date_range(symbol.as_str(), date_range)?
@@ -57,5 +58,5 @@ pub fn get_market_data(
         }
     };
 
-    return Ok(market_data);
+    Ok(market_data)
 }

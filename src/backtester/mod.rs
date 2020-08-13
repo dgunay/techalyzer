@@ -55,7 +55,7 @@ impl<'a> BackTester<'a> {
         // For every day in the time series, there must be some Position.
         for day in prices.map.keys() {
             if trades.get(day).is_none() {
-                return Err(BackTesterError::NoPositionFound(day.clone()));
+                return Err(BackTesterError::NoPositionFound(*day));
             }
         }
 
@@ -104,7 +104,7 @@ impl<'a> BackTester<'a> {
             };
 
             // Store
-            portvals.insert(day.clone(), equity_value + self.cash);
+            portvals.insert(*day, equity_value + self.cash);
         }
 
         PortfolioPerformance::new(portvals)

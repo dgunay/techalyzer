@@ -20,7 +20,7 @@ impl Prices {
         let slice = self
             .map
             .range(range)
-            .map(|e| (e.0.clone(), e.1.clone()))
+            .map(|e| (*e.0, *e.1))
             .collect();
 
         Prices {
@@ -72,7 +72,7 @@ impl From<TechalyzerPrintOutput> for Prices {
     fn from(t: TechalyzerPrintOutput) -> Self {
         Prices {
             symbol: t.symbol,
-            map: t.map.iter().map(|e| (e.0.clone(), e.1.price)).collect(),
+            map: t.map.iter().map(|e| (*e.0, e.1.price)).collect(),
         }
     }
 }

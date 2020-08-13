@@ -44,14 +44,14 @@ impl PortfolioPerformance {
         // });
         let mut daily_returns = BTreeMap::new();
         let first_key = first_key(&daily_portvals).ok_or(PerformanceError::NotEnoughDataPoints)?;
-        daily_returns.insert(first_key.clone(), 0.0);
+        daily_returns.insert(*first_key, 0.0);
         let mut yesterday = daily_portvals[first_key];
         for (day, value) in daily_portvals.iter() {
             if day == first_key {
                 continue;
             }
             let ret = (value / yesterday) - 1.0;
-            daily_returns.insert(day.clone(), ret);
+            daily_returns.insert(*day, ret);
             yesterday = *value;
         }
 

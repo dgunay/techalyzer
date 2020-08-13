@@ -53,25 +53,22 @@ pub fn print(prices: Prices, indicator: SupportedIndicators) -> Result<(), Techa
     // before printing it?
 
     let mut m = std::collections::BTreeMap::new();
-    let mut i = 0;
-    // for (date, price) in data.map.iter() {
-    for (date, price) in prices.iter() {
+    for (i, (date, price)) in prices.iter().enumerate() {
         m.insert(
-            date.clone(),
+            *date,
             TechalyzerEntry {
-                price: price.clone(),
+                price: *price,
                 signal: sigs.signals()[i],
                 output: sigs.outputs()[i].clone(),
             },
         );
-        i += 1;
     }
 
     // TODO: factor out this ugliness or change the datastructures
     // involved to be less gross
     let output = TechalyzerPrintOutput {
         symbol: prices.symbol,
-        indicator: indicator,
+        indicator,
         map: m,
     };
 
@@ -110,7 +107,7 @@ impl From<SupportedIndicators> for Box<dyn SignalsIter> {
     }
 }
 
-fn train_model<'a>(
+fn train_model(
     prices: &Prices,
     train_dates: Vec<Date>,
     signal_generators: Vec<Box<dyn SignalsIter>>,
@@ -163,7 +160,7 @@ pub fn backtest(
     let output = TechalyzerBacktestOutput {
         performance,
         total_return,
-        trades: trades.clone(),
+        trades: trades,
         model_name: trading_model.to_string(),
         symbol,
         prices,

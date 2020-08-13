@@ -30,11 +30,11 @@ impl TradingModel for BuyAndHold {
             Some(d) => d,
             None => return Err(BuyAndHoldError::NoFirstDay),
         };
-        trades.insert(first_day.clone(), Long(self.shares));
+        trades.insert(*first_day, Long(self.shares));
         let mut iter = prices.map.iter();
         let _ = iter.next();
         for (d, _) in iter {
-            trades.insert(d.clone(), Hold);
+            trades.insert(*d, Hold);
         }
 
         Ok(Trades { trades })
