@@ -186,7 +186,8 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
                 .collect();
 
             // TODO: include date info
-            let out_path = out_path.unwrap_or_else(|| PathBuf::from(format!("{}.bin", &prices.symbol)));
+            let out_path =
+                out_path.unwrap_or_else(|| PathBuf::from(format!("{}.bin", &prices.symbol)));
             train(prices, range, p.signal_generators, p.horizon, out_path)?
         }
         SubCommands::BackTest {

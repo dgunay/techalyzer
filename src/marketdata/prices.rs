@@ -17,11 +17,7 @@ impl Prices {
     }
 
     pub fn date_range(&self, range: impl RangeBounds<Date>) -> Prices {
-        let slice = self
-            .map
-            .range(range)
-            .map(|e| (*e.0, *e.1))
-            .collect();
+        let slice = self.map.range(range).map(|e| (*e.0, *e.1)).collect();
 
         Prices {
             map: slice,

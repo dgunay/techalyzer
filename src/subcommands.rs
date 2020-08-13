@@ -87,7 +87,7 @@ pub fn train(
     horizon: u32,
     out_path: PathBuf,
 ) -> Result<(), TechalyzerError> {
-    // Chop off `horizon` days from the train_dates to reserve for lookahead.
+    // TODO: Chop off `horizon` days from the train_dates to reserve for lookahead.
 
     let gens = signal_generators.iter().map(|f| f.into()).collect();
     let model = train_model(&prices, train_dates, gens, horizon)?;

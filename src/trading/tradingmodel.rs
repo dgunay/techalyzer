@@ -5,7 +5,7 @@ use crate::{error::TechalyzerError, marketdata::prices::Prices};
 use serde::Serialize;
 use std::collections::BTreeMap;
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, Debug, Eq, PartialEq)]
 pub struct Trades {
     pub trades: BTreeMap<Date, Position>,
 }

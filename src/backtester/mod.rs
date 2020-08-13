@@ -21,7 +21,7 @@ pub enum BackTesterError {
 
 /// A trade with the position (long/short/out) and number of shares commit to
 /// the trade.
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub enum Position {
     /// Buy N shares.
     Long(u64),

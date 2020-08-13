@@ -1,7 +1,7 @@
 use super::signals::{Output, Signal, SignalsIter};
 use crate::signals::signals::Signals;
 use crate::{marketdata::prices::Prices, util::clamp};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, slice::Iter};
 use ta::indicators::MovingAverageConvergenceDivergence;
 use ta::indicators::MovingAverageConvergenceDivergenceOutput;
@@ -13,7 +13,7 @@ pub struct MovingAverageConvergenceDivergenceSignals {
     signals: Vec<Signal>,
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct MACDSignalsIter {
     macd_line_prev: f64,
     macd: MovingAverageConvergenceDivergence,
@@ -25,6 +25,8 @@ impl Reset for MACDSignalsIter {
     }
 }
 
+// TODO: re-enable when ta-rs is serde capable
+// #[typetag::serde]
 impl SignalsIter for MACDSignalsIter {
     fn next(&mut self, price: f64) -> (Signal, Output) {
         // let output: MovingAverageConvergenceDivergenceOutput = indicator_output.into();

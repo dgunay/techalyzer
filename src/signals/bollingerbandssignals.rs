@@ -1,11 +1,11 @@
 use super::signals::{Output, Signal, SignalsIter};
 use crate::{marketdata::prices::Prices, signals::signals::Signals, util::clamp};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, slice::Iter};
 use ta::indicators::{BollingerBands, BollingerBandsOutput};
 use ta::{Next, Reset};
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct BBSignalsIter {
     bb: BollingerBands,
 }
@@ -16,6 +16,7 @@ impl Reset for BBSignalsIter {
     }
 }
 
+// #[typetag::serde]
 impl SignalsIter for BBSignalsIter {
     fn next(&mut self, price: f64) -> (Signal, Output) {
         let o = self.bb.next(price);

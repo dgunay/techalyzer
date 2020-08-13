@@ -1,15 +1,29 @@
 use super::signals::{Output, Signal, SignalsIter};
 use crate::{marketdata::prices::Prices, signals::signals::Signals};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use std::slice::Iter;
-use ta::indicators::RelativeStrengthIndex;
+use ta::indicators::{ExponentialMovingAverage, RelativeStrengthIndex};
 use ta::{Next, Reset};
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct RSISignalsIter {
     rsi: RelativeStrengthIndex,
 }
+
+/// Required in order to serialize types containing these.
+// TODO: I actually would rather just add serde to my fork, if I don't do that
+// then i have to tediously implement getters for all of ta-rs's types
+// a-la https://serde.rs/remote-derive.html
+// #[derive(Serialize, Deserialize)]
+// #[serde(remote = "RelativeStrengthIndex")]
+// struct RemoteRSI {
+//     pub n: u32,
+//     pub up_ema_indicator: ExponentialMovingAverage,
+//     pub down_ema_indicator: ExponentialMovingAverage,
+//     pub prev_val: f64,
+//     pub is_new: bool,
+// }
 
 impl Reset for RSISignalsIter {
     fn reset(&mut self) {
@@ -17,6 +31,7 @@ impl Reset for RSISignalsIter {
     }
 }
 
+// #[typetag::serde]
 impl SignalsIter for RSISignalsIter {
     fn next(&mut self, price: f64) -> (Signal, Output) {
         let rsi_val = self.rsi.next(price);

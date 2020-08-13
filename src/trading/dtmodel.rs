@@ -1,10 +1,12 @@
 use super::tradingmodel::{Trades, TradingModel};
 use crate::Date;
-use crate::{marketdata::prices::Prices, signals::signals::SignalsIter};
+use crate::{backtester::Position, marketdata::prices::Prices, signals::signals::SignalsIter};
 use derive_more::Display;
 use rustlearn::prelude::*;
 use rustlearn::trees::decision_tree::DecisionTree;
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
+use ta::Next;
 
 // TODO: Try doing this to make forgetting to train the model a compile-time error:
 // https://stackoverflow.com/questions/42036826/using-the-rust-compiler-to-prevent-forgetting-to-call-a-method
@@ -14,14 +16,30 @@ pub struct DecisionTreeTrader {
     model: DecisionTree,
 
     // TODO: solve these problems to have arbitrary injectable signal generators:
-    // - TODO: not yet sure how to serialize
-    // - TODO: can we "reset" the generator between train and test runs?
-    // - TODO: Can we rewrite the TradingModel trait so that we don't have to
-    //         cheat with RefCell to mutate our signal generators?
-    #[serde(skip)]
+    // how can we keep runtime polymorphism and have serde work?
+    // maybe try
     // signal_generators: Vec<&'a mut dyn SignalsIter>,
+    #[serde(skip)] // FIXME: remove when serde capability is fixed
     signal_generators: Vec<Box<dyn SignalsIter>>,
 }
+
+// struct SerializableSignalsIter<T: Next<f64>> {
+//     indicator: T,
+// }
+
+// impl Serialize for Box<dyn SignalsIter> {
+//     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+//     where
+//         S: serde::Serializer,
+//     {
+//         // Convert the signal generators into enums
+//         // TODO: configuration won't be preserved - how can we do this?
+
+//         // match self {
+
+//         // }
+//     }
+// }
 
 #[derive(Display, Debug)]
 pub enum DecisionTreeError {
@@ -129,29 +147,110 @@ impl TradingModel for DecisionTreeTrader {
         // Reset our technical indicators
         self.signal_generators.iter_mut().for_each(|g| g.reset());
 
+        let mut trades = BTreeMap::new();
         // Given each day and it's technical indicators, predict the return and
         // act accordingly
-        for (_day, price) in prices.iter() {
+        for (day, price) in prices.iter() {
+            // FIXME: for some reason, `signals` is empty sometimes and I have no
+            // idea why. Debugging it, it appears that for some reason when the
+            // for loop is making its last iteration, some action at a distance
+            // just deletes whatever signal generator is in there, leaving it
+            // empty. Then when it does iter/map over the signal generators,
+            // there are none of them to do any mapping so we get an empty Vec.
+
+            // Actually it happens because the deserialized one doesn't have a
+            // signal generator. Problematic. TODO: how can we make Box<dyn SignalsIter>
+            // survive serialization?
             let signals: Vec<f32> = self.next_signals(price);
+
             // TODO: start submitting PRs to improve rustlearn, it has no
             // error enums for one thing
-            let predicted_return = match self.model.predict(&Array::from(signals)) {
+            let prediction = match self.model.predict(&Array::from(signals)) {
                 Ok(r) => r,
                 Err(msg) => return Err(DecisionTreeError::TrainingError(msg.to_string())),
             };
 
-            print!("{:?}", predicted_return);
+            // println!("{} {:?}", day, prediction);
+            // TODO: don't hardcode traded shares
+            let position = match prediction.get(0, 0) {
+                val if val == 1.0 => Position::Long(1),
+                val if val == 0.0 => Position::Short(1),
+                val => {
+                    return Err(DecisionTreeError::TrainingError(format!(
+                        "Invalid prediction '{}'",
+                        val
+                    )))
+                }
+            };
+
+            println!("Day: {} {:?}", day, self.signal_generators);
+            trades.insert(*day, position);
         }
 
-        todo!()
+        Ok(Trades { trades })
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use super::DecisionTreeTrader;
+    use crate::{
+        backtester::Position,
+        date::Date,
+        marketdata::prices::Prices,
+        signals::{relativestrengthindexsignals::RSISignalsIter, signals::SignalsIter},
+        trading::tradingmodel::TradingModel,
+    };
+    use chrono::Duration;
+    use rustlearn::trees::decision_tree::{DecisionTree, Hyperparameters};
+    use std::collections::BTreeMap;
+
+    /// Creates a month of Prices
+    fn fixture_setup() -> Prices {
+        let start = Date::from_ymd(2012, 1, 2);
+        let end = Date::from_ymd(2012, 2, 2);
+        let mut dt = start;
+        let mut entries = BTreeMap::new();
+        while dt <= end {
+            entries.insert(dt, 30.0);
+            // dt = dt.and_hms(1, 1, 1) + Duration::days(1);
+            dt = dt + Duration::days(1);
+        }
+
+        Prices {
+            map: entries,
+            symbol: "jpm".to_string(),
+        }
+    }
+
     #[test]
+    #[should_panic]
     fn smoke_test() {
-        // Can we make it run?
-        todo!("write a smoke test for DecisionTreeTrader")
+        // Can we make it run and then serialize/deserialize?
+
+        let indics: Vec<Box<dyn SignalsIter>> = vec![Box::new(RSISignalsIter::default())];
+
+        // Construct the model
+        let params = Hyperparameters::new(indics.len());
+        let mut dt_trader = DecisionTreeTrader::new(params.build(), indics);
+
+        // Train it
+        let prices = fixture_setup();
+        let range = Date::range(Date::from_ymd(2012, 01, 2), Date::from_ymd(2012, 01, 30));
+        dt_trader.train(&prices, range, 3, 0.03).unwrap();
+
+        // Can we turn it into bincode and back?
+        let bytes = bincode::serialize(&dt_trader).unwrap();
+        let loaded: DecisionTreeTrader = bincode::deserialize(&bytes).unwrap();
+
+        // Predict something
+        let trades = dt_trader.get_trades(&prices).unwrap();
+        assert!(trades.trades.iter().all(|p| *p.1 == Position::Long(1)));
+
+        // Predict it again from the deserialized copy
+        // FIXME: panics because the Box<dyn SignalsIter> is lost during
+        // serialization/deserialization.
+        let again_trades = loaded.get_trades(&prices).unwrap();
+        assert_eq!(trades, again_trades);
     }
 }
