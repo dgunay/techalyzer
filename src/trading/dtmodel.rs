@@ -13,7 +13,8 @@ use std::collections::BTreeMap;
 // TODO: Try doing this to make forgetting to train the model a compile-time error:
 // https://stackoverflow.com/questions/42036826/using-the-rust-compiler-to-prevent-forgetting-to-call-a-method
 
-// TODO: document
+/// Predicts trading opportunities using a one-vs-rest decision tree classifier
+/// with technical indicators
 #[derive(Serialize, Deserialize)]
 pub struct DecisionTreeTrader {
     /// Our multi-class decision tree classifier
@@ -37,6 +38,9 @@ pub enum DecisionTreeError {
 
     #[display(fmt = "No price found on date {}", _0)]
     NoPriceFound(Date),
+
+    #[display(fmt = "No signal generators provided")]
+    NoSignalGeneratorsProvided,
 }
 
 const LONG: f32 = 1.0;
@@ -45,12 +49,16 @@ const OUT: f32 = 0.0;
 const SHORT: f32 = -1.0;
 
 impl DecisionTreeTrader {
-    pub fn new(signal_generators: Vec<Box<dyn SignalsIter>>) -> Self {
+    pub fn new(signal_generators: Vec<Box<dyn SignalsIter>>) -> Result<Self, DecisionTreeError> {
+        if signal_generators.is_empty() {
+            return Err(DecisionTreeError::NoSignalGeneratorsProvided);
+        }
+
         let learner = Hyperparameters::new(signal_generators.len()).one_vs_rest();
-        Self {
+        Ok(Self {
             learner,
             signal_generators,
-        }
+        })
     }
 
     /// Trains the model using technical indicator signal generators for the
@@ -108,7 +116,6 @@ impl DecisionTreeTrader {
     /// Gets the next set of signals from the signal generators
     fn next_signals(&mut self, price: &f64) -> Vec<f32> {
         self.signal_generators
-            // .borrow_mut()
             .iter_mut()
             .map(|g| f32::from(g.next(*price).0))
             .collect()
@@ -145,7 +152,6 @@ impl TradingModel for DecisionTreeTrader {
                 Err(msg) => return Err(DecisionTreeError::TrainingError(msg.to_string())),
             };
 
-            // println!("{} {:?}", day, prediction);
             // TODO: don't hardcode traded shares
             let position = match prediction.get(0, 0) {
                 val if val == LONG => Position::Long(1),
@@ -207,7 +213,7 @@ mod tests {
         let indics: Vec<Box<dyn SignalsIter>> = vec![Box::new(RSISignalsIter::default())];
 
         // Construct the model
-        let mut dt_trader = DecisionTreeTrader::new(indics);
+        let mut dt_trader = DecisionTreeTrader::new(indics).unwrap();
 
         // Train it
         let prices = fixture_setup();
@@ -240,7 +246,7 @@ mod tests {
         let indics: Vec<Box<dyn SignalsIter>> = vec![Box::new(MACDSignalsIter::default())];
 
         // Construct the model
-        let mut dt_trader = DecisionTreeTrader::new(indics);
+        let mut dt_trader = DecisionTreeTrader::new(indics).unwrap();
 
         // Train it (in a bull market where stonks only go up)
         let mut prices = fixture_setup();

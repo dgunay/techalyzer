@@ -115,7 +115,7 @@ fn train_model(
     horizon: u32,
 ) -> Result<DecisionTreeTrader, DecisionTreeError> {
     // TODO: either load a model or train a new one right here.
-    let mut model = DecisionTreeTrader::new(signal_generators);
+    let mut model = DecisionTreeTrader::new(signal_generators)?;
 
     model.train(prices, train_dates, horizon, 0.03)?;
 
