@@ -156,6 +156,7 @@ mod tests {
     use crate::Date;
     use crate::{
         backtester::Position, marketdata::prices::Prices, trading::tradingmodel::TradingModel,
+        util::TimeSeries,
     };
     use chrono::Duration;
     use std::collections::BTreeMap;
@@ -194,9 +195,6 @@ mod tests {
     //         entries
     //     };
     // }
-
-    // TODO: consider using this everywhere
-    type TimeSeries<T> = BTreeMap<Date, T>;
 
     #[test]
     fn test_manual_trader() {

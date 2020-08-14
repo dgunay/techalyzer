@@ -44,7 +44,7 @@ impl TradingModel for BuyAndHold {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::Date;
+    use crate::{util::TimeSeries, Date};
 
     #[test]
     fn test_buy_and_hold() {
@@ -52,7 +52,7 @@ mod tests {
         let day2 = Date::from_ymd(2020, 1, 2);
         let day3 = Date::from_ymd(2020, 1, 3);
         let model = BuyAndHold { shares: 1000 };
-        let map: BTreeMap<Date, f64> = vec![(day1, 30.0), (day2, 32.0), (day3, 34.0)]
+        let map: TimeSeries<f64> = vec![(day1, 30.0), (day2, 32.0), (day3, 34.0)]
             .iter()
             .cloned()
             .collect();

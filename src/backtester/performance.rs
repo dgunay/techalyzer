@@ -1,6 +1,6 @@
 //! Measures portfolio performance as total/daily returns over periods of time.
 
-use crate::util::first_key;
+use crate::util::{first_key, TimeSeries};
 use crate::Date;
 use derive_more::Display;
 use serde::Serialize;
@@ -11,11 +11,11 @@ use std::{collections::BTreeMap, ops::RangeBounds};
 #[derive(Debug, Serialize)]
 pub struct PortfolioPerformance {
     /// The running total portfolio value in a time series.
-    pub daily_portvals: BTreeMap<Date, f64>,
+    pub daily_portvals: TimeSeries<f64>,
 
     // pub sharpe_ratio: f64, // TODO: add this
     /// The daily portfolio returns in a time series.
-    pub daily_returns: BTreeMap<Date, f64>,
+    pub daily_returns: TimeSeries<f64>,
 
     /// Standard deviation of daily returns.
     pub volatility: f64,
@@ -32,7 +32,7 @@ pub enum PerformanceError {
 impl PortfolioPerformance {
     /// Constructs a PortfolioPerformance. There must be at least one datapoint
     /// in `daily_portvals`.
-    pub fn new(daily_portvals: BTreeMap<Date, f64>) -> Result<Self, PerformanceError> {
+    pub fn new(daily_portvals: TimeSeries<f64>) -> Result<Self, PerformanceError> {
         // Calculate daily returns
         // TODO: this can be probably done more elegantly either with fold_first once
         // stabilized, or through a better pattern I'm not yet aware of. for

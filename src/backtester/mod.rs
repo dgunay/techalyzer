@@ -136,7 +136,7 @@ impl<'a> BackTester<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::util::nearly_equal;
+    use crate::util::{nearly_equal, TimeSeries};
 
     // TODO: less copypasted code for fixtures
 
@@ -147,7 +147,7 @@ mod tests {
         let day3 = Date::from_ymd(2012, 1, 3);
 
         // Buy and hold 1000 shares for the duration of a few days
-        let strat: BTreeMap<Date, Position> = vec![
+        let strat: TimeSeries<Position> = vec![
             (day1, Position::Long(1)),
             (day2, Position::Hold),
             (day3, Position::Hold),
@@ -156,7 +156,7 @@ mod tests {
         .cloned()
         .collect();
 
-        let prices: BTreeMap<Date, f64> = vec![(day1, 100.0), (day2, 105.0), (day3, 110.0)]
+        let prices: TimeSeries<f64> = vec![(day1, 100.0), (day2, 105.0), (day3, 110.0)]
             .iter()
             .cloned()
             .collect();
@@ -180,7 +180,7 @@ mod tests {
         let day3 = Date::from_ymd(2012, 1, 3);
 
         // Buy 2 shares, sell 1, hold the other.
-        let strat: BTreeMap<Date, Position> = vec![
+        let strat: TimeSeries<Position> = vec![
             (day1, Position::Long(2)),
             (day2, Position::Long(1)),
             (day3, Position::Hold),
@@ -189,7 +189,7 @@ mod tests {
         .cloned()
         .collect();
 
-        let prices: BTreeMap<Date, f64> = vec![(day1, 100.0), (day2, 105.0), (day3, 110.0)]
+        let prices: TimeSeries<f64> = vec![(day1, 100.0), (day2, 105.0), (day3, 110.0)]
             .iter()
             .cloned()
             .collect();
@@ -214,7 +214,7 @@ mod tests {
         let day3 = Date::from_ymd(2012, 1, 3);
 
         // Buy and hold 1000 shares for the duration of a few days
-        let strat: BTreeMap<Date, Position> = vec![
+        let strat: TimeSeries<Position> = vec![
             (day1, Position::Short(1)),
             (day2, Position::Hold),
             (day3, Position::Hold),
@@ -223,7 +223,7 @@ mod tests {
         .cloned()
         .collect();
 
-        let prices: BTreeMap<Date, f64> = vec![(day1, 100.0), (day2, 105.0), (day3, 110.0)]
+        let prices: TimeSeries<f64> = vec![(day1, 100.0), (day2, 105.0), (day3, 110.0)]
             .iter()
             .cloned()
             .collect();
@@ -248,7 +248,7 @@ mod tests {
         let day4 = Date::from_ymd(2012, 1, 4);
 
         // Buy and hold 1000 shares for the duration of a few days
-        let strat: BTreeMap<Date, Position> = vec![
+        let strat: TimeSeries<Position> = vec![
             (day1, Position::Long(1)),
             (day2, Position::Hold),
             (day3, Position::Short(1)),
@@ -258,7 +258,7 @@ mod tests {
         .cloned()
         .collect();
 
-        let prices: BTreeMap<Date, f64> =
+        let prices: TimeSeries<f64> =
             vec![(day1, 100.0), (day2, 105.0), (day3, 110.0), (day4, 105.0)]
                 .iter()
                 .cloned()
@@ -285,7 +285,7 @@ mod tests {
         let day4 = Date::from_ymd(2012, 1, 4);
 
         // Buy and hold 1000 shares for the duration of a few days
-        let strat: BTreeMap<Date, Position> = vec![
+        let strat: TimeSeries<Position> = vec![
             (day1, Position::Long(1)),
             (day2, Position::Hold),
             (day3, Position::Out),
@@ -295,7 +295,7 @@ mod tests {
         .cloned()
         .collect();
 
-        let prices: BTreeMap<Date, f64> =
+        let prices: TimeSeries<f64> =
             vec![(day1, 100.0), (day2, 105.0), (day3, 110.0), (day4, 105.0)]
                 .iter()
                 .cloned()

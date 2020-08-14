@@ -1,4 +1,3 @@
-use crate::Date;
 use crate::{
     backtester::performance::PortfolioPerformance,
     marketdata::prices::Prices,
@@ -9,9 +8,9 @@ use crate::{
         signals::{Output, Signal, SignalsIter},
     },
     trading::tradingmodel::Trades,
+    util::TimeSeries,
 };
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
 use strum_macros::{EnumString, EnumVariantNames};
 
 #[derive(Debug, Serialize, Deserialize, EnumString, EnumVariantNames)]
@@ -48,7 +47,7 @@ pub struct TechalyzerEntry {
 /// Organizes our data the way we want before printing.
 #[derive(Serialize, Deserialize)]
 pub struct TechalyzerPrintOutput {
-    pub map: BTreeMap<Date, TechalyzerEntry>,
+    pub map: TimeSeries<TechalyzerEntry>,
     pub symbol: String,
     pub indicator: SupportedIndicators,
 }

@@ -1,19 +1,17 @@
 use crate::Date;
-use crate::{datasources::alphavantage::entry_to_date, output::TechalyzerPrintOutput};
-use alphavantage::time_series::TimeSeries;
+use crate::{
+    datasources::alphavantage::entry_to_date, output::TechalyzerPrintOutput, util::TimeSeries,
+};
 use serde::{Deserialize, Serialize};
 use std::{
-    collections::{
-        btree_map::{Iter, IterMut},
-        BTreeMap,
-    },
+    collections::btree_map::{Iter, IterMut},
     ops::RangeBounds,
 };
 
 /// Contains a time series prices data
 #[derive(Deserialize, Serialize, Debug, PartialEq)]
 pub struct Prices {
-    pub map: BTreeMap<Date, f64>,
+    pub map: TimeSeries<f64>,
     pub symbol: String,
 }
 
@@ -62,8 +60,8 @@ impl Prices {
     }
 }
 
-impl From<TimeSeries> for Prices {
-    fn from(t: TimeSeries) -> Self {
+impl From<alphavantage::time_series::TimeSeries> for Prices {
+    fn from(t: alphavantage::time_series::TimeSeries) -> Self {
         let mut m = std::collections::BTreeMap::new();
         for e in t.entries {
             m.insert(entry_to_date(Some(&e)), e.close);
@@ -88,7 +86,7 @@ impl From<TechalyzerPrintOutput> for Prices {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use alphavantage::time_series::Entry;
+    use alphavantage::time_series::{Entry, TimeSeries};
     use chrono::{Duration, TimeZone};
     use chrono_tz::US::Eastern;
     use std::collections::BTreeMap;

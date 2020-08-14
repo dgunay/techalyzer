@@ -1,6 +1,10 @@
 // TODO: make this private to the crate (control exported symbols in general)
 
+use crate::date::Date;
 use std::collections::BTreeMap;
+
+pub type TimeSeries<T> = BTreeMap<Date, T>;
+
 #[derive(Debug)]
 pub struct ClampError {
     min: f64,

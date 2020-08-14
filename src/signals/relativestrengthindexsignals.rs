@@ -79,9 +79,8 @@ impl Signals for RelativeStrengthIndexSignals {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::util::nearly_equal;
+    use crate::util::{nearly_equal, TimeSeries};
     use crate::Date;
-    use std::collections::BTreeMap;
 
     struct Close {
         price: f64,
@@ -110,7 +109,7 @@ mod tests {
     }
 
     fn fixture_prices() -> Prices {
-        let map: BTreeMap<Date, f64> = vec![
+        let map: TimeSeries<f64> = vec![
             (Date::from_ymd(2020, 03, 1), 1.9),
             (Date::from_ymd(2020, 03, 2), 2.0),
             (Date::from_ymd(2020, 03, 3), 2.1),

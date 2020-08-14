@@ -99,8 +99,10 @@ impl Signals for BollingerBandsSignals {
 mod tests {
     use super::{BollingerBands, BollingerBandsSignals, Signals};
     use crate::Date;
-    use crate::{marketdata::prices::Prices, util::nearly_equal};
-    use std::collections::BTreeMap;
+    use crate::{
+        marketdata::prices::Prices,
+        util::{nearly_equal, TimeSeries},
+    };
 
     struct Close {
         price: f64,
@@ -116,7 +118,7 @@ mod tests {
     fn test_signals_from_bollinger_bands() {
         let _bb = BollingerBands::new(5, 2.0).unwrap();
 
-        let map: BTreeMap<Date, f64> = vec![
+        let map: TimeSeries<f64> = vec![
             (Date::from_ymd(2020, 03, 1), 1.9),
             (Date::from_ymd(2020, 03, 2), 2.0),
             (Date::from_ymd(2020, 03, 3), 2.1),

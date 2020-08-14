@@ -1,13 +1,12 @@
 use crate::backtester::Position;
 use crate::Date;
-use crate::{error::TechalyzerError, marketdata::prices::Prices};
+use crate::{error::TechalyzerError, marketdata::prices::Prices, util::TimeSeries};
 
 use serde::Serialize;
-use std::collections::BTreeMap;
 
 #[derive(Serialize, Clone, Debug, Eq, PartialEq)]
 pub struct Trades {
-    pub trades: BTreeMap<Date, Position>,
+    pub trades: TimeSeries<Position>,
 }
 
 impl Trades {

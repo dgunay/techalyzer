@@ -126,9 +126,8 @@ impl Signals for MovingAverageConvergenceDivergenceSignals {
 mod tests {
     use super::MovingAverageConvergenceDivergenceSignals;
     use crate::marketdata::prices::Prices;
-    use crate::Date;
+    use crate::{util::TimeSeries, Date};
     use dg_ta::indicators::MovingAverageConvergenceDivergence;
-    use std::collections::BTreeMap;
 
     struct Close {
         price: f64,
@@ -142,7 +141,7 @@ mod tests {
 
     #[test]
     fn test_signals_from_macd() {
-        let map: BTreeMap<Date, f64> = vec![
+        let map: TimeSeries<f64> = vec![
             (Date::from_ymd(2020, 03, 1), 1.9),
             (Date::from_ymd(2020, 03, 2), 2.0),
             (Date::from_ymd(2020, 03, 3), 2.1),
