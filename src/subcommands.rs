@@ -25,7 +25,6 @@ use crate::{
 use dg_ta::indicators::{
     BollingerBands, MovingAverageConvergenceDivergence, RelativeStrengthIndex,
 };
-use rustlearn::trees::decision_tree::Hyperparameters;
 use std::{fs::File, path::PathBuf};
 
 pub fn print(prices: Prices, indicator: SupportedIndicators) -> Result<(), TechalyzerError> {
@@ -115,9 +114,8 @@ fn train_model(
     signal_generators: Vec<Box<dyn SignalsIter>>,
     horizon: u32,
 ) -> Result<DecisionTreeTrader, DecisionTreeError> {
-    let dt = Hyperparameters::new(signal_generators.len()).build();
     // TODO: either load a model or train a new one right here.
-    let mut model = DecisionTreeTrader::new(dt, signal_generators);
+    let mut model = DecisionTreeTrader::new(signal_generators);
 
     model.train(prices, train_dates, horizon, 0.03)?;
 

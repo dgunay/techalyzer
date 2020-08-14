@@ -3,22 +3,23 @@ use crate::Date;
 use crate::{backtester::Position, marketdata::prices::Prices, signals::signals::SignalsIter};
 use derive_more::Display;
 use rustlearn::prelude::*;
-use rustlearn::trees::decision_tree::DecisionTree;
+use rustlearn::{
+    multiclass::OneVsRestWrapper,
+    trees::decision_tree::{DecisionTree, Hyperparameters},
+};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 // TODO: Try doing this to make forgetting to train the model a compile-time error:
 // https://stackoverflow.com/questions/42036826/using-the-rust-compiler-to-prevent-forgetting-to-call-a-method
 
+// TODO: document
 #[derive(Serialize, Deserialize)]
 pub struct DecisionTreeTrader {
-    model: DecisionTree,
+    /// Our multi-class decision tree classifier
+    learner: OneVsRestWrapper<DecisionTree>,
 
-    // TODO: solve these problems to have arbitrary injectable signal generators:
-    // how can we keep runtime polymorphism and have serde work?
-    // maybe try
-    // signal_generators: Vec<&'a mut dyn SignalsIter>,
-    // #[serde(skip)] // FIXME: remove when serde capability is fixed
+    /// Signals that will inform the model.
     signal_generators: Vec<Box<dyn SignalsIter>>,
 }
 
@@ -39,14 +40,15 @@ pub enum DecisionTreeError {
 }
 
 const LONG: f32 = 1.0;
-const SHORT: f32 = 0.0;
-// const SHORT: f32 = -1.0;
+// const SHORT: f32 = 0.0;
+const OUT: f32 = 0.0;
+const SHORT: f32 = -1.0;
 
 impl DecisionTreeTrader {
-    // pub fn new(model: DecisionTree, signal_generators: Vec<&'a mut dyn SignalsIter>) -> Self {
-    pub fn new(model: DecisionTree, signal_generators: Vec<Box<dyn SignalsIter>>) -> Self {
+    pub fn new(signal_generators: Vec<Box<dyn SignalsIter>>) -> Self {
+        let learner = Hyperparameters::new(signal_generators.len()).one_vs_rest();
         Self {
-            model,
+            learner,
             signal_generators,
         }
     }
@@ -86,26 +88,19 @@ impl DecisionTreeTrader {
             let future_return = ((future_price / price) - 1.0) as f32;
 
             // Returns above threshold is Long, below is Short, otherwise Out.
-            // TODO: change back to this when we have a multiclass classifier
-            // let label = match future_return {
-            //     r if r >= threshold => LONG,
-            //     r if r <= -threshold => SHORT,
-            //     _ => OUT
-            // };
             let label = match future_return {
                 r if r >= threshold => LONG,
-                r if r < -threshold => SHORT,
-                _ => LONG,
+                r if r <= -threshold => SHORT,
+                _ => OUT,
             };
 
             // X is the signals, Y our long/short/out decision based on future return
-            // TODO: how do we structure it for rustlearn
             x.push(signals);
             y.push(label);
         }
 
         // Construct X train, Y train data out of the prices
-        self.model
+        self.learner
             .fit(&Array::from(&x), &y.into())
             .map_err(|msg| DecisionTreeError::TrainingError(msg.to_string()))
     }
@@ -137,15 +132,15 @@ impl TradingModel for DecisionTreeTrader {
             // just deletes whatever signal generator is in there, leaving it
             // empty. Then when it does iter/map over the signal generators,
             // there are none of them to do any mapping so we get an empty Vec.
-
             // Actually it happens because the deserialized one doesn't have a
-            // signal generator. Problematic. TODO: how can we make Box<dyn SignalsIter>
-            // survive serialization?
+            // signal generator. Problematic. Should we pre-emptively error out
+            // if all the signals are a contant value (0/1/-1)
+
             let signals: Vec<f32> = self.next_signals(price);
 
             // TODO: start submitting PRs to improve rustlearn, it has no
             // error enums for one thing
-            let prediction = match self.model.predict(&Array::from(signals)) {
+            let prediction = match self.learner.predict(&Array::from(signals)) {
                 Ok(r) => r,
                 Err(msg) => return Err(DecisionTreeError::TrainingError(msg.to_string())),
             };
@@ -153,8 +148,9 @@ impl TradingModel for DecisionTreeTrader {
             // println!("{} {:?}", day, prediction);
             // TODO: don't hardcode traded shares
             let position = match prediction.get(0, 0) {
-                val if val == 1.0 => Position::Long(1),
-                val if val == 0.0 => Position::Short(1),
+                val if val == LONG => Position::Long(1),
+                val if val == OUT => Position::Out,
+                val if val == SHORT => Position::Short(1),
                 val => {
                     return Err(DecisionTreeError::TrainingError(format!(
                         "Invalid prediction '{}'",
@@ -184,7 +180,6 @@ mod tests {
         trading::tradingmodel::{Trades, TradingModel},
     };
     use chrono::Duration;
-    use rustlearn::trees::decision_tree::Hyperparameters;
     use std::collections::BTreeMap;
 
     /// Creates a month of Prices
@@ -212,8 +207,7 @@ mod tests {
         let indics: Vec<Box<dyn SignalsIter>> = vec![Box::new(RSISignalsIter::default())];
 
         // Construct the model
-        let params = Hyperparameters::new(indics.len());
-        let mut dt_trader = DecisionTreeTrader::new(params.build(), indics);
+        let mut dt_trader = DecisionTreeTrader::new(indics);
 
         // Train it
         let prices = fixture_setup();
@@ -226,7 +220,6 @@ mod tests {
 
         // Predict what trades to make for profit
         let trades = dt_trader.get_trades(&prices).unwrap();
-        assert!(trades.trades.iter().all(|p| *p.1 == Position::Long(1)));
 
         // Predict it again from the deserialized copy
         let again_trades = loaded.get_trades(&prices).unwrap();
@@ -243,11 +236,11 @@ mod tests {
     // edits the prices used to train the model before running a test over the
     // fixture_data()
     fn run_trader_test(new_prices: Vec<f64>, horizon: u32, threshold: f32) -> Trades {
+        // TODO: parameterize the indicators
         let indics: Vec<Box<dyn SignalsIter>> = vec![Box::new(MACDSignalsIter::default())];
 
         // Construct the model
-        let params = Hyperparameters::new(indics.len());
-        let mut dt_trader = DecisionTreeTrader::new(params.build(), indics);
+        let mut dt_trader = DecisionTreeTrader::new(indics);
 
         // Train it (in a bull market where stonks only go up)
         let mut prices = fixture_setup();
@@ -269,10 +262,12 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
     fn afraid_to_invest() {
         let new_prices: Vec<f64> = (15..55).map(|f| f.into()).rev().collect();
         let trades = run_trader_test(new_prices, 3, 1.0);
         assert!(trades.trades.iter().all(|p| *p.1 == Position::Out));
     }
+
+    #[test]
+    fn up_and_down() {}
 }
