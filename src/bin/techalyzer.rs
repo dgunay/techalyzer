@@ -14,7 +14,7 @@ use techalyzer::{
 #[derive(StructOpt, Debug)]
 #[structopt(name = "Techalyzer", author = "Devin Gunay")]
 struct Opts {
-    /// Secret associated with your chosen data source, usually an API key or something.
+    /// Secret associated with your chosen data source, usually an API key
     #[structopt(long)]
     secret: Option<String>,
 
@@ -27,11 +27,11 @@ struct Opts {
     /// The symbol of the security to analyze
     symbol: String,
 
-    /// Start date of the analysis. Leave out to go to the earliest possible date.
+    /// Start date of the analysis. Defaults to the earliest possible date.
     #[structopt(long, short, parse(try_from_str = parse_date))]
     start_date: Option<Date>,
 
-    /// End date of the analysis. Leave out to go to the latest possible date
+    /// End date of the analysis. Defaults to the latest possible date
     /// (usually today).
     #[structopt(long, short, parse(try_from_str = parse_date))]
     end_date: Option<Date>,
@@ -67,48 +67,54 @@ enum SubCommands {
     /// Trains a machine learning model on stock data to make trades based on
     /// technical indicators, then serializes it for later use.
     Train {
-        // TODO: decide on common model training parameters
         #[structopt(flatten)]
         params: TrainingParams,
 
+        /// File path to output a model file to.
         #[structopt(long, short)]
         out_path: Option<PathBuf>,
     },
 
     /// Suggests a trading course of action given recent developments in a
     /// security's price action.
-    Suggest {
-        /// See [SupportedTradingModel](enum.SupportedTradingModel.html)
-        model: SupportedTradingModel,
-    },
+    Suggest { model: SupportedTradingModel },
 
     /// Backtests a strategy through a given dataset
     BackTest {
+        /// Which trading model to use.
         trading_model: SupportedTradingModel,
+
+        /// Saved model file to use (generate one with `techalyzer train`)
+        #[structopt(long, short, required_if("trading-model", "MachineLearningModel"))]
+        model_file: Option<PathBuf>,
+
+        /// How much cash the model begins with.
         cash: f64, // TODO: is there a good money type/bignum to avoid possible problems?
     },
 }
 
-// TODO: remove if we don't use this
-// #[derive(Debug)]
-// enum TrainOrLoad {
-//     Train(TrainingParams),
-//     Load(PathBuf),
-// }
-
-// impl Default for TrainOrLoad {
-//     fn default() -> Self {
-//         TrainOrLoad::Train(TrainingParams::default())
-//     }
-// }
-
 #[derive(Debug, StructOpt)]
 struct TrainingParams {
+    /// Start date of the training dataset.
     train_start_date: Date,
-    #[structopt(default_value)]
-    train_end_date: Date,
+
+    /// End date of the training. Defaults to the end of the dataset, less
+    /// `horizon` days.
+    train_end_date: Option<Date>,
+
+    /// How many days in the future to check future returns in order to decide
+    /// how to label the data. Defaults to 10 days.
     #[structopt(default_value = "10", long, short)]
     horizon: u32,
+
+    /// What percentage (+/-) returns to consider a buying or shorting
+    /// opportunity when looking at future returns. Defaults to 0.03 (3%
+    /// returns).
+    #[structopt(default_value = "0.03", long, short)]
+    decision_threshold: f64,
+
+    /// Which technical indicators to use to generate features for the learner.
+    #[structopt(long, short)]
     signal_generators: Vec<SupportedIndicators>,
 }
 
@@ -121,15 +127,22 @@ impl Default for TrainingParams {
                 SupportedIndicators::MACD,
             ],
             train_start_date: very_early_date(),
-            train_end_date: Date::default(),
+            train_end_date: Some(Date::default()),
             horizon: 10,
+            decision_threshold: 0.03,
         }
     }
 }
 
 fn main() -> Result<(), TechalyzerError> {
     let opts = Opts::from_args();
-    run_program(opts)
+    match run_program(opts) {
+        Ok(_) => Ok(()),
+        Err(e) => {
+            println!("{}", e);
+            Err(e)
+        }
+    }
 }
 
 fn very_early_date() -> Date {
@@ -177,9 +190,29 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
             params: p,
             out_path,
         } => {
+            if p.signal_generators.is_empty() {
+                return Err(TechalyzerError::NoIndicatorSpecified);
+            }
+
+            // Manual end date or -horizon days before the end of the dataset.
+            let end_date = match p.train_end_date {
+                Some(d) => d,
+                None => {
+                    *prices
+                        .iter()
+                        .rev()
+                        .nth(p.horizon as usize)
+                        .ok_or(format!(
+                            "No day found {} days before last day in dataset",
+                            p.horizon
+                        ))?
+                        .0
+                }
+            };
+
             // Copy our training dates out of the Price data set.
             let range: Vec<Date> = prices
-                .date_range(p.train_start_date..=p.train_end_date)
+                .date_range(p.train_start_date..=end_date)
                 .map
                 .keys()
                 .cloned()
@@ -193,8 +226,9 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
         SubCommands::BackTest {
             trading_model,
             cash,
+            model_file,
         } => {
-            backtest(prices, trading_model, cash)?;
+            backtest(prices, trading_model, model_file, cash)?;
         }
     }
 
@@ -223,4 +257,7 @@ mod tests {
 
         res.unwrap();
     }
+
+    // TODO: test behavior of each path (mainly whether required arguments work
+    // properly or not)
 }

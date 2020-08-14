@@ -125,17 +125,26 @@ fn train_model(
 pub fn backtest(
     prices: Prices,
     trading_model: SupportedTradingModel,
+    model_file: Option<PathBuf>,
     cash: f64,
 ) -> Result<(), TechalyzerError> {
-    let trades = match trading_model {
+    // TODO: instantiate BuyAndHold by default and use it with the same parameters
+    // as the trader instead of using normalized stock price to compare performance.
+
+    let trades = match &trading_model {
         // TODO: don't unwrap
         SupportedTradingModel::BuyAndHold => BuyAndHold::default().get_trades(&prices).unwrap(),
         SupportedTradingModel::ManualTradingAlgo => {
             ManualTradingModel::default().get_trades(&prices)?
         }
-        SupportedTradingModel::MachineLearningModel(_) => {
-            let _model: DecisionTreeTrader = todo!();
-            // model.get_trades(&prices)?
+        SupportedTradingModel::MachineLearningModel => {
+            // let model: DecisionTreeTrader =
+            //     bincode::deserialize(std::fs::read(model_file)?.as_slice())?;
+            let model: DecisionTreeTrader = match model_file {
+                Some(path) => bincode::deserialize(std::fs::read(path)?.as_slice())?,
+                None => return Err(TechalyzerError::NoModelFileSpecified),
+            };
+            model.get_trades(&prices)?
         }
     };
 

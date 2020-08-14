@@ -3,7 +3,6 @@ pub mod dtmodel;
 pub mod manual;
 pub mod tradingmodel;
 
-use std::path::PathBuf;
 use strum_macros::{Display, EnumString};
 
 // TODO: move this somewhere else
@@ -12,15 +11,5 @@ use strum_macros::{Display, EnumString};
 pub enum SupportedTradingModel {
     ManualTradingAlgo,
     BuyAndHold,
-    MachineLearningModel(PathBuf),
+    MachineLearningModel,
 }
-
-// impl Display for SupportedTradingModel {
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         match self {
-//             SupportedTradingModel::ManualTradingAlgo => write!(f, self.)
-//             SupportedTradingModel::BuyAndHold => {}
-//             SupportedTradingModel::MachineLearningModel(_) => {}
-//         }
-//     }
-// }

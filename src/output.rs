@@ -11,12 +11,10 @@ use crate::{
     trading::tradingmodel::Trades,
 };
 use serde::{Deserialize, Serialize};
-
-// use strum;
 use std::collections::BTreeMap;
-use strum_macros::EnumString;
+use strum_macros::{EnumString, EnumVariantNames};
 
-#[derive(Debug, Serialize, Deserialize, EnumString)]
+#[derive(Debug, Serialize, Deserialize, EnumString, EnumVariantNames)]
 // #[serde(untagged)]
 pub enum SupportedIndicators {
     #[strum(serialize = "BollingerBands", serialize = "bb")]

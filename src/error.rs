@@ -1,10 +1,12 @@
 use crate::{
     backtester::performance::PerformanceError,
+    output::SupportedIndicators,
     trading::{
         buyandhold::BuyAndHoldError, dtmodel::DecisionTreeError, manual::ManualTradingModelError,
     },
 };
 use derive_more::{Display, From};
+use strum::VariantNames;
 
 // use std::str::FromStr;
 
@@ -15,19 +17,21 @@ use derive_more::{Display, From};
 pub enum TechalyzerError {
     #[display(fmt = "{}", _0)]
     Generic(String),
+
+    #[display(
+        fmt = "Must include at least one signal generator (supported: {})",
+        "list_of_indicators()"
+    )]
+    NoIndicatorSpecified,
+
+    #[display(fmt = "Please supply a model file.")]
+    NoModelFileSpecified,
 }
 
-// impl FromStr for TechalyzerError {
-//     type Err;
-//     fn from_str(s: &str) -> Result<Self, Self::Err> {
-//         todo!()
-//     }
-// }
-
-// TODO: is there any way we can just do this, or do we need to wait for stabilization?
-// impl From<T: ToString> for TechalyzerError {
-
-// }
+fn list_of_indicators() -> String {
+    let v = Vec::from(SupportedIndicators::VARIANTS);
+    v.join(", ")
+}
 
 /// Makes a From<T: ToString> implementation for TechalyzerError
 macro_rules! impl_techalyzer_error_from_stringable_type {
