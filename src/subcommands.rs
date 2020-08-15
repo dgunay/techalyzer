@@ -128,8 +128,7 @@ pub fn backtest(
     model_file: Option<PathBuf>,
     cash: f64,
 ) -> Result<(), TechalyzerError> {
-    // TODO: instantiate BuyAndHold by default and use it with the same parameters
-    // as the trader instead of using normalized stock price to compare performance.
+    // TODO: allow parameters for the models here.
 
     let trades = match &trading_model {
         // TODO: don't unwrap
@@ -151,21 +150,14 @@ pub fn backtest(
     // TODO: have a way for the model to tell us its signal data
 
     // Give the backtester the trades
-    let symbol = prices.symbol.clone();
-    let mut backtester = match BackTester::new(trades.clone(), &prices, cash) {
-        Ok(bt) => bt,
-        Err(e) => return Err(TechalyzerError::Generic(e.to_string())),
-    };
+    let performance = BackTester::new(trades.clone(), &prices, cash)?.backtest()?;
 
-    // Run the backtest
-    let performance = match backtester.backtest() {
-        Ok(perf) => perf,
-        Err(e) => return Err(TechalyzerError::Generic(e.to_string())),
-    };
+    let bench_trades = BuyAndHold::default().get_trades(&prices)?;
+    let bench_perf = BackTester::new(bench_trades, &prices, cash)?.backtest()?;
 
     let total_return = performance.total_return()?;
-    // .expect("Couldn't get total return");
 
+    let symbol = prices.symbol.clone();
     let output = TechalyzerBacktestOutput {
         performance,
         total_return,
@@ -173,6 +165,7 @@ pub fn backtest(
         model_name: trading_model.to_string(),
         symbol,
         prices,
+        benchmark: bench_perf,
     };
 
     // Serialize the backtest

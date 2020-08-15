@@ -158,6 +158,9 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
     // API keys if necessary
     let secret = Secret { data: opts.secret };
 
+    let start_date = start.unwrap_or(very_early_date());
+    let end_date = end.unwrap_or(today());
+
     // FIXME: this is a hack because I can't figure out how to have both
     // bounded inclusive ranges and full/unbounded ranges in the same variable.
     let impossibly_early_date = very_early_date();
@@ -169,7 +172,8 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
     };
 
     // Get market data
-    let prices = match get_market_data(opts.data_source, opts.symbol, date_range, secret) {
+    let prices = match get_market_data(opts.data_source, opts.symbol, start_date..=end_date, secret)
+    {
         Ok(d) => d,
         Err(e) => {
             return Err(TechalyzerError::Generic(format!("{}", e)));
@@ -195,30 +199,28 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
             }
 
             // Manual end date or -horizon days before the end of the dataset.
-            let end_date = match p.train_end_date {
-                Some(d) => d,
-                None => {
-                    *prices
-                        .iter()
-                        .rev()
-                        .nth(p.horizon as usize)
-                        .ok_or(format!(
-                            "No day found {} days before last day in dataset",
-                            p.horizon
-                        ))?
-                        .0
-                }
-            };
+            let end_date = end.unwrap_or(
+                *prices
+                    .iter()
+                    .rev()
+                    .nth(p.horizon as usize)
+                    .ok_or(format!(
+                        "No day found {} days before last day in dataset",
+                        p.horizon
+                    ))?
+                    .0,
+            );
 
             // Copy our training dates out of the Price data set.
             let range: Vec<Date> = prices
-                .date_range(p.train_start_date..=end_date)
+                .date_range(start_date..=end_date)
                 .map
                 .keys()
                 .cloned()
                 .collect();
 
             // TODO: include date info
+            // FIXME: need a way to output to null for testing
             let out_path =
                 out_path.unwrap_or_else(|| PathBuf::from(format!("{}.bin", &prices.symbol)));
             train(prices, range, p.signal_generators, p.horizon, out_path)?

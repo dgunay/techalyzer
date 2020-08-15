@@ -91,6 +91,7 @@ def plot_backtest(data: dict):
     structure = {
         "trades": trades,
         "daily_portvals": data['performance']['daily_portvals'],
+        "bench_portvals": data['benchmark']['daily_portvals'],
         "price": data['prices']['map']
         # "daily_returns" : data['performance']['daily_returns']
     }
@@ -101,17 +102,19 @@ def plot_backtest(data: dict):
     ed = df.index[-1]
 
     plt.figure()
-    fig, (price_ax) = plt.subplots(1, sharex=True)
+    fig, (port_ax, price_ax) = plt.subplots(2, sharex=True)
     fig.suptitle("{} performance on {} from {} to {}".format(
         data['model_name'], data['symbol'].upper(), sd.strftime("%Y-%m-%d"), ed.strftime("%Y-%m-%d")))
 
-    # Normalized Price
-    norm_prices = df['price'] / df['price'].iloc[0]
-    price_ax.plot(norm_prices, label="{} price".format(data['symbol'].upper()))
-    # ax.set_title("{} price".format(data['symbol'].upper()))
+    # Stock price
+    price_ax.plot(df['price'], label="{} price".format(data['symbol'].upper()))
+
+    # Benchmark performance
+    bench_normed = df['bench_portvals'] / df['bench_portvals'].iloc[0]
+    port_ax.plot(bench_normed, label="Benchmark portfolio value")
 
     # Normalized daily portvals
-    price_ax.plot(df['daily_portvals'] / df['daily_portvals'].iloc[0], label="Portfolio value")
+    port_ax.plot(df['daily_portvals'] / df['daily_portvals'].iloc[0], label="Portfolio value")
 
     # Buy/sells
     price_xmin, price_xmax, price_ymin, price_ymax = plt.gca().axis()
@@ -122,15 +125,16 @@ def plot_backtest(data: dict):
         if trade == 'Long':
             color = 'green'
             ymin = price_ymin
-            ymax = norm_prices[date]
+            ymax = df['price'][date]
         elif trade == "Short":
             color = 'red'
             ymin = price_ymin
-            ymax = norm_prices[date]
+            ymax = df['price'][date]
 
         price_ax.vlines(date, color=color, linestyle="-", ymin=ymin, ymax=ymax)
 
-    plt.legend()
+    price_ax.legend()
+    port_ax.legend()
 
     plt.savefig("{}_{}_backtest".format(data['symbol'], data['model_name']))
 
@@ -138,16 +142,9 @@ def plot_backtest(data: dict):
 
 
 if __name__ == "__main__":
-    # json_str=''
-    # for line in fileinput.input():
-    #     json_str += line
-
-    # print(json_str[0:40])
     import sys
     import codecs
-    # import fileinput
 
-    # handle = codecs.getreader("utf_") open(sys.argv[0]) if len(sys.argv) > 0 else sys.stdin
     handle = open(sys.argv[1]) if len(sys.argv) > 1 else sys.stdin
     
     try:

@@ -1,5 +1,5 @@
 use crate::{
-    backtester::performance::PerformanceError,
+    backtester::{BackTesterError, performance::PerformanceError},
     output::SupportedIndicators,
     trading::{
         buyandhold::BuyAndHoldError, dtmodel::DecisionTreeError, manual::ManualTradingModelError,
@@ -52,46 +52,4 @@ impl_techalyzer_error_from_stringable_type!(ManualTradingModelError);
 impl_techalyzer_error_from_stringable_type!(DecisionTreeError);
 impl_techalyzer_error_from_stringable_type!(std::io::Error);
 impl_techalyzer_error_from_stringable_type!(bincode::Error);
-
-// // TODO: maybe a macro would help reduce some of this repetition.
-// impl From<serde_json::Error> for TechalyzerError {
-//     fn from(e: serde_json::Error) -> Self {
-//         e.to_string().into()
-//     }
-// }
-
-// impl From<dg_ta::errors::Error> for TechalyzerError {
-//     fn from(e: dg_ta::errors::Error) -> Self {
-//         e.to_string().into()
-//     }
-// }
-
-// impl From<PerformanceError> for TechalyzerError {
-//     fn from(e: PerformanceError) -> Self {
-//         e.to_string().into()
-//     }
-// }
-
-// impl From<BuyAndHoldError> for TechalyzerError {
-//     fn from(e: BuyAndHoldError) -> Self {
-//         e.to_string().into()
-//     }
-// }
-
-// impl From<ManualTradingModelError> for TechalyzerError {
-//     fn from(e: ManualTradingModelError) -> Self {
-//         e.to_string().into()
-//     }
-// }
-
-// impl From<DecisionTreeError> for TechalyzerError {
-//     fn from(e: DecisionTreeError) -> Self {
-//         e.to_string().into()
-//     }
-// }
-
-// impl From<std::io::Error> for TechalyzerError {
-//     fn from(e: std::io::Error) -> Self {
-//         e.to_string().into()
-//     }
-// }
+impl_techalyzer_error_from_stringable_type!(BackTesterError);

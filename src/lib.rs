@@ -23,8 +23,7 @@ use ::alphavantage::blocking::Client;
 use date::Date;
 
 /// Gets stock price time series data from a given Source, within the given
-/// date range. A Secret is used to access the data source, if necessary. For
-/// and open-ended date range, use None as one of the bounds.
+/// date range. A Secret is used to access the data source, if necessary.
 pub fn get_market_data(
     source: SupportedDataSources,
     symbol: String,
