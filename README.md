@@ -73,9 +73,13 @@ TBD
 
 ## Random Backlog
 
-* TODO: reorganize the source code to have less of the logic in the "main" file
-* TODO: Program a set of trades, serialize it, then be able to use it on the backtester. Optionally, skip the serialize step and let it go immediately to backtesting. 
+* TODO: Immediately backtest a trained model without having to stitch commands together
+* TODO: let the user tweak the parameters of the ML model
+* TODO: add different ML algorithms/classifiers
+* TODO: implement ensemble learning
+* TODO: consider what performance gains can be had from switching off of `Vec`
 * TODO: Charts + statistics (sharpe ratio, returns, etc) for the backtester
+* TODO: native plotting solution (no more pyplot scripts)
 * TODO: documentation needs to be written, then updated, and double checked for rot
 * Integration tests to write in techalyzer.rs:
   * TODO: `--file file` doesn't exist
@@ -86,6 +90,7 @@ TBD
 * TODO: Determine if the name Techalyzer is ok (not trademarked/no bad connotations)
 * TODO: make the readme and documentation more instructional when the app 
   frontend is more set in stone.
+* TODO: ensure that incoming data uses adjusted close, or investigate the means to program it in.
 * TODO: actually hold onto high/low/open/close info instead of doing everything
   using only closing price
 * TODO: add capability to process hourly/minute-to-minute data
