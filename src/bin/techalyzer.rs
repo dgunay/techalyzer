@@ -262,4 +262,20 @@ mod tests {
 
     // TODO: test behavior of each path (mainly whether required arguments work
     // properly or not)
+
+    #[test]
+    fn training_dates() {
+        // let res = run_program(Opts {
+        //     secret: None,
+        //     data_source: SupportedDataSources::TechalyzerJson("test/json/jpm_rsi.json".into()),
+        //     symbol: "JPM".to_string(),
+        //     start_date: None,
+        //     end_date: Some(Date::from_ymd(2017, 06, 02)),
+        //     cmd: SubCommands::Train {
+        //         params: TrainingParams::default(),
+        //         out_path: "",
+        //     },
+        // });
+        todo!()
+    }
 }
