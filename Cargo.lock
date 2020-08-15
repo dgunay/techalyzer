@@ -1229,6 +1229,7 @@ dependencies = [
  "structopt",
  "strum",
  "strum_macros",
+ "tempfile",
  "typetag",
 ]
 

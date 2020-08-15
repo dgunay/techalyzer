@@ -198,6 +198,8 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
                 return Err(TechalyzerError::NoIndicatorSpecified);
             }
 
+            dbg!(&prices);
+
             // Manual end date or -horizon days before the end of the dataset.
             let end_date = end.unwrap_or(
                 *prices
@@ -241,6 +243,9 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
 mod tests {
     use super::{run_program, Opts, SubCommands};
     use super::{SupportedDataSources, SupportedIndicators};
+    use techalyzer::date::Date;
+    use crate::TrainingParams;
+    use tempfile::NamedTempFile;
 
     #[test]
     fn end_to_end_print_rsi() {
@@ -265,17 +270,20 @@ mod tests {
 
     #[test]
     fn training_dates() {
-        // let res = run_program(Opts {
-        //     secret: None,
-        //     data_source: SupportedDataSources::TechalyzerJson("test/json/jpm_rsi.json".into()),
-        //     symbol: "JPM".to_string(),
-        //     start_date: None,
-        //     end_date: Some(Date::from_ymd(2017, 06, 02)),
-        //     cmd: SubCommands::Train {
-        //         params: TrainingParams::default(),
-        //         out_path: "",
-        //     },
-        // });
-        todo!()
+        let file = NamedTempFile::new().unwrap();
+
+        // FIXME: running Train with this date range causes errors
+        let res = run_program(Opts {
+            secret: None,
+            data_source: SupportedDataSources::TechalyzerJson("test/json/jpm_rsi.json".into()),
+            symbol: "JPM".to_string(),
+            start_date: None,
+            end_date: Some(Date::from_ymd(2020, 06, 02)),
+            cmd: SubCommands::Train {
+                params: TrainingParams::default(),
+                out_path: Some(file.path().to_path_buf()),
+            },
+        }).unwrap();
+        // todo!()
     }
 }
