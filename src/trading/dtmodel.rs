@@ -55,6 +55,7 @@ impl DecisionTreeTrader {
         }
 
         let learner = Hyperparameters::new(signal_generators.len()).one_vs_rest();
+        // let learner = Hyperparameters::new(1).one_vs_rest();
         Ok(Self {
             learner,
             signal_generators,
@@ -147,16 +148,16 @@ impl TradingModel for DecisionTreeTrader {
 
             // TODO: start submitting PRs to improve rustlearn, it has no
             // error enums for one thing
-            let prediction = match self.learner.predict(&Array::from(signals)) {
+            let prediction = match self.learner.predict(&Array::from(&vec![signals])) {
                 Ok(r) => r,
                 Err(msg) => return Err(DecisionTreeError::TrainingError(msg.to_string())),
             };
 
             // TODO: don't hardcode traded shares
             let position = match prediction.get(0, 0) {
-                val if val == LONG => Position::Long(1),
+                val if val == LONG => Position::Long(1000),
                 val if val == OUT => Position::Out,
-                val if val == SHORT => Position::Short(1),
+                val if val == SHORT => Position::Short(1000),
                 val => {
                     return Err(DecisionTreeError::TrainingError(format!(
                         "Invalid prediction '{}'",
@@ -181,7 +182,7 @@ mod tests {
         marketdata::prices::Prices,
         signals::{
             macdsignals::MACDSignalsIter, relativestrengthindexsignals::RSISignalsIter,
-            signals::SignalsIter,
+            signals::SignalsIter, bollingerbandssignals::BBSignalsIter,
         },
         trading::tradingmodel::{Trades, TradingModel},
     };
@@ -209,7 +210,6 @@ mod tests {
     #[test]
     fn smoke_test() {
         // Can we make it run and then serialize/deserialize?
-
         let indics: Vec<Box<dyn SignalsIter>> = vec![Box::new(RSISignalsIter::default())];
 
         // Construct the model
@@ -234,17 +234,20 @@ mod tests {
 
     #[test]
     fn bull_market() {
+        let indics: Vec<Box<dyn SignalsIter>> = vec![Box::new(MACDSignalsIter::default())];
         let new_prices: Vec<f64> = (15..55).map(|f| f.into()).collect();
-        let trades = run_trader_test(new_prices, 3, 0.03);
+        let trades = run_trader_test(indics, new_prices, 3, 0.03);
         assert!(trades.trades.iter().all(|p| *p.1 == Position::Long(1)));
     }
 
     // edits the prices used to train the model before running a test over the
     // fixture_data()
-    fn run_trader_test(new_prices: Vec<f64>, horizon: u32, threshold: f32) -> Trades {
-        // TODO: parameterize the indicators
-        let indics: Vec<Box<dyn SignalsIter>> = vec![Box::new(MACDSignalsIter::default())];
-
+    fn run_trader_test(
+        indics: Vec<Box<dyn SignalsIter>>,
+        new_prices: Vec<f64>,
+        horizon: u32,
+        threshold: f32,
+    ) -> Trades {
         // Construct the model
         let mut dt_trader = DecisionTreeTrader::new(indics).unwrap();
 
@@ -263,15 +266,29 @@ mod tests {
     #[test]
     fn bear_market() {
         let new_prices: Vec<f64> = (15..55).map(|f| f.into()).rev().collect();
-        let trades = run_trader_test(new_prices, 3, 0.03);
+        let indics: Vec<Box<dyn SignalsIter>> = vec![Box::new(MACDSignalsIter::default())];
+        let trades = run_trader_test(indics, new_prices, 3, 0.03);
         assert!(trades.trades.iter().all(|p| *p.1 == Position::Short(1)));
     }
 
     #[test]
     fn afraid_to_invest() {
         let new_prices: Vec<f64> = (15..55).map(|f| f.into()).rev().collect();
-        let trades = run_trader_test(new_prices, 3, 1.0);
+        let indics: Vec<Box<dyn SignalsIter>> = vec![Box::new(MACDSignalsIter::default())];
+        let trades = run_trader_test(indics, new_prices, 3, 1.0);
         assert!(trades.trades.iter().all(|p| *p.1 == Position::Out));
+    }
+
+    #[test]
+    fn multi_inputs() {
+        let indics: Vec<Box<dyn SignalsIter>> = vec![
+            Box::new(MACDSignalsIter::default()),
+            Box::new(RSISignalsIter::default()),
+            Box::new(BBSignalsIter::default()),
+        ];
+        let new_prices: Vec<f64> = (15..55).map(|f| f.into()).rev().collect();
+        let trades = run_trader_test(indics, new_prices, 3, 1.0);
+        // assert!(trades.trades.iter().all(|p| *p.1 == Position::Out));
     }
 
     #[test]
