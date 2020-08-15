@@ -81,6 +81,7 @@ pub fn print(prices: Prices, indicator: SupportedIndicators) -> Result<(), Techa
 /// Outputs a string to an output buffer, Stdout by default.
 // fn print_techalyzer_json(output: &TechalyzerPrintOutput) {}
 
+/// `train_dates` should be `horizon` days less than the end of `prices`.
 pub fn train(
     prices: Prices,
     train_dates: Vec<Date>,
@@ -88,8 +89,6 @@ pub fn train(
     horizon: u32,
     out_path: PathBuf,
 ) -> Result<(), TechalyzerError> {
-    // TODO: Chop off `horizon` days from the train_dates to reserve for lookahead.
-
     let gens = signal_generators.iter().map(|f| f.into()).collect();
     let model = train_model(&prices, train_dates, gens, horizon)?;
 

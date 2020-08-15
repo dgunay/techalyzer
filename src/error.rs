@@ -1,5 +1,6 @@
 use crate::{
-    backtester::{BackTesterError, performance::PerformanceError},
+    backtester::{performance::PerformanceError, BackTesterError},
+    marketdata::prices::PricesError,
     output::SupportedIndicators,
     trading::{
         buyandhold::BuyAndHoldError, dtmodel::DecisionTreeError, manual::ManualTradingModelError,
@@ -53,3 +54,4 @@ impl_techalyzer_error_from_stringable_type!(DecisionTreeError);
 impl_techalyzer_error_from_stringable_type!(std::io::Error);
 impl_techalyzer_error_from_stringable_type!(bincode::Error);
 impl_techalyzer_error_from_stringable_type!(BackTesterError);
+impl_techalyzer_error_from_stringable_type!(PricesError);

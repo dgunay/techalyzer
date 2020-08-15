@@ -2,11 +2,18 @@ use crate::Date;
 use crate::{
     datasources::alphavantage::entry_to_date, output::TechalyzerPrintOutput, util::TimeSeries,
 };
+use derive_more::Display;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::btree_map::{Iter, IterMut},
     ops::RangeBounds,
 };
+
+#[derive(Display)]
+pub enum PricesError {
+    #[display(fmt = "No Date found at {} in Prices", _0)]
+    DateNotFound(Date),
+}
 
 /// Contains a time series prices data
 #[derive(Deserialize, Serialize, Debug, PartialEq)]
@@ -26,6 +33,10 @@ impl Prices {
         self.map.iter_mut()
     }
 
+    pub fn first_entry(&self) -> Option<(&Date, &f64)> {
+        self.iter().next()
+    }
+
     pub fn date_range(&self, range: impl RangeBounds<Date>) -> Prices {
         let slice = self.map.range(range).map(|e| (*e.0, *e.1)).collect();
 
@@ -40,11 +51,18 @@ impl Prices {
     }
 
     pub fn get_after(&self, date: &Date, days_after: u32) -> Option<(Date, f64)> {
+        self.get_offset(self.map.iter(), date, days_after)
+    }
+
+    fn get_offset<'a, I>(&self, iter: I, date: &Date, days_after: u32) -> Option<(Date, f64)>
+    where
+        I: Iterator<Item = (&'a Date, &'a f64)>,
+    {
         // From the given date, go n days after
         // TODO: gross and probably inefficient, is there a way we can hash
         // straight to `date` and then start iterating?
         let mut i_after = 0;
-        for pair in &self.map {
+        for pair in iter {
             if i_after == 0 && pair.0 == date {
                 i_after += 1;
             } else if i_after > 0 {
@@ -57,6 +75,10 @@ impl Prices {
         }
 
         None
+    }
+
+    pub fn get_before(&self, date: &Date, days_before: u32) -> Option<(Date, f64)> {
+        self.get_offset(self.map.iter().rev(), date, days_before)
     }
 }
 
@@ -149,6 +171,16 @@ mod tests {
         let date = Date::from_ymd(2012, 1, 14);
         let target = Date::from_ymd(2012, 1, 15);
         let result = p.get_after(&date, 1).unwrap();
+
+        assert_eq!(result.0, target);
+    }
+
+    #[test]
+    fn test_get_before() {
+        let p = fixture_setup();
+        let date = Date::from_ymd(2012, 1, 15);
+        let target = Date::from_ymd(2012, 1, 14);
+        let result = p.get_before(&date, 1).unwrap();
 
         assert_eq!(result.0, target);
     }

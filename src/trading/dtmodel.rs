@@ -181,8 +181,8 @@ mod tests {
         date::Date,
         marketdata::prices::Prices,
         signals::{
-            macdsignals::MACDSignalsIter, relativestrengthindexsignals::RSISignalsIter,
-            signals::SignalsIter, bollingerbandssignals::BBSignalsIter,
+            bollingerbandssignals::BBSignalsIter, macdsignals::MACDSignalsIter,
+            relativestrengthindexsignals::RSISignalsIter, signals::SignalsIter,
         },
         trading::tradingmodel::{Trades, TradingModel},
     };
@@ -237,7 +237,7 @@ mod tests {
         let indics: Vec<Box<dyn SignalsIter>> = vec![Box::new(MACDSignalsIter::default())];
         let new_prices: Vec<f64> = (15..55).map(|f| f.into()).collect();
         let trades = run_trader_test(indics, new_prices, 3, 0.03);
-        assert!(trades.trades.iter().all(|p| *p.1 == Position::Long(1)));
+        assert!(trades.trades.iter().all(|p| *p.1 == Position::Long(1000)));
     }
 
     // edits the prices used to train the model before running a test over the
@@ -268,7 +268,7 @@ mod tests {
         let new_prices: Vec<f64> = (15..55).map(|f| f.into()).rev().collect();
         let indics: Vec<Box<dyn SignalsIter>> = vec![Box::new(MACDSignalsIter::default())];
         let trades = run_trader_test(indics, new_prices, 3, 0.03);
-        assert!(trades.trades.iter().all(|p| *p.1 == Position::Short(1)));
+        assert!(trades.trades.iter().all(|p| *p.1 == Position::Short(1000)));
     }
 
     #[test]
@@ -287,8 +287,7 @@ mod tests {
             Box::new(BBSignalsIter::default()),
         ];
         let new_prices: Vec<f64> = (15..55).map(|f| f.into()).rev().collect();
-        let trades = run_trader_test(indics, new_prices, 3, 1.0);
-        // assert!(trades.trades.iter().all(|p| *p.1 == Position::Out));
+        let _ = run_trader_test(indics, new_prices, 3, 1.0);
     }
 
     #[test]

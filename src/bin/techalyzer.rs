@@ -1,4 +1,4 @@
-use std::{ops::RangeInclusive, path::PathBuf, str::FromStr};
+use std::{path::PathBuf, str::FromStr};
 use structopt::StructOpt;
 use techalyzer::datasources::SupportedDataSources;
 use techalyzer::error::TechalyzerError;
@@ -8,7 +8,9 @@ use techalyzer::secret::Secret;
 use techalyzer::subcommands::*;
 use techalyzer::{
     date::{today, Date},
+    marketdata::prices::PricesError,
     trading::SupportedTradingModel,
+    util::last_key,
 };
 
 #[derive(StructOpt, Debug)]
@@ -95,8 +97,9 @@ enum SubCommands {
 
 #[derive(Debug, StructOpt)]
 struct TrainingParams {
-    /// Start date of the training dataset.
-    train_start_date: Date,
+    /// Start date of the training dataset. Defaults to the beginning of the
+    /// dataset.
+    train_start_date: Option<Date>,
 
     /// End date of the training. Defaults to the end of the dataset, less
     /// `horizon` days.
@@ -126,7 +129,7 @@ impl Default for TrainingParams {
                 SupportedIndicators::BollingerBands,
                 SupportedIndicators::MACD,
             ],
-            train_start_date: very_early_date(),
+            train_start_date: None,
             train_end_date: Some(Date::default()),
             horizon: 10,
             decision_threshold: 0.03,
@@ -163,13 +166,13 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
 
     // FIXME: this is a hack because I can't figure out how to have both
     // bounded inclusive ranges and full/unbounded ranges in the same variable.
-    let impossibly_early_date = very_early_date();
-    let date_range: RangeInclusive<Date> = match (start, end) {
-        (None, None) => impossibly_early_date..=today(),
-        (None, Some(end)) => impossibly_early_date..=end,
-        (Some(start), None) => start..=today(),
-        (Some(start), Some(end)) => start..=end,
-    };
+    // let impossibly_early_date = very_early_date();
+    // let date_range: RangeInclusive<Date> = match (start, end) {
+    //     (None, None) => impossibly_early_date..=today(),
+    //     (None, Some(end)) => impossibly_early_date..=end,
+    //     (Some(start), None) => start..=today(),
+    //     (Some(start), Some(end)) => start..=end,
+    // };
 
     // Get market data
     let prices = match get_market_data(opts.data_source, opts.symbol, start_date..=end_date, secret)
@@ -198,20 +201,37 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
                 return Err(TechalyzerError::NoIndicatorSpecified);
             }
 
-            dbg!(&prices);
+            let start_date = match p.train_start_date {
+                Some(d) => d,
+                None => {
+                    *prices
+                        .first_entry()
+                        .ok_or(format!("Could not find first entry in dataset"))?
+                        .0
+                }
+            };
 
             // Manual end date or -horizon days before the end of the dataset.
-            let end_date = end.unwrap_or(
-                *prices
-                    .iter()
-                    .rev()
-                    .nth(p.horizon as usize)
-                    .ok_or(format!(
-                        "No day found {} days before last day in dataset",
-                        p.horizon
-                    ))?
-                    .0,
-            );
+            let end_date = match end {
+                // if it's some end date, index into the prices until we're
+                // horizon days before it
+                Some(d) => {
+                    prices
+                        .get_before(&d, p.horizon)
+                        .ok_or(PricesError::DateNotFound(d))?
+                        .0
+                }
+                // else use the last n days
+                None => {
+                    last_key(&prices.map)
+                        .and_then(|d| prices.get_before(&d, p.horizon))
+                        .ok_or(format!(
+                            "Could not find {} days before last day in price data",
+                            p.horizon
+                        ))?
+                        .0
+                }
+            };
 
             // Copy our training dates out of the Price data set.
             let range: Vec<Date> = prices
@@ -243,8 +263,8 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
 mod tests {
     use super::{run_program, Opts, SubCommands};
     use super::{SupportedDataSources, SupportedIndicators};
-    use techalyzer::date::Date;
     use crate::TrainingParams;
+    use techalyzer::date::Date;
     use tempfile::NamedTempFile;
 
     #[test]
@@ -269,11 +289,14 @@ mod tests {
     // properly or not)
 
     #[test]
-    fn training_dates() {
+    fn training_end_date() {
         let file = NamedTempFile::new().unwrap();
 
         // FIXME: running Train with this date range causes errors
-        let res = run_program(Opts {
+        // The desired behavior should be that it trains on data from up to
+        // 10 trading days before 2020-06-02, but it seems to not line up that
+        // way.
+        let _ = run_program(Opts {
             secret: None,
             data_source: SupportedDataSources::TechalyzerJson("test/json/jpm_rsi.json".into()),
             symbol: "JPM".to_string(),
@@ -283,7 +306,8 @@ mod tests {
                 params: TrainingParams::default(),
                 out_path: Some(file.path().to_path_buf()),
             },
-        }).unwrap();
+        })
+        .unwrap();
         // todo!()
     }
 }
