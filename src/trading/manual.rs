@@ -1,6 +1,6 @@
 use super::tradingmodel::{Trades, TradingModel};
 use crate::Date;
-use crate::{backtester::Position, signals::signals::SignalsIter};
+use crate::{backtester::Position, signals::SignalsIter};
 use crate::{
     marketdata::prices::Prices,
     signals::{

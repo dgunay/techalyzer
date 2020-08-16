@@ -1,5 +1,5 @@
-use super::signals::{Output, Signal, SignalsIter};
-use crate::{marketdata::prices::Prices, signals::signals::Signals};
+use super::{Output, Signal, SignalsIter};
+use crate::{marketdata::prices::Prices, signals::Signals};
 use serde::{Deserialize, Serialize};
 
 use dg_ta::indicators::RelativeStrengthIndex;

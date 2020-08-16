@@ -1,6 +1,6 @@
 use super::tradingmodel::{Trades, TradingModel};
 use crate::Date;
-use crate::{backtester::Position, marketdata::prices::Prices, signals::signals::SignalsIter};
+use crate::{backtester::Position, marketdata::prices::Prices, signals::SignalsIter};
 use derive_more::Display;
 use rustlearn::prelude::*;
 use rustlearn::{
@@ -204,7 +204,7 @@ mod tests {
         marketdata::prices::Prices,
         signals::{
             bollingerbandssignals::BBSignalsIter, macdsignals::MACDSignalsIter,
-            relativestrengthindexsignals::RSISignalsIter, signals::SignalsIter,
+            relativestrengthindexsignals::RSISignalsIter, SignalsIter,
         },
         trading::tradingmodel::{Trades, TradingModel},
     };

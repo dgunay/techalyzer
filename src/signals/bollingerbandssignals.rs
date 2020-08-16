@@ -1,5 +1,5 @@
-use super::signals::{Output, Signal, SignalsIter};
-use crate::{marketdata::prices::Prices, signals::signals::Signals, util::clamp};
+use super::{Output, Signal, SignalsIter};
+use crate::{marketdata::prices::Prices, signals::Signals, util::clamp};
 use dg_ta::indicators::{BollingerBands, BollingerBandsOutput};
 use dg_ta::{Next, Reset};
 use serde::{Deserialize, Serialize};

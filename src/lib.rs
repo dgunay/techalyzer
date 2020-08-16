@@ -1,4 +1,4 @@
-#[warn(missing_docs)]
+#[deny(missing_docs)]
 pub mod backtester;
 pub mod datasources;
 pub mod date;

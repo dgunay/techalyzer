@@ -1,5 +1,5 @@
-use super::signals::{Output, Signal, SignalsIter};
-use crate::signals::signals::Signals;
+use super::{Output, Signal, SignalsIter};
+use crate::signals::Signals;
 use crate::{marketdata::prices::Prices, util::clamp};
 use dg_ta::indicators::MovingAverageConvergenceDivergence;
 use dg_ta::indicators::MovingAverageConvergenceDivergenceOutput;

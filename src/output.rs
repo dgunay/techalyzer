@@ -5,7 +5,7 @@ use crate::{
         bollingerbandssignals::BBSignalsIter,
         macdsignals::MACDSignalsIter,
         relativestrengthindexsignals::RSISignalsIter,
-        signals::{Output, Signal, SignalsIter},
+        {Output, Signal, SignalsIter},
     },
     trading::tradingmodel::Trades,
     util::TimeSeries,

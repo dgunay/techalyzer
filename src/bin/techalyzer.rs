@@ -161,8 +161,8 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
     // API keys if necessary
     let secret = Secret { data: opts.secret };
 
-    let start_date = start.unwrap_or(very_early_date());
-    let end_date = end.unwrap_or(today());
+    let start_date = start.unwrap_or_else(very_early_date);
+    let end_date = end.unwrap_or_else(today);
 
     // FIXME: this is a hack because I can't figure out how to have both
     // bounded inclusive ranges and full/unbounded ranges in the same variable.
@@ -206,7 +206,7 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
                 None => {
                     *prices
                         .first_entry()
-                        .ok_or(format!("Could not find first entry in dataset"))?
+                        .ok_or_else(|| "Could not find first entry in dataset".to_string())?
                         .0
                 }
             };
@@ -290,12 +290,13 @@ mod tests {
 
     #[test]
     fn training_end_date() {
-        let file = NamedTempFile::new().unwrap();
-
-        // FIXME: running Train with this date range causes errors
+        // Regression test for this issue:
+        //
+        // Running Train with this date range causes errors.
         // The desired behavior should be that it trains on data from up to
         // 10 trading days before 2020-06-02, but it seems to not line up that
         // way.
+        let file = NamedTempFile::new().unwrap();
         let _ = run_program(Opts {
             secret: None,
             data_source: SupportedDataSources::TechalyzerJson("test/json/jpm_rsi.json".into()),
@@ -308,6 +309,5 @@ mod tests {
             },
         })
         .unwrap();
-        // todo!()
     }
 }

@@ -12,7 +12,7 @@ use crate::{
         bollingerbandssignals::{BBSignalsIter, BollingerBandsSignals},
         macdsignals::{MACDSignalsIter, MovingAverageConvergenceDivergenceSignals},
         relativestrengthindexsignals::{RSISignalsIter, RelativeStrengthIndexSignals},
-        signals::{Signals, SignalsIter},
+        {Signals, SignalsIter},
     },
     trading::{
         buyandhold::BuyAndHold,
