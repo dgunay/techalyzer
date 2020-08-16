@@ -21,5 +21,6 @@ pub trait TradingModel {
     /// Error type that can happen for our implementation of TradingModel.
     type Error: Into<TechalyzerError>;
 
+    /// Given the Prices time series data, returns a Trades object.
     fn get_trades(self, prices: &Prices) -> Result<Trades, Self::Error>;
 }

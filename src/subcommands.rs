@@ -16,7 +16,7 @@ use crate::{
     },
     trading::{
         buyandhold::BuyAndHold,
-        dtmodel::{DecisionTreeError, DecisionTreeTrader},
+        dtmodel::{DecisionTreeError, DecisionTreeTrader, Trained},
         manual::ManualTradingModel,
         tradingmodel::TradingModel,
         SupportedTradingModel,
@@ -112,13 +112,12 @@ fn train_model(
     train_dates: Vec<Date>,
     signal_generators: Vec<Box<dyn SignalsIter>>,
     horizon: u32,
-) -> Result<DecisionTreeTrader, DecisionTreeError> {
+) -> Result<DecisionTreeTrader<Trained>, DecisionTreeError> {
     // TODO: either load a model or train a new one right here.
-    let mut model = DecisionTreeTrader::new(signal_generators)?;
+    let model = DecisionTreeTrader::new(signal_generators)?;
+    let trained = model.train(prices, train_dates, horizon, 0.03)?;
 
-    model.train(prices, train_dates, horizon, 0.03)?;
-
-    Ok(model)
+    Ok(trained)
 }
 
 pub fn backtest(
@@ -136,9 +135,7 @@ pub fn backtest(
             ManualTradingModel::default().get_trades(&prices)?
         }
         SupportedTradingModel::MachineLearningModel => {
-            // let model: DecisionTreeTrader =
-            //     bincode::deserialize(std::fs::read(model_file)?.as_slice())?;
-            let model: DecisionTreeTrader = match model_file {
+            let model: DecisionTreeTrader<Trained> = match model_file {
                 Some(path) => bincode::deserialize(std::fs::read(path)?.as_slice())?,
                 None => return Err(TechalyzerError::NoModelFileSpecified),
             };

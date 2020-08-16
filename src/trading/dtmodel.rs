@@ -8,20 +8,26 @@ use rustlearn::{
     trees::decision_tree::{DecisionTree, Hyperparameters},
 };
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, marker::PhantomData};
 
 // TODO: Try doing this to make forgetting to train the model a compile-time error:
 // https://stackoverflow.com/questions/42036826/using-the-rust-compiler-to-prevent-forgetting-to-call-a-method
 
+pub struct Trained;
+
 /// Predicts trading opportunities using a one-vs-rest decision tree classifier
-/// with technical indicators
+/// with technical indicators.
 #[derive(Serialize, Deserialize)]
-pub struct DecisionTreeTrader {
+pub struct DecisionTreeTrader<TrainedState = ()> {
     /// Our multi-class decision tree classifier
     learner: OneVsRestWrapper<DecisionTree>,
 
     /// Signals that will inform the model.
     signal_generators: Vec<Box<dyn SignalsIter>>,
+
+    /// Silences the compiler as we implement compile-time checks for untrained
+    /// models.
+    phantom: PhantomData<TrainedState>,
 }
 
 #[derive(Display, Debug)]
@@ -44,9 +50,20 @@ pub enum DecisionTreeError {
 }
 
 const LONG: f32 = 1.0;
-// const SHORT: f32 = 0.0;
 const OUT: f32 = 0.0;
 const SHORT: f32 = -1.0;
+
+// Private constructor to control construction of untrained/trained DecisionTreeTrader.
+fn state_constructor<State>(
+    learner: OneVsRestWrapper<DecisionTree>,
+    signal_generators: Vec<Box<dyn SignalsIter>>,
+) -> DecisionTreeTrader<State> {
+    DecisionTreeTrader {
+        learner,
+        signal_generators,
+        phantom: PhantomData,
+    }
+}
 
 impl DecisionTreeTrader {
     pub fn new(signal_generators: Vec<Box<dyn SignalsIter>>) -> Result<Self, DecisionTreeError> {
@@ -54,16 +71,16 @@ impl DecisionTreeTrader {
             return Err(DecisionTreeError::NoSignalGeneratorsProvided);
         }
 
+        // TODO: be able to adjust the parameters (and figure out how to reduce
+        // overfitting)
         let learner = Hyperparameters::new(signal_generators.len()).one_vs_rest();
-        // let learner = Hyperparameters::new(1).one_vs_rest();
-        Ok(Self {
-            learner,
-            signal_generators,
-        })
+
+        Ok(state_constructor(learner, signal_generators))
     }
 
     /// Trains the model using technical indicator signal generators for the
-    /// given Prices time series.
+    /// given Prices time series. Consumes the caller and returns a trained
+    /// DecisionTreeTrader.
     ///
     /// ## Arguments
     ///
@@ -73,12 +90,12 @@ impl DecisionTreeTrader {
     /// * `horizon` - Uses the returns this many days in the future for Y.
     /// * `threshold` - How good (or bad) the returns have to be for the model to go Long or Short.
     pub fn train(
-        &mut self,
+        mut self,
         train_prices: &Prices,
         train_dates: Vec<Date>,
         horizon: u32,
         threshold: f32,
-    ) -> Result<(), DecisionTreeError> {
+    ) -> Result<DecisionTreeTrader<Trained>, DecisionTreeError> {
         let mut x = Vec::new();
         let mut y = Vec::new();
 
@@ -87,7 +104,7 @@ impl DecisionTreeTrader {
                 .get(&day)
                 .ok_or(DecisionTreeError::NoPriceFound(day))?;
 
-            let signals: Vec<f32> = self.next_signals(price);
+            let signals: Vec<f32> = next_signals(&mut self.signal_generators, price);
 
             // look ahead for n-day future return
             let future_price = train_prices
@@ -111,19 +128,24 @@ impl DecisionTreeTrader {
         // Construct X train, Y train data out of the prices
         self.learner
             .fit(&Array::from(&x), &y.into())
-            .map_err(|msg| DecisionTreeError::TrainingError(msg.to_string()))
-    }
+            .map_err(|msg| DecisionTreeError::TrainingError(msg.to_string()))?;
 
-    /// Gets the next set of signals from the signal generators
-    fn next_signals(&mut self, price: &f64) -> Vec<f32> {
-        self.signal_generators
-            .iter_mut()
-            .map(|g| f32::from(g.next(*price).0))
-            .collect()
+        Ok(state_constructor::<Trained>(
+            self.learner,
+            self.signal_generators,
+        ))
     }
 }
 
-impl TradingModel for DecisionTreeTrader {
+/// Gets the next set of signals from the signal generators
+fn next_signals(signal_generators: &mut Vec<Box<dyn SignalsIter>>, price: &f64) -> Vec<f32> {
+    signal_generators
+        .iter_mut()
+        .map(|g| f32::from(g.next(*price).0))
+        .collect()
+}
+
+impl TradingModel for DecisionTreeTrader<Trained> {
     type Error = DecisionTreeError;
 
     fn get_trades(mut self, prices: &Prices) -> Result<Trades, Self::Error> {
@@ -144,7 +166,7 @@ impl TradingModel for DecisionTreeTrader {
             // signal generator. Problematic. Should we pre-emptively error out
             // if all the signals are a contant value (0/1/-1)
 
-            let signals: Vec<f32> = self.next_signals(price);
+            let signals: Vec<f32> = next_signals(&mut self.signal_generators, price);
 
             // TODO: start submitting PRs to improve rustlearn, it has no
             // error enums for one thing
@@ -175,7 +197,7 @@ impl TradingModel for DecisionTreeTrader {
 
 #[cfg(test)]
 mod tests {
-    use super::DecisionTreeTrader;
+    use super::{DecisionTreeTrader, Trained};
     use crate::{
         backtester::Position,
         date::Date,
@@ -213,19 +235,19 @@ mod tests {
         let indics: Vec<Box<dyn SignalsIter>> = vec![Box::new(RSISignalsIter::default())];
 
         // Construct the model
-        let mut dt_trader = DecisionTreeTrader::new(indics).unwrap();
+        let dt_trader = DecisionTreeTrader::new(indics).unwrap();
 
         // Train it
         let prices = fixture_setup();
         let range = Date::range(Date::from_ymd(2012, 01, 2), Date::from_ymd(2012, 01, 30));
-        dt_trader.train(&prices, range, 3, 0.03).unwrap();
+        let trained_trader = dt_trader.train(&prices, range, 3, 0.03).unwrap();
 
         // Can we turn it into bincode and back?
-        let bytes = bincode::serialize(&dt_trader).unwrap();
-        let loaded: DecisionTreeTrader = bincode::deserialize(&bytes).unwrap();
+        let bytes = bincode::serialize(&trained_trader).unwrap();
+        let loaded: DecisionTreeTrader<Trained> = bincode::deserialize(&bytes).unwrap();
 
         // Predict what trades to make for profit
-        let trades = dt_trader.get_trades(&prices).unwrap();
+        let trades = trained_trader.get_trades(&prices).unwrap();
 
         // Predict it again from the deserialized copy
         let again_trades = loaded.get_trades(&prices).unwrap();
@@ -249,7 +271,7 @@ mod tests {
         threshold: f32,
     ) -> Trades {
         // Construct the model
-        let mut dt_trader = DecisionTreeTrader::new(indics).unwrap();
+        let dt_trader = DecisionTreeTrader::new(indics).unwrap();
 
         // Train it (in a bull market where stonks only go up)
         let mut prices = fixture_setup();
@@ -258,9 +280,9 @@ mod tests {
         }
 
         let range = Date::range(Date::from_ymd(2012, 01, 2), Date::from_ymd(2012, 01, 30));
-        dt_trader.train(&prices, range, horizon, threshold).unwrap();
+        let trained = dt_trader.train(&prices, range, horizon, threshold).unwrap();
 
-        dt_trader.get_trades(&prices).unwrap()
+        trained.get_trades(&prices).unwrap()
     }
 
     #[test]

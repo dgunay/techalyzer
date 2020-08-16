@@ -1,4 +1,5 @@
-//! A wrapper for Date with some conveniences for Techalyzer.
+//! A wrapper for Date with some conveniences and trait impls useful for
+//! Techalyzer.
 
 use chrono::{Duration, NaiveDate, ParseError};
 use derive_more::Display;
