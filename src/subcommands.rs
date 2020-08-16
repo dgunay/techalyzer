@@ -1,4 +1,5 @@
-//! Subcommands for the Techalyzer program.
+//! Subcommands for the Techalyzer program. They are split off to allow for
+//! easier integration and end-to-end testing.
 
 use crate::Date;
 use crate::{
@@ -27,10 +28,13 @@ use dg_ta::indicators::{
 };
 use std::{fs::File, path::PathBuf};
 
+/// Using price time series info and a technical indicator, prints the buy/sell
+/// signals, the indicator outputs, and prices to STDOUT as JSON.
 pub fn print(prices: Prices, indicator: SupportedIndicators) -> Result<(), TechalyzerError> {
     // TODO: evaluate/benchmark signal generation using ndarray vs Vec<f64>
 
     // Calculate the technical indicator outputs and signals
+    // TODO: replace this with SignalsIter objects.
     // TODO: allow parameters for each indicator
     // FIXME: is there any way we can avoid heap allocating/dynamic dispatch?
     let sigs: Box<dyn Signals> = match indicator {
@@ -48,11 +52,6 @@ pub fn print(prices: Prices, indicator: SupportedIndicators) -> Result<(), Techa
         )),
     };
 
-    // TODO: sadly output shapes are not all the same, BollingerBandsOutput
-    // is a tuple of f64s whereas the other indicators usually just have
-    // a single f64 per data point. Can this be reconciled in a pretty way
-    // before printing it?
-
     let mut m = std::collections::BTreeMap::new();
     for (i, (date, price)) in prices.iter().enumerate() {
         m.insert(
@@ -65,8 +64,6 @@ pub fn print(prices: Prices, indicator: SupportedIndicators) -> Result<(), Techa
         );
     }
 
-    // TODO: factor out this ugliness or change the datastructures
-    // involved to be less gross
     let output = TechalyzerPrintOutput {
         symbol: prices.symbol,
         indicator,
@@ -78,15 +75,25 @@ pub fn print(prices: Prices, indicator: SupportedIndicators) -> Result<(), Techa
     Ok(())
 }
 
-/// Outputs a string to an output buffer, Stdout by default.
-// fn print_techalyzer_json(output: &TechalyzerPrintOutput) {}
-
-/// `train_dates` should be `horizon` days less than the end of `prices`.
+/// Trains a machine learning classifier using a Prices time series, across the given
+/// set of train_dates, using a list of technical indicators. The model will be
+/// serialized to a binary file for later use.
+///
+/// ### Arguments
+///
+/// * `prices` - Prices dataset.
+/// * `train_dates` - Date range to train the model on. Should be `horizon` days
+/// less than the end of `prices`.
+/// * `signal_generators` - Technical Indicators to serve as features for the model.
+/// * `horizon` - During labelling, returns from this many days in the future are
+/// used. If the returns are positive or negative,
+/// * `outpath` - Where to save the serialized model file for later use.
 pub fn train(
     prices: Prices,
     train_dates: Vec<Date>,
     signal_generators: Vec<SupportedIndicators>,
     horizon: u32,
+    // TODO: add threshold as a param here
     out_path: PathBuf,
 ) -> Result<(), TechalyzerError> {
     let gens = signal_generators.iter().map(|f| f.into()).collect();
@@ -115,11 +122,20 @@ fn train_model(
 ) -> Result<DecisionTreeTrader<Trained>, DecisionTreeError> {
     // TODO: either load a model or train a new one right here.
     let model = DecisionTreeTrader::new(signal_generators)?;
+    // TODO: don't hardcode threshold.
     let trained = model.train(prices, train_dates, horizon, 0.03)?;
 
     Ok(trained)
 }
 
+/// Backtests the performance of a trading model over a given set of price data.
+/// The backtest results are written to STDOUT as JSON.
+///
+/// ### Arguments
+/// * `prices` - Dataset to test the trading model over.
+/// * `trading_model` - One of the trading models supported by Techalyzer.
+/// * `model_file` - If given, the file from which to load the trading model.
+/// * `cash` - How much cash the trading model starts with.
 pub fn backtest(
     prices: Prices,
     trading_model: SupportedTradingModel,

@@ -1,3 +1,5 @@
+//! Structs for serializing/deserializing the output of Techalyzer to JSON.
+
 use crate::{
     backtester::performance::PortfolioPerformance,
     marketdata::prices::Prices,
@@ -13,8 +15,8 @@ use crate::{
 use serde::{Deserialize, Serialize};
 use strum_macros::{EnumString, EnumVariantNames};
 
+/// The list of technical indicators supported by Techalyzer.
 #[derive(Debug, Serialize, Deserialize, EnumString, EnumVariantNames)]
-// #[serde(untagged)]
 pub enum SupportedIndicators {
     #[strum(serialize = "BollingerBands", serialize = "bb")]
     BollingerBands,
@@ -36,7 +38,7 @@ impl From<&SupportedIndicators> for Box<dyn SignalsIter> {
     }
 }
 
-/// An entry at some date with price, signal, and technical indicator data
+/// An entry at some date with price, signal, and technical indicator data.
 #[derive(Serialize, Deserialize)]
 pub struct TechalyzerEntry {
     pub signal: Signal,
@@ -44,7 +46,7 @@ pub struct TechalyzerEntry {
     pub output: Output,
 }
 
-/// Organizes our data the way we want before printing.
+/// Organizes the output of Print the way we want before printing to JSON.
 #[derive(Serialize, Deserialize)]
 pub struct TechalyzerPrintOutput {
     pub map: TimeSeries<TechalyzerEntry>,
@@ -52,6 +54,7 @@ pub struct TechalyzerPrintOutput {
     pub indicator: SupportedIndicators,
 }
 
+/// Organizes the output of BackTest before printing to JSON.
 #[derive(Serialize)]
 pub struct TechalyzerBacktestOutput {
     pub prices: Prices,

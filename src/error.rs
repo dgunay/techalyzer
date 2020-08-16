@@ -1,3 +1,11 @@
+//! Provides a top-level error enum for Techalyzer. Anything that implements
+//! ToString or Display can be converted into a TechalyzerError.
+//!
+//! Works using a macro to write a FromStr implementation for a list of given
+//! types. Probably won't be necessary anymore when
+//! [associated type bounds](https://rust-lang.github.io/rfcs/2289-associated-type-bounds.html)
+//! are stabilized (can just write `impl FromStr<T: ToString> for TechalyzerError`).
+
 use crate::{
     backtester::{performance::PerformanceError, BackTesterError},
     marketdata::prices::PricesError,
@@ -8,10 +16,6 @@ use crate::{
 };
 use derive_more::{Display, From};
 use strum::VariantNames;
-
-// use std::str::FromStr;
-
-// TODO: unify error handling around this module
 
 /// Errors produced by Techalyzer main program
 #[derive(Debug, Display, From)]

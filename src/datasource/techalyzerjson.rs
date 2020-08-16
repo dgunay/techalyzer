@@ -1,14 +1,14 @@
-/// Reingests JSON text that the techalyzer program outputs, in order to
-/// get data.
-use crate::datasources::datasource::{DataSource, Error};
-use crate::output::TechalyzerPrintOutput;
+//! Reingests JSON text from `techalyzer print`, in order to
+//! recover price data.
 
+use crate::datasource::{DataSource, Error};
 use crate::marketdata::prices::Prices;
-
+use crate::output::TechalyzerPrintOutput;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
 
+/// JSON file containing the output of `techalyzer print`.
 pub struct TechalyzerJson {
     file: File,
 }

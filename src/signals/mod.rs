@@ -1,3 +1,9 @@
+//! Signal generators that use technical indicators to generate bullish and
+//! bearish signals in order to inform trading models.
+//!
+//! Technical indicators are provided by [ta-rs](https://github.com/dgunay/ta-rs), currently forked to support
+//! serde serialization and other features.
+
 pub mod bollingerbandssignals;
 pub mod macdsignals;
 pub mod relativestrengthindexsignals;
@@ -7,6 +13,10 @@ use dg_ta::Reset;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, fmt::Debug, slice::Iter};
 
+/// Thin wrapper for a float - represents a bullish or bearish signal.
+///
+/// Signal is runtime checked in debug builds to be between -1.0 and 1.0
+/// inclusive (the expected range for signal generators to be outputting).
 #[derive(Serialize, Deserialize, Debug, Copy, Clone)]
 #[serde(transparent)]
 pub struct Signal {
@@ -39,7 +49,8 @@ impl Signal {
     }
 }
 
-/// buy/sell signals given by a technical indicator.
+// TODO: remove this in favor of SignalsIter.
+/// [DEPRECATED] Buy/sell signals given by a technical indicator.
 pub trait Signals {
     /// 1.0 for an absolute buy, -1.0 for an absolute short, 0.0 for do nothing.
     fn signals(&self) -> &Vec<Signal>;
@@ -47,13 +58,14 @@ pub trait Signals {
     fn iter(&self) -> Iter<Output>;
 }
 
-/// Buy/sell signals, but done in a lazy fashion
-#[typetag::serde(tag = "type")]
+/// Iteratively generates buy/sell signals.
+#[typetag::serde(tag = "type")] // allows Box<dyn SignalsIter> to work with serde.
 pub trait SignalsIter: Reset + Debug {
+    /// Return a tuple of the next Signal and technical indicator Output.
     fn next(&mut self, price: f64) -> (Signal, Output);
 }
 
-/// Represents a single point output of a ta technical indicactor. Usually a
+/// Represents a single point output of a ta technical indicator. Usually a
 /// float, sometimes a float tuple depending on the indicator.
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Output {
@@ -64,6 +76,7 @@ pub struct Output {
     pub output: HashMap<String, f64>,
 }
 
+/// Errors that can occur while using Output (mainly mapping length mismatches).
 #[derive(Debug, Display)]
 pub enum OutputError {
     #[display(

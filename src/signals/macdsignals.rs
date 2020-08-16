@@ -1,3 +1,5 @@
+//! Signals generated with Moving Average Convergence Divergence (MACD).
+
 use super::{Output, Signal, SignalsIter};
 use crate::signals::Signals;
 use crate::{marketdata::prices::Prices, util::clamp};

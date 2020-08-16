@@ -1,12 +1,12 @@
 use std::{path::PathBuf, str::FromStr};
 use structopt::StructOpt;
-use techalyzer::datasources::SupportedDataSources;
 use techalyzer::error::TechalyzerError;
 use techalyzer::get_market_data;
 use techalyzer::output::SupportedIndicators;
 use techalyzer::secret::Secret;
 use techalyzer::subcommands::*;
 use techalyzer::{
+    datasource::SupportedDataSource,
     date::{today, Date},
     marketdata::prices::PricesError,
     trading::SupportedTradingModel,
@@ -24,7 +24,7 @@ struct Opts {
     // selected as mutually exclusive flags (e.g. --file-data and --api-data)
     /// Where to get stock data from
     #[structopt(long, short)]
-    data_source: SupportedDataSources,
+    data_source: SupportedDataSource,
 
     /// The symbol of the security to analyze
     symbol: String,
@@ -261,17 +261,17 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
 
 #[cfg(test)]
 mod tests {
+    use super::SupportedIndicators;
     use super::{run_program, Opts, SubCommands};
-    use super::{SupportedDataSources, SupportedIndicators};
     use crate::TrainingParams;
-    use techalyzer::date::Date;
+    use techalyzer::{datasource::SupportedDataSource, date::Date};
     use tempfile::NamedTempFile;
 
     #[test]
     fn end_to_end_print_rsi() {
         // Basic smoke test that the program can go end to end
         let res = run_program(Opts {
-            data_source: SupportedDataSources::TechalyzerJson("test/json/jpm_rsi.json".into()),
+            data_source: SupportedDataSource::TechalyzerJson("test/json/jpm_rsi.json".into()),
             secret: None,
             symbol: "JPM".to_string(),
             start_date: None,
@@ -299,7 +299,7 @@ mod tests {
         let file = NamedTempFile::new().unwrap();
         let _ = run_program(Opts {
             secret: None,
-            data_source: SupportedDataSources::TechalyzerJson("test/json/jpm_rsi.json".into()),
+            data_source: SupportedDataSource::TechalyzerJson("test/json/jpm_rsi.json".into()),
             symbol: "JPM".to_string(),
             start_date: None,
             end_date: Some(Date::from_ymd(2020, 06, 02)),

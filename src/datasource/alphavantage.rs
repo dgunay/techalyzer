@@ -1,10 +1,12 @@
-use crate::datasources::datasource::{DataSource, Error};
+//! Stock price information from [Alpha Vantage](https://www.alphavantage.co/).
+
+use crate::datasource::{DataSource, Error};
 use crate::marketdata::prices::Prices;
 use crate::Date;
+use alphavantage::blocking::Client;
 use alphavantage::time_series::Entry;
 
-use alphavantage::blocking::Client;
-
+/// Contains an Alpha Vantage client.
 pub struct AlphaVantage {
     client: Client,
 }
@@ -15,6 +17,7 @@ impl AlphaVantage {
     }
 }
 
+/// Gets the data from the ALpha Vantage API.
 impl DataSource for AlphaVantage {
     fn get(&self, symbol: &str) -> Result<Prices, Error> {
         // TODO: if start is in the last 100 market days, don't request the full

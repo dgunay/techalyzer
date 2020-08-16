@@ -1,3 +1,5 @@
+//! Signals generated with Bollinger Bands.
+
 use super::{Output, Signal, SignalsIter};
 use crate::{marketdata::prices::Prices, signals::Signals, util::clamp};
 use dg_ta::indicators::{BollingerBands, BollingerBandsOutput};
@@ -5,6 +7,7 @@ use dg_ta::{Next, Reset};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, slice::Iter};
 
+/// Contains a ta-rs BollingerBands object, from which it generates signals.
 #[derive(Default, Debug, Serialize, Deserialize)]
 pub struct BBSignalsIter {
     bb: BollingerBands,
@@ -36,7 +39,6 @@ impl SignalsIter for BBSignalsIter {
         }
     }
 }
-
 #[derive(Debug, Serialize)]
 pub struct BollingerBandsSignals {
     pub outputs: Vec<Output>,

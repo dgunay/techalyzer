@@ -1,3 +1,5 @@
+//! Signals generated with Relative Strength Index (RSI).
+
 use super::{Output, Signal, SignalsIter};
 use crate::{marketdata::prices::Prices, signals::Signals};
 use serde::{Deserialize, Serialize};

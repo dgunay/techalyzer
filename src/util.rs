@@ -1,10 +1,12 @@
-// TODO: make this private to the crate (control exported symbols in general)
+//! Utility functions with general use in various parts of Techalyzer.
 
 use crate::date::Date;
 use std::collections::BTreeMap;
 
+/// Used for every time series type - aliases a BTreeMap of Date to whatever.
 pub type TimeSeries<T> = BTreeMap<Date, T>;
 
+/// Error returned in the `clamp` function.
 #[derive(Debug)]
 pub struct ClampError {
     min: f64,
@@ -38,28 +40,35 @@ pub fn clamp(a: f64, min: f64, max: f64) -> Result<f64, ClampError> {
     Ok(res)
 }
 
+/// Very quick and dirty floating point epsilon comparison for testing - NOT in
+/// any way meant to be a robust function.
 pub fn nearly_equal(a: f64, b: f64) -> bool {
     f64::abs(a - b) < 0.000001
 }
 
+/// Gets the first key from a BTreeMap
 pub fn first_key<K, V>(map: &BTreeMap<K, V>) -> Option<&K> {
     map.keys().next()
 }
 
+/// Gets the last key from a BTreeMap
 pub fn last_key<K, V>(map: &BTreeMap<K, V>) -> Option<&K> {
     map.keys().last()
 }
 
+/// Gets the first value from a BTreeMap
 pub fn first_value<K, V>(map: &BTreeMap<K, V>) -> Option<&V> {
     map.values().next()
 }
 
+/// Gets the last value from a BTreeMap
 pub fn last_value<K, V>(map: &BTreeMap<K, V>) -> Option<&V> {
     map.values().last()
 }
 
 /// Computes the slope between two floating point values. Normalized to a scale
-/// where 0.5 is a 45 degree angle upwards.
+/// where 0.5 is a 45 degree angle upwards. The scaling is not perfect due to
+/// the use of arc tangent.
 pub fn slope(current: f64, prev: f64, run: f64) -> f64 {
     let rise = current - prev;
     (rise / run).atan() / std::f64::consts::FRAC_PI_2

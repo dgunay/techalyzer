@@ -1,6 +1,8 @@
+//! The standard stock price time series data format for Techalyzer.
+
 use crate::Date;
 use crate::{
-    datasources::alphavantage::entry_to_date, output::TechalyzerPrintOutput, util::TimeSeries,
+    datasource::alphavantage::entry_to_date, output::TechalyzerPrintOutput, util::TimeSeries,
 };
 use derive_more::Display;
 use serde::{Deserialize, Serialize};
@@ -9,16 +11,23 @@ use std::{
     ops::RangeBounds,
 };
 
+/// Errors that can occur while using Prices.
 #[derive(Display)]
 pub enum PricesError {
     #[display(fmt = "No Date found at {} in Prices", _0)]
     DateNotFound(Date),
 }
 
-/// Contains a time series prices data
+/// Contains a time series of stock price data.
+///
+/// Prices should be convertible from any type that implements DataSource, for
+/// best integration.
 #[derive(Deserialize, Serialize, Debug, PartialEq)]
 pub struct Prices {
+    /// Price data.
     pub map: TimeSeries<f64>,
+
+    /// The ticker symbol of the stock.
     pub symbol: String,
 }
 
