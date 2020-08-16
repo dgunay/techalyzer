@@ -1,24 +1,30 @@
 //! Signals generated with Moving Average Convergence Divergence (MACD).
 
 use super::{Output, Signal, SignalsIter};
-use crate::signals::Signals;
-use crate::{marketdata::prices::Prices, util::clamp};
+use crate::util::clamp;
 use dg_ta::indicators::MovingAverageConvergenceDivergence;
 use dg_ta::indicators::MovingAverageConvergenceDivergenceOutput;
 use dg_ta::{Next, Reset};
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, slice::Iter};
-
-#[derive(Serialize)]
-pub struct MovingAverageConvergenceDivergenceSignals {
-    pub outputs: Vec<Output>,
-    signals: Vec<Signal>,
-}
+use std::collections::HashMap;
 
 #[derive(Default, Debug, Serialize, Deserialize)]
 pub struct MACDSignalsIter {
     macd_line_prev: f64,
     macd: MovingAverageConvergenceDivergence,
+}
+
+impl MACDSignalsIter {
+    pub fn new(
+        fast_length: u32,
+        slow_length: u32,
+        signal_length: u32,
+    ) -> Result<Self, dg_ta::errors::ErrorKind> {
+        Ok(Self {
+            macd_line_prev: 0.0,
+            macd: MovingAverageConvergenceDivergence::new(fast_length, slow_length, signal_length)?,
+        })
+    }
 }
 
 impl Reset for MACDSignalsIter {
@@ -60,32 +66,6 @@ impl SignalsIter for MACDSignalsIter {
     }
 }
 
-impl MovingAverageConvergenceDivergenceSignals {
-    pub fn new(prices: &Prices, macd: MovingAverageConvergenceDivergence) -> Self {
-        // TODO: should I check prices not empty?
-
-        // Generate signals from MACD
-        let mut signals = Vec::new();
-
-        let mut outputs = Vec::new();
-        let mut signal_iterator = MACDSignalsIter {
-            macd,
-            ..Default::default()
-        };
-        for (_, price) in prices.iter() {
-            let (signal, output) = signal_iterator.next(*price);
-            signals.push(signal);
-            outputs.push(output);
-        }
-
-        Self { outputs, signals }
-    }
-
-    pub fn to_json(&self) -> String {
-        serde_json::to_string(self).unwrap()
-    }
-}
-
 impl From<MovingAverageConvergenceDivergenceOutput> for Output {
     fn from(m: MovingAverageConvergenceDivergenceOutput) -> Self {
         let map: HashMap<String, f64> = [
@@ -101,35 +81,15 @@ impl From<MovingAverageConvergenceDivergenceOutput> for Output {
     }
 }
 
-// impl From<Output> for MovingAverageConvergenceDivergenceOutput {
-//     fn from(o: Output) -> Self {
-//         Self {
-//             macd: o.output["macd"],
-//             signal: o.output["signal"],
-//             histogram: o.output["histogram"],
-//         }
-//     }
-// }
-
-impl Signals for MovingAverageConvergenceDivergenceSignals {
-    fn signals(&self) -> &Vec<Signal> {
-        &self.signals
-    }
-
-    fn outputs(&self) -> &Vec<Output> {
-        &self.outputs
-    }
-    fn iter(&self) -> Iter<Output> {
-        self.outputs.iter()
-    }
-}
-
 #[cfg(test)]
 mod tests {
-    use super::MovingAverageConvergenceDivergenceSignals;
+    use super::MACDSignalsIter;
     use crate::marketdata::prices::Prices;
-    use crate::{util::TimeSeries, Date};
-    use dg_ta::indicators::MovingAverageConvergenceDivergence;
+    use crate::{
+        signals::{Signal, SignalsIter},
+        util::TimeSeries,
+        Date,
+    };
 
     struct Close {
         price: f64,
@@ -163,16 +123,15 @@ mod tests {
             symbol: "jpm".to_string(),
         };
 
-        let _signals = MovingAverageConvergenceDivergenceSignals::new(
-            &prices,
-            MovingAverageConvergenceDivergence::new(12, 26, 9).unwrap(),
-        );
+        let mut sig_gen = MACDSignalsIter::default();
+        let signals: Vec<Signal> = prices.iter().map(|p| sig_gen.next(*p.1).0).collect();
 
         // TODO: test more specific values/calculations after plotting is
         // implemented
         // TODO: maybe no longer necessary with the implementation of Signal struct.
-        // let nan = 0. / 0.;
-        // assert!(signals.signals().iter().cloned().fold(nan, f64::max) <= 1.0);
-        // assert!(signals.signals().iter().cloned().fold(nan, f64::min) >= -1.0);
+        let nan = 0. / 0.;
+        let as_float: Vec<f64> = signals.iter().map(f64::from).collect();
+        assert!(as_float.iter().cloned().fold(nan, f64::max) <= 1.0);
+        assert!(as_float.iter().cloned().fold(nan, f64::min) >= -1.0);
     }
 }

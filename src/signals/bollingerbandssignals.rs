@@ -1,16 +1,24 @@
 //! Signals generated with Bollinger Bands.
 
 use super::{Output, Signal, SignalsIter};
-use crate::{marketdata::prices::Prices, signals::Signals, util::clamp};
+use crate::util::clamp;
 use dg_ta::indicators::{BollingerBands, BollingerBandsOutput};
 use dg_ta::{Next, Reset};
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, slice::Iter};
+use std::collections::HashMap;
 
 /// Contains a ta-rs BollingerBands object, from which it generates signals.
 #[derive(Default, Debug, Serialize, Deserialize)]
 pub struct BBSignalsIter {
     bb: BollingerBands,
+}
+
+impl BBSignalsIter {
+    pub fn new(length: u32, multiplier: f64) -> Result<Self, dg_ta::errors::ErrorKind> {
+        Ok(Self {
+            bb: BollingerBands::new(length, multiplier)?,
+        })
+    }
 }
 
 impl Reset for BBSignalsIter {
@@ -39,34 +47,6 @@ impl SignalsIter for BBSignalsIter {
         }
     }
 }
-#[derive(Debug, Serialize)]
-pub struct BollingerBandsSignals {
-    pub outputs: Vec<Output>,
-    pub signals: Vec<Signal>,
-}
-
-impl BollingerBandsSignals {
-    pub fn new(prices: &Prices, bb: BollingerBands) -> Self {
-        // Generate signals as %BB
-        // [(Price – Lower Band) / (Upper Band – Lower Band)] * 100
-        // https://www.fidelity.com/learning-center/trading-investing/technical-analysis/technical-indicator-guide/percent-b
-        let mut signals = Vec::new();
-        let mut outputs = Vec::new();
-        let mut signal_iterator = BBSignalsIter { bb };
-        for (_, price) in prices.iter() {
-            let (signal, output) = signal_iterator.next(*price);
-
-            signals.push(signal);
-            outputs.push(output);
-        }
-
-        Self { outputs, signals }
-    }
-
-    pub fn to_json(&self) -> String {
-        serde_json::to_string(self).unwrap()
-    }
-}
 
 impl From<BollingerBandsOutput> for Output {
     fn from(b: BollingerBandsOutput) -> Self {
@@ -83,26 +63,13 @@ impl From<BollingerBandsOutput> for Output {
     }
 }
 
-impl Signals for BollingerBandsSignals {
-    fn signals(&self) -> &Vec<Signal> {
-        &self.signals
-    }
-
-    fn outputs(&self) -> &Vec<Output> {
-        &self.outputs
-    }
-
-    fn iter(&self) -> Iter<Output> {
-        self.outputs.iter()
-    }
-}
-
 #[cfg(test)]
 mod tests {
-    use super::{BollingerBands, BollingerBandsSignals, Signals};
+    use super::{BBSignalsIter, BollingerBands};
     use crate::Date;
     use crate::{
         marketdata::prices::Prices,
+        signals::{Signal, SignalsIter},
         util::{nearly_equal, TimeSeries},
     };
 
@@ -136,11 +103,13 @@ mod tests {
             map,
             symbol: "jpm".to_string(),
         };
-        let signals = BollingerBandsSignals::new(&prices, BollingerBands::new(5, 2.0).unwrap());
 
-        assert_eq!(signals.signals().len(), l);
-        assert!(nearly_equal(signals.signals()[0].val, 0.0));
-        assert!(nearly_equal(signals.signals()[1].val, -0.5));
-        assert!(nearly_equal(signals.signals()[5].val, 0.9669875568304561));
+        let mut sig_gen = BBSignalsIter::new(5, 2.0).unwrap();
+        let signals: Vec<Signal> = prices.iter().map(|p| sig_gen.next(*p.1).0).collect();
+
+        assert_eq!(signals.len(), l);
+        assert!(nearly_equal(signals[0].val, 0.0));
+        assert!(nearly_equal(signals[1].val, -0.5));
+        assert!(nearly_equal(signals[5].val, 0.9669875568304561));
     }
 }

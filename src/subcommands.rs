@@ -10,10 +10,8 @@ use crate::{
         SupportedIndicators, TechalyzerBacktestOutput, TechalyzerEntry, TechalyzerPrintOutput,
     },
     signals::{
-        bollingerbandssignals::{BBSignalsIter, BollingerBandsSignals},
-        macdsignals::{MACDSignalsIter, MovingAverageConvergenceDivergenceSignals},
-        relativestrengthindexsignals::{RSISignalsIter, RelativeStrengthIndexSignals},
-        {Signals, SignalsIter},
+        bollingerbandssignals::BBSignalsIter, macdsignals::MACDSignalsIter,
+        relativestrengthindexsignals::RSISignalsIter, Output, Signal, SignalsIter,
     },
     trading::{
         buyandhold::BuyAndHold,
@@ -23,9 +21,6 @@ use crate::{
         SupportedTradingModel,
     },
 };
-use dg_ta::indicators::{
-    BollingerBands, MovingAverageConvergenceDivergence, RelativeStrengthIndex,
-};
 use std::{fs::File, path::PathBuf};
 
 /// Using price time series info and a technical indicator, prints the buy/sell
@@ -34,23 +29,15 @@ pub fn print(prices: Prices, indicator: SupportedIndicators) -> Result<(), Techa
     // TODO: evaluate/benchmark signal generation using ndarray vs Vec<f64>
 
     // Calculate the technical indicator outputs and signals
-    // TODO: replace this with SignalsIter objects.
     // TODO: allow parameters for each indicator
     // FIXME: is there any way we can avoid heap allocating/dynamic dispatch?
-    let sigs: Box<dyn Signals> = match indicator {
-        SupportedIndicators::BollingerBands => Box::new(BollingerBandsSignals::new(
-            &prices,
-            BollingerBands::new(20, 2.0)?,
-        )),
-        SupportedIndicators::RelativeStrengthIndex => Box::new(RelativeStrengthIndexSignals::new(
-            &prices,
-            RelativeStrengthIndex::new(14).expect("invalid RSI params"),
-        )),
-        SupportedIndicators::MACD => Box::new(MovingAverageConvergenceDivergenceSignals::new(
-            &prices,
-            MovingAverageConvergenceDivergence::new(12, 26, 9).expect("Invalid MACD params"),
-        )),
+    let mut sig_iter: Box<dyn SignalsIter> = match indicator {
+        SupportedIndicators::BollingerBands => Box::new(BBSignalsIter::default()),
+        SupportedIndicators::RelativeStrengthIndex => Box::new(RSISignalsIter::default()),
+        SupportedIndicators::MACD => Box::new(MACDSignalsIter::default()),
     };
+
+    let results: Vec<(Signal, Output)> = prices.iter().map(|p| sig_iter.next(*p.1)).collect();
 
     let mut m = std::collections::BTreeMap::new();
     for (i, (date, price)) in prices.iter().enumerate() {
@@ -58,8 +45,8 @@ pub fn print(prices: Prices, indicator: SupportedIndicators) -> Result<(), Techa
             *date,
             TechalyzerEntry {
                 price: *price,
-                signal: sigs.signals()[i],
-                output: sigs.outputs()[i].clone(),
+                signal: results[i].0,
+                output: results[i].1.clone(),
             },
         );
     }

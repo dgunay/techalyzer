@@ -11,7 +11,7 @@ pub mod relativestrengthindexsignals;
 use derive_more::Display;
 use dg_ta::Reset;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, fmt::Debug, slice::Iter};
+use std::{collections::HashMap, fmt::Debug};
 
 /// Thin wrapper for a float - represents a bullish or bearish signal.
 ///
@@ -29,8 +29,20 @@ impl From<f64> for Signal {
     }
 }
 
+impl From<&f64> for Signal {
+    fn from(f: &f64) -> Self {
+        Self::new(*f)
+    }
+}
+
 impl From<Signal> for f64 {
     fn from(s: Signal) -> Self {
+        s.val
+    }
+}
+
+impl From<&Signal> for f64 {
+    fn from(s: &Signal) -> Self {
         s.val
     }
 }
@@ -47,15 +59,6 @@ impl Signal {
         debug_assert!((-1.0..=1.0).contains(&val));
         Self { val }
     }
-}
-
-// TODO: remove this in favor of SignalsIter.
-/// [DEPRECATED] Buy/sell signals given by a technical indicator.
-pub trait Signals {
-    /// 1.0 for an absolute buy, -1.0 for an absolute short, 0.0 for do nothing.
-    fn signals(&self) -> &Vec<Signal>;
-    fn outputs(&self) -> &Vec<Output>;
-    fn iter(&self) -> Iter<Output>;
 }
 
 /// Iteratively generates buy/sell signals.
@@ -91,7 +94,7 @@ pub enum OutputError {
 }
 
 impl Output {
-    /// Create a new Outputs. Each element of `outputs` must have the same
+    /// Create a new Output. Each element of `outputs` must have the same
     /// number of elements as `mapping`.
     pub fn new(outputs: Vec<f64>, mapping: Vec<String>) -> Result<Self, OutputError> {
         if outputs.len() != mapping.len() {
@@ -107,5 +110,13 @@ impl Output {
         }
 
         Ok(Self { output: map })
+    }
+}
+
+impl From<f64> for Output {
+    fn from(f: f64) -> Self {
+        Output {
+            output: [("rsi".to_string(), f)].iter().cloned().collect(),
+        }
     }
 }
