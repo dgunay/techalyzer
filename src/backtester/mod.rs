@@ -1,4 +1,6 @@
-//! TODO: document
+//! The BackTester runs backtests for a given set of Trades on a Prices time
+//! series. It returns a [PortfolioPerformance](performance/struct.PortfolioPerformance.html)
+//! containing portfolio value over time as well as other statistics.
 
 pub mod performance;
 
