@@ -10,9 +10,6 @@ use rustlearn::{
 use serde::{Deserialize, Serialize};
 use std::{collections::BTreeMap, marker::PhantomData};
 
-// TODO: Try doing this to make forgetting to train the model a compile-time error:
-// https://stackoverflow.com/questions/42036826/using-the-rust-compiler-to-prevent-forgetting-to-call-a-method
-
 pub struct Trained;
 
 /// Predicts trading opportunities using a one-vs-rest decision tree classifier
