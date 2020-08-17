@@ -24,6 +24,7 @@ use crate::datasource::SupportedDataSource;
 use crate::datasource::{DataSource, Error};
 use crate::marketdata::prices::Prices;
 use ::alphavantage::blocking::Client;
+use datasource::csv::CsvFile;
 use date::Date;
 use secret::Secret;
 use std::ops::RangeInclusive;
@@ -53,10 +54,27 @@ pub fn get_market_data(
             match TechalyzerJson::new(path.as_path()) {
                 Ok(t) => t.get_date_range(symbol.as_str(), date_range)?,
                 Err(io_err) => {
-                    return Err(Error::Other(
-                        io_err.to_string(),
-                        format!("Tried to open {:?}", path),
-                    ))
+                    return Err(Error::Other {
+                        msg: io_err.to_string(),
+                        context: format!("Tried to open {:?}", path),
+                    })
+                }
+            }
+        }
+        SupportedDataSource::CsvFile(path) => {
+            if !path.exists() {
+                return Err(Error::FileNotFound(
+                    path.into_os_string().into_string().expect("invalid string"),
+                ));
+            }
+
+            match CsvFile::new(path.as_path()) {
+                Ok(csv) => csv.get_date_range(symbol.as_str(), date_range)?,
+                Err(e) => {
+                    return Err(Error::Other {
+                        msg: e.to_string(),
+                        context: format!("Tried to open {:?}", path),
+                    })
                 }
             }
         }

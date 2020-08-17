@@ -36,10 +36,10 @@ impl DataSource for TechalyzerJson {
         let data: TechalyzerPrintOutput = match serde_json::from_reader(reader) {
             Ok(d) => d,
             Err(e) => {
-                return Err(Error::Other(
-                    "Failed to deserialize from file as JSON".to_string(),
-                    e.to_string(),
-                ))
+                return Err(Error::Other {
+                    msg: "Failed to deserialize from file as JSON".to_string(),
+                    context: e.to_string(),
+                })
             }
         };
 

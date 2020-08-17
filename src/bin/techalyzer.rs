@@ -164,16 +164,6 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
     let start_date = start.unwrap_or_else(very_early_date);
     let end_date = end.unwrap_or_else(today);
 
-    // FIXME: this is a hack because I can't figure out how to have both
-    // bounded inclusive ranges and full/unbounded ranges in the same variable.
-    // let impossibly_early_date = very_early_date();
-    // let date_range: RangeInclusive<Date> = match (start, end) {
-    //     (None, None) => impossibly_early_date..=today(),
-    //     (None, Some(end)) => impossibly_early_date..=end,
-    //     (Some(start), None) => start..=today(),
-    //     (Some(start), Some(end)) => start..=end,
-    // };
-
     // Get market data
     let prices = match get_market_data(opts.data_source, opts.symbol, start_date..=end_date, secret)
     {
@@ -309,5 +299,19 @@ mod tests {
             },
         })
         .unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_open_csv() {
+        // TODO: test happy and invalid csv open paths
+        todo!("test happy and invalid csv open paths")
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_open_json() {
+        // TODO: test happy and invalid json open paths
+        todo!("test happy and invalid json open paths")
     }
 }
