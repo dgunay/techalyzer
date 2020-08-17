@@ -73,6 +73,8 @@ TBD
 
 ## Random Backlog
 
+* TODO: Add a parameters file to help make model and technical indicators
+        easier to configure
 * TODO: Immediately backtest a trained model without having to stitch commands together
 * TODO: let the user tweak the parameters of the ML model
 * TODO: add different ML algorithms/classifiers
