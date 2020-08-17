@@ -26,7 +26,7 @@ impl FromStr for SupportedDataSource {
             "alphavantage" => Ok(SupportedDataSource::AlphaVantage),
             "AlphaVantage" => Ok(SupportedDataSource::AlphaVantage),
             possible_file => {
-                // FIXME: why can't I use into_ok() on this?
+                // TODO: when stabilized, use into_ok() 
                 let buf = PathBuf::from_str(possible_file)
                     .expect("Should never fail (err type is Infallible)");
                 Ok(SupportedDataSource::TechalyzerJson(buf))
