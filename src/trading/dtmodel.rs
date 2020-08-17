@@ -153,15 +153,8 @@ impl TradingModel for DecisionTreeTrader<Trained> {
         // Given each day and it's technical indicators, predict the return and
         // act accordingly
         for (day, price) in prices.iter() {
-            // FIXME: for some reason, `signals` is empty sometimes and I have no
-            // idea why. Debugging it, it appears that for some reason when the
-            // for loop is making its last iteration, some action at a distance
-            // just deletes whatever signal generator is in there, leaving it
-            // empty. Then when it does iter/map over the signal generators,
-            // there are none of them to do any mapping so we get an empty Vec.
-            // Actually it happens because the deserialized one doesn't have a
-            // signal generator. Problematic. Should we pre-emptively error out
-            // if all the signals are a contant value (0/1/-1)
+            // TODO: Should we pre-emptively error out if all the signals are a 
+            // contant value (0/1/-1)? That will cause an error while predicting
 
             let signals: Vec<f32> = next_signals(&mut self.signal_generators, price);
 
