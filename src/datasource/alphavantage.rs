@@ -2,9 +2,7 @@
 
 use crate::datasource::{DataSource, Error};
 use crate::marketdata::prices::Prices;
-use crate::Date;
 use alphavantage::blocking::Client;
-use alphavantage::time_series::Entry;
 
 /// Contains an Alpha Vantage client.
 pub struct AlphaVantage {
@@ -30,16 +28,6 @@ impl DataSource for AlphaVantage {
             Err(e) => Err(Error::AlphaVantageError(e.to_string())),
         }
     }
-}
-
-/// Helper function to convert the date of an Entry into a Date
-pub fn entry_to_date(entry: Option<&Entry>) -> Date {
-    entry
-        .expect("No first Entry")
-        .date
-        .naive_local()
-        .date()
-        .into()
 }
 
 #[cfg(test)]

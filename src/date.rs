@@ -1,7 +1,8 @@
 //! A wrapper for Date with some conveniences and trait impls useful for
 //! Techalyzer.
 
-use chrono::{Duration, NaiveDate, ParseError};
+use alphavantage::time_series::Entry;
+use chrono::{Duration, NaiveDate, NaiveDateTime, ParseError};
 use derive_more::Display;
 use serde::{Deserialize, Serialize};
 use std::{
@@ -57,6 +58,18 @@ impl FromStr for Date {
 impl From<NaiveDate> for Date {
     fn from(d: NaiveDate) -> Self {
         Self(d)
+    }
+}
+
+impl From<NaiveDateTime> for Date {
+    fn from(d: NaiveDateTime) -> Self {
+        Self(d.date())
+    }
+}
+
+impl From<&Entry> for Date {
+    fn from(e: &Entry) -> Self {
+        e.date.naive_local().into()
     }
 }
 

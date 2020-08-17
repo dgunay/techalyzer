@@ -1,9 +1,7 @@
 //! The standard stock price time series data format for Techalyzer.
 
 use crate::Date;
-use crate::{
-    datasource::alphavantage::entry_to_date, output::TechalyzerPrintOutput, util::TimeSeries,
-};
+use crate::{output::TechalyzerPrintOutput, util::TimeSeries};
 use derive_more::Display;
 use serde::{Deserialize, Serialize};
 use std::{
@@ -101,7 +99,7 @@ impl From<alphavantage::time_series::TimeSeries> for Prices {
     fn from(t: alphavantage::time_series::TimeSeries) -> Self {
         let mut m = std::collections::BTreeMap::new();
         for e in t.entries {
-            m.insert(entry_to_date(Some(&e)), e.close);
+            m.insert(Date::from(&e), e.close);
         }
 
         Prices {
