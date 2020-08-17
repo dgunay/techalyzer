@@ -5,49 +5,15 @@ use crate::{
     marketdata::prices::Prices,
     signals::{
         bollingerbandssignals::BBSignalsIter, macdsignals::MACDSignalsIter,
-        relativestrengthindexsignals::RSISignalsIter,
+        relativestrengthindexsignals::RSISignalsIter, Signal,
     },
 };
 use derive_more::Display;
 use dg_ta::indicators::SimpleMovingAverage;
-use std::{collections::BTreeMap, ops::Add};
+use std::collections::BTreeMap;
 
 pub enum Error {
     NoSignalAvailable,
-}
-
-/// Wraps an f64 that is runtime checked to be between -1.0 and 1.0 in debug
-/// builds.
-// TODO: use this everywhere Signal is involved maybe?
-#[derive(PartialEq, PartialOrd, Copy, Clone)]
-struct SignalRangedFloat {
-    pub val: f64,
-}
-
-impl SignalRangedFloat {
-    pub fn new(val: f64) -> Self {
-        debug_assert!(val >= -1.0 && val <= 1.0);
-        Self { val }
-    }
-}
-
-impl From<SignalRangedFloat> for f64 {
-    fn from(srf: SignalRangedFloat) -> Self {
-        srf.val
-    }
-}
-
-impl From<f64> for SignalRangedFloat {
-    fn from(f: f64) -> Self {
-        Self::new(f)
-    }
-}
-
-impl Add<SignalRangedFloat> for f64 {
-    type Output = f64;
-    fn add(self, rhs: SignalRangedFloat) -> Self::Output {
-        self + rhs.val
-    }
 }
 
 pub struct ManualTradingModel {
@@ -58,11 +24,11 @@ pub struct ManualTradingModel {
     /// How far the signal needs to be from 0 in order to make a trade. For
     /// example, if the dead zone is 0.2, only an average signal of less than
     /// -0.2 or greater than 0.2 will cause the model to go short or long.
-    dead_zone: SignalRangedFloat,
+    dead_zone: Signal,
 
     /// The tendency for the algorithm to be bullish or bearish by adding or
     /// subtracting from the signal before determining a trade.
-    disposition: SignalRangedFloat,
+    disposition: Signal,
 }
 
 impl ManualTradingModel {
@@ -152,7 +118,7 @@ impl TradingModel for ManualTradingModel {
 
 #[cfg(test)]
 mod tests {
-    use super::{ManualTradingModel, SignalRangedFloat};
+    use super::ManualTradingModel;
     use crate::Date;
     use crate::{
         backtester::Position, marketdata::prices::Prices, trading::tradingmodel::TradingModel,
@@ -246,13 +212,5 @@ mod tests {
         let algo = ManualTradingModel::new(1, 0.0, 1.0);
         let trades = algo.get_trades(&prices).unwrap();
         assert!(trades.trades.iter().all(|t| *t.1 == Position::Long(1)));
-    }
-
-    #[test]
-    #[should_panic(expected = "assertion failed: val >= -1.0 && val <= 1.0")]
-    fn test_signal_ranged_float_from_out_of_range_float() {
-        // out of range into
-        let a = 5.5;
-        let _: SignalRangedFloat = a.into();
     }
 }

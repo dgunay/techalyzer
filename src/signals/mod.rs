@@ -11,7 +11,7 @@ pub mod relativestrengthindexsignals;
 use derive_more::Display;
 use dg_ta::Reset;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, fmt::Debug};
+use std::{collections::HashMap, fmt::Debug, ops::Add};
 
 /// Thin wrapper for a float - represents a bullish or bearish signal.
 ///
@@ -21,6 +21,13 @@ use std::{collections::HashMap, fmt::Debug};
 #[serde(transparent)]
 pub struct Signal {
     pub val: f64,
+}
+
+impl Add<Signal> for f64 {
+    type Output = f64;
+    fn add(self, rhs: Signal) -> Self::Output {
+        self + rhs.val
+    }
 }
 
 impl From<f64> for Signal {
@@ -119,4 +126,12 @@ impl From<f64> for Output {
             output: [("rsi".to_string(), f)].iter().cloned().collect(),
         }
     }
+}
+
+#[test]
+#[should_panic]
+fn test_signal_from_out_of_range_float() {
+    // out of range into
+    let a = 5.5;
+    let _: Signal = a.into();
 }
