@@ -31,13 +31,19 @@ pub struct Prices {
     pub symbol: String,
 }
 
+impl IntoIterator for Prices {
+    type Item = (Date, f64);
+    type IntoIter = std::collections::btree_map::IntoIter<Date, f64>;
+    fn into_iter(self) -> Self::IntoIter {
+        self.map.into_iter()
+    }
+}
+
 impl Prices {
-    // TODO: implement this using some kind of trait
     pub fn iter(&self) -> Iter<Date, f64> {
         self.map.iter()
     }
 
-    // TODO: implement this using some kind of trait
     pub fn iter_mut(&mut self) -> IterMut<Date, f64> {
         self.map.iter_mut()
     }
