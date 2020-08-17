@@ -108,7 +108,8 @@ fn train_model(
     horizon: u32,
 ) -> Result<DecisionTreeTrader<Trained>, DecisionTreeError> {
     // TODO: either load a model or train a new one right here.
-    let model = DecisionTreeTrader::new(signal_generators)?;
+    // TODO: don't hardcore shares
+    let model = DecisionTreeTrader::new(signal_generators, 1000)?;
     // TODO: don't hardcode threshold.
     let trained = model.train(prices, train_dates, horizon, 0.03)?;
 

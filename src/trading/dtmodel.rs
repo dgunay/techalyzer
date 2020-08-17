@@ -1,6 +1,13 @@
 use super::tradingmodel::{Trades, TradingModel};
 use crate::Date;
-use crate::{backtester::Position, marketdata::prices::Prices, signals::SignalsIter};
+use crate::{
+    backtester::Position,
+    marketdata::prices::Prices,
+    signals::{
+        bollingerbandssignals::BBSignalsIter, macdsignals::MACDSignalsIter,
+        relativestrengthindexsignals::RSISignalsIter, SignalsIter,
+    },
+};
 use derive_more::Display;
 use rustlearn::prelude::*;
 use rustlearn::{
@@ -21,6 +28,9 @@ pub struct DecisionTreeTrader<TrainedState = ()> {
 
     /// Signals that will inform the model.
     signal_generators: Vec<Box<dyn SignalsIter>>,
+
+    /// The maximum shares that the bot will commit to a given trade
+    max_shares: u32,
 
     /// Silences the compiler as we implement compile-time checks for untrained
     /// models.
@@ -54,16 +64,34 @@ const SHORT: f32 = -1.0;
 fn state_constructor<State>(
     learner: OneVsRestWrapper<DecisionTree>,
     signal_generators: Vec<Box<dyn SignalsIter>>,
+    max_shares: u32,
 ) -> DecisionTreeTrader<State> {
     DecisionTreeTrader {
         learner,
         signal_generators,
         phantom: PhantomData,
+        max_shares,
+    }
+}
+
+impl Default for DecisionTreeTrader {
+    fn default() -> Self {
+        let signal_generators: Vec<Box<dyn SignalsIter>> = vec![
+            Box::new(MACDSignalsIter::default()),
+            Box::new(RSISignalsIter::default()),
+            Box::new(BBSignalsIter::default()),
+        ];
+        let learner = Hyperparameters::new(signal_generators.len()).one_vs_rest();
+
+        state_constructor(learner, signal_generators, 1000)
     }
 }
 
 impl DecisionTreeTrader {
-    pub fn new(signal_generators: Vec<Box<dyn SignalsIter>>) -> Result<Self, DecisionTreeError> {
+    pub fn new(
+        signal_generators: Vec<Box<dyn SignalsIter>>,
+        max_shares: u32,
+    ) -> Result<Self, DecisionTreeError> {
         if signal_generators.is_empty() {
             return Err(DecisionTreeError::NoSignalGeneratorsProvided);
         }
@@ -72,7 +100,7 @@ impl DecisionTreeTrader {
         // overfitting)
         let learner = Hyperparameters::new(signal_generators.len()).one_vs_rest();
 
-        Ok(state_constructor(learner, signal_generators))
+        Ok(state_constructor(learner, signal_generators, max_shares))
     }
 
     /// Trains the model using technical indicator signal generators for the
@@ -130,6 +158,7 @@ impl DecisionTreeTrader {
         Ok(state_constructor::<Trained>(
             self.learner,
             self.signal_generators,
+            1000, // TODO: don't hardcore shares
         ))
     }
 }
@@ -153,7 +182,7 @@ impl TradingModel for DecisionTreeTrader<Trained> {
         // Given each day and it's technical indicators, predict the return and
         // act accordingly
         for (day, price) in prices.iter() {
-            // TODO: Should we pre-emptively error out if all the signals are a 
+            // TODO: Should we pre-emptively error out if all the signals are a
             // contant value (0/1/-1)? That will cause an error while predicting
 
             let signals: Vec<f32> = next_signals(&mut self.signal_generators, price);
@@ -225,7 +254,7 @@ mod tests {
         let indics: Vec<Box<dyn SignalsIter>> = vec![Box::new(RSISignalsIter::default())];
 
         // Construct the model
-        let dt_trader = DecisionTreeTrader::new(indics).unwrap();
+        let dt_trader = DecisionTreeTrader::new(indics, 1000).unwrap();
 
         // Train it
         let prices = fixture_setup();
@@ -261,7 +290,7 @@ mod tests {
         threshold: f32,
     ) -> Trades {
         // Construct the model
-        let dt_trader = DecisionTreeTrader::new(indics).unwrap();
+        let dt_trader = DecisionTreeTrader::new(indics, 1000).unwrap();
 
         // Train it (in a bull market where stonks only go up)
         let mut prices = fixture_setup();
