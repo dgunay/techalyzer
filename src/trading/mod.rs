@@ -1,3 +1,5 @@
+//! Collection of different trading models using various methods.
+
 pub mod buyandhold;
 pub mod dtmodel;
 pub mod manual;

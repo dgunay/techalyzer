@@ -1,11 +1,13 @@
+//! Buys and holds shares for the entirety of the trading period.
+
 use super::tradingmodel::{Trades, TradingModel};
 use crate::backtester::Position::*;
 use crate::marketdata::prices::Prices;
-use crate::util::first_key;
 use derive_more::Display;
 use std::collections::BTreeMap;
 
 pub struct BuyAndHold {
+    /// How many share to buy and hold.
     shares: u64,
 }
 
@@ -15,6 +17,7 @@ impl Default for BuyAndHold {
     }
 }
 
+/// Things that can go wrong with the BuyAndHold.
 #[derive(Display, Debug)]
 pub enum BuyAndHoldError {
     #[display(techalyzer = "No first day found", _0)]
@@ -26,13 +29,9 @@ impl TradingModel for BuyAndHold {
 
     fn get_trades(self, prices: &Prices) -> Result<Trades, Self::Error> {
         let mut trades = BTreeMap::new();
-        let first_day = match first_key(&prices.map) {
-            Some(d) => d,
-            None => return Err(BuyAndHoldError::NoFirstDay),
-        };
-        trades.insert(*first_day, Long(self.shares));
         let mut iter = prices.map.iter();
-        let _ = iter.next();
+        let (first_day, _) = iter.next().ok_or(BuyAndHoldError::NoFirstDay)?;
+        trades.insert(*first_day, Long(self.shares));
         for (d, _) in iter {
             trades.insert(*d, Hold);
         }
