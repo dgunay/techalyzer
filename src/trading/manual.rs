@@ -1,3 +1,5 @@
+//! A manually-written strategy that trades based off of technical indicators.
+
 use super::tradingmodel::{Trades, TradingModel};
 use crate::Date;
 use crate::{backtester::Position, signals::SignalsIter};
@@ -12,13 +14,16 @@ use derive_more::Display;
 use dg_ta::indicators::SimpleMovingAverage;
 use std::collections::BTreeMap;
 
+/// Errors that can happen.
 pub enum Error {
     NoSignalAvailable,
 }
 
+/// The manual trading model.
 pub struct ManualTradingModel {
     // TODO: make this a max and let the bot decide dynamically how many shares
     // to trade
+    /// How many shares will be committed to a trade.
     shares: u64,
 
     /// How far the signal needs to be from 0 in order to make a trade. For
@@ -46,6 +51,7 @@ impl ManualTradingModel {
 }
 
 impl Default for ManualTradingModel {
+    /// Sets shares to 1000, deadzone and disposition to 0.0.
     fn default() -> Self {
         Self::new(1000, 0.0, 0.0)
     }

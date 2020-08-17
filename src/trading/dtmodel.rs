@@ -1,3 +1,7 @@
+//! A one-vs-rest decision tree-based trader. Technical indicator signal
+//! generators provide features, future returns provide labels. Various
+//! parameters influence trading behavior.
+
 use super::tradingmodel::{Trades, TradingModel};
 use crate::Date;
 use crate::{
@@ -17,6 +21,7 @@ use rustlearn::{
 use serde::{Deserialize, Serialize};
 use std::{collections::BTreeMap, marker::PhantomData};
 
+/// State type parameter that denotes a trained model.
 pub struct Trained;
 
 /// Predicts trading opportunities using a one-vs-rest decision tree classifier
@@ -37,6 +42,7 @@ pub struct DecisionTreeTrader<TrainedState = ()> {
     phantom: PhantomData<TrainedState>,
 }
 
+/// Things that can go wrong while training or using a DecisionTreeTrader.
 #[derive(Display, Debug)]
 pub enum DecisionTreeError {
     #[display(
@@ -88,6 +94,7 @@ impl Default for DecisionTreeTrader {
 }
 
 impl DecisionTreeTrader {
+    /// At least one signal generator must be given.
     pub fn new(
         signal_generators: Vec<Box<dyn SignalsIter>>,
         max_shares: u32,
