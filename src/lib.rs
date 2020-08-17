@@ -31,7 +31,6 @@ pub fn get_market_data(
 ) -> Result<Prices, Error> {
     let market_data: Prices = match source {
         SupportedDataSource::AlphaVantage => {
-            // TODO: just make Secret contain an empty string with the Default trait
             let key = secret.data.unwrap_or_else(|| "".to_string());
             let cl = Client::new(key.as_str());
             let av = alphavantage::AlphaVantage::new(cl);
