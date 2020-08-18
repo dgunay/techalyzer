@@ -11,7 +11,7 @@ my $start_test_date = $ARGV[3] or die 'provide start test date';
 system("cargo run -- -d AlphaVantage --secret $secret $symbol print -i rsi > $symbol\_rsi.json")
  == 0  or die;
 
-system("cargo run -- -d $symbol\_rsi.json --end-date $end_train_date $symbol train -s BollingerBands")
+system("cargo run -- -d $symbol\_rsi.json --end-date $end_train_date $symbol train -s SmaCrossover rsi macd bb")
  == 0  or die;
 
 system("cargo run -- -d $symbol\_rsi.json --start-date $start_test_date $symbol back-test MachineLearningModel -m $symbol.bin 10000 > $symbol\_perf.json")

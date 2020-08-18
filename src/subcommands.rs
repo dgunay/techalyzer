@@ -11,7 +11,8 @@ use crate::{
     },
     signals::{
         bollingerbandssignals::BBSignalsIter, macdsignals::MACDSignalsIter,
-        relativestrengthindexsignals::RSISignalsIter, Output, Signal, SignalsIter,
+        relativestrengthindexsignals::RSISignalsIter, smacrossovers::SmaCrossoversSignalsIter,
+        Output, Signal, SignalsIter,
     },
     trading::{
         buyandhold::BuyAndHold,
@@ -31,11 +32,7 @@ pub fn print(prices: Prices, indicator: SupportedIndicators) -> Result<(), Techa
     // Calculate the technical indicator outputs and signals
     // TODO: allow parameters for each indicator
     // FIXME: is there any way we can avoid heap allocating/dynamic dispatch?
-    let mut sig_iter: Box<dyn SignalsIter> = match indicator {
-        SupportedIndicators::BollingerBands => Box::new(BBSignalsIter::default()),
-        SupportedIndicators::RelativeStrengthIndex => Box::new(RSISignalsIter::default()),
-        SupportedIndicators::MACD => Box::new(MACDSignalsIter::default()),
-    };
+    let mut sig_iter: Box<dyn SignalsIter> = indicator.into();
 
     let results: Vec<(Signal, Output)> = prices.iter().map(|p| sig_iter.next(*p.1)).collect();
 
@@ -97,6 +94,7 @@ impl From<SupportedIndicators> for Box<dyn SignalsIter> {
             SupportedIndicators::BollingerBands => Box::new(BBSignalsIter::default()),
             SupportedIndicators::RelativeStrengthIndex => Box::new(RSISignalsIter::default()),
             SupportedIndicators::MACD => Box::new(MACDSignalsIter::default()),
+            SupportedIndicators::SmaCrossover => Box::new(SmaCrossoversSignalsIter::default()),
         }
     }
 }
