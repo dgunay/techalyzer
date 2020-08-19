@@ -49,10 +49,6 @@ impl Position {
             (Position::Out, p) if p.is_entry() => true,
             (Position::Long(_), Position::Short(_)) => true,
             (Position::Short(_), Position::Long(_)) => true,
-            // (Position::Out, Position::Long(_)) => true,
-            // (Position::Out, Position::Short(_)) => true,
-            // (Position::Long(_),  Position::Out) => true,
-            // (Position::Short(_), Position::Out) => true,
             _ => false,
         }
     }
@@ -84,7 +80,7 @@ mod tests {
         assert!(!out.is_entry());
         assert!(!hold.is_entry());
 
-        // out is an exit from a long or short position, but out cannot 
+        // out is an exit from a long or short position, but out cannot
         // "be exited" from anything since it isn't an entry.
         assert!(out.is_exit_from(long));
         assert!(out.is_exit_from(short));
