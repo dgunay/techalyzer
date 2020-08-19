@@ -1,3 +1,6 @@
+//! Represents different trading positions (long/short/out/holding) using an
+//! enum with some helper functions.
+
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
@@ -75,20 +78,33 @@ mod tests {
         let out = Position::Out;
         let hold = Position::Hold;
 
+        // only long and short are entries
         assert!(long.is_entry());
-        assert!(long.is_entry());
+        assert!(short.is_entry());
         assert!(!out.is_entry());
         assert!(!hold.is_entry());
 
+        // out is an exit from a long or short position, but out cannot 
+        // "be exited" from anything since it isn't an entry.
         assert!(out.is_exit_from(long));
         assert!(out.is_exit_from(short));
         assert!(!long.is_exit_from(out));
         assert!(!short.is_exit_from(out));
 
+        // Long and short are opposites and can be exits from one another.
         assert!(long.is_exit_from(short));
         assert!(short.is_exit_from(long));
 
+        // Long and short cannot be exited from themselves by themselves.
         assert!(!long.is_exit_from(long));
         assert!(!short.is_exit_from(short));
+
+        // Long and short are opposites, out and hold are not.
+        assert!(long.is_opposite(short));
+        assert!(short.is_opposite(long));
+        assert!(!long.is_opposite(out));
+        assert!(!short.is_opposite(out));
+        assert!(!out.is_opposite(long));
+        assert!(!hold.is_opposite(long));
     }
 }
