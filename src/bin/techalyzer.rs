@@ -13,8 +13,12 @@ use techalyzer::{
     util::last_key,
 };
 
+/// A hobby tool for machine learning and technical analysis trading insights.
+///
+/// The outputs, source code, and views of the authors of Techalyzer are not
+/// professional or financial advice.
 #[derive(StructOpt, Debug)]
-#[structopt(name = "Techalyzer", author = "Devin Gunay")]
+#[structopt(name = "Techalyzer",  author = "Devin Gunay <devingunay@gmail.com>")]
 struct Opts {
     /// Secret associated with your chosen data source, usually an API key
     #[structopt(long)]
@@ -82,7 +86,7 @@ enum SubCommands {
     Suggest { model: SupportedTradingModel },
 
     /// Backtests a strategy through a given dataset
-    BackTest {
+    Backtest {
         /// Which trading model to use.
         trading_model: SupportedTradingModel,
 
@@ -237,7 +241,7 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
                 out_path.unwrap_or_else(|| PathBuf::from(format!("{}.bin", &prices.symbol)));
             train(prices, range, p.signal_generators, p.horizon, out_path)?
         }
-        SubCommands::BackTest {
+        SubCommands::Backtest {
             trading_model,
             cash,
             model_file,
