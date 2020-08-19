@@ -6,7 +6,7 @@ use techalyzer::output::SupportedIndicators;
 use techalyzer::secret::Secret;
 use techalyzer::subcommands::*;
 use techalyzer::{
-    config::GeneralParams,
+    config::{GeneralParams, TrainingParams},
     date::{today, Date},
     marketdata::prices::PricesError,
     trading::SupportedTradingModel,
@@ -20,6 +20,8 @@ use techalyzer::{
 #[derive(StructOpt, Debug)]
 #[structopt(name = "Techalyzer", author = "Devin Gunay <devingunay@gmail.com>")]
 struct Opts {
+    // TODO: make it so either there's a --paramfile given, or the user supplies
+    // options
     #[structopt(flatten)]
     params: GeneralParams,
 
@@ -46,7 +48,10 @@ enum SubCommands {
         #[structopt(flatten)]
         params: TrainingParams,
 
-        /// File path to output a model file to.
+        // TODO: find a way to express this default in code without inlining it
+        // into the Train function and hardcoding the default here. There has to
+        // be a way to get around Default not allowing a dynamic symbol name.
+        /// File path to output a model file to [default: <symbol>.bin]
         #[structopt(long, short)]
         out_path: Option<PathBuf>,
     },
@@ -67,48 +72,6 @@ enum SubCommands {
         /// How much cash the model begins with.
         cash: f64, // TODO: is there a good money type/bignum to avoid possible problems?
     },
-}
-
-#[derive(Debug, StructOpt)]
-struct TrainingParams {
-    /// Start date of the training dataset. Defaults to the beginning of the
-    /// dataset.
-    train_start_date: Option<Date>,
-
-    /// End date of the training. Defaults to the end of the dataset, less
-    /// `horizon` days.
-    train_end_date: Option<Date>,
-
-    /// How many days in the future to check future returns in order to decide
-    /// how to label the data. Defaults to 10 days.
-    #[structopt(default_value = "10", long, short)]
-    horizon: u32,
-
-    /// What percentage (+/-) returns to consider a buying or shorting
-    /// opportunity when looking at future returns. Defaults to 0.03 (3%
-    /// returns).
-    #[structopt(default_value = "0.03", long, short)]
-    decision_threshold: f64,
-
-    /// Which technical indicators to use to generate features for the learner.
-    #[structopt(long, short)]
-    signal_generators: Vec<SupportedIndicators>,
-}
-
-impl Default for TrainingParams {
-    fn default() -> Self {
-        Self {
-            signal_generators: vec![
-                SupportedIndicators::RelativeStrengthIndex,
-                SupportedIndicators::BollingerBands,
-                SupportedIndicators::MACD,
-            ],
-            train_start_date: None,
-            train_end_date: Some(Date::default()),
-            horizon: 10,
-            decision_threshold: 0.03,
-        }
-    }
 }
 
 fn main() -> Result<(), TechalyzerError> {
