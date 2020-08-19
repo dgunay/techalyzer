@@ -5,12 +5,12 @@
 use super::tradingmodel::{Trades, TradingModel};
 use crate::Date;
 use crate::{
-    backtester::Position,
     marketdata::prices::Prices,
     signals::{
         bollingerbandssignals::BBSignalsIter, macdsignals::MACDSignalsIter,
         relativestrengthindexsignals::RSISignalsIter, SignalsIter,
     },
+    trading::Position,
 };
 use derive_more::Display;
 use rustlearn::prelude::*;
@@ -225,7 +225,6 @@ impl TradingModel for DecisionTreeTrader<Trained> {
 mod tests {
     use super::{DecisionTreeTrader, Trained};
     use crate::{
-        backtester::Position,
         date::Date,
         marketdata::prices::Prices,
         signals::{
@@ -233,6 +232,7 @@ mod tests {
             relativestrengthindexsignals::RSISignalsIter, SignalsIter,
         },
         trading::tradingmodel::{Trades, TradingModel},
+        trading::Position,
     };
     use chrono::Duration;
     use std::collections::BTreeMap;

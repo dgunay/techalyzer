@@ -2,7 +2,6 @@
 
 use super::tradingmodel::{Trades, TradingModel};
 use crate::Date;
-use crate::{backtester::Position, signals::SignalsIter};
 use crate::{
     marketdata::prices::Prices,
     signals::{
@@ -10,6 +9,7 @@ use crate::{
         relativestrengthindexsignals::RSISignalsIter, Signal,
     },
 };
+use crate::{signals::SignalsIter, trading::Position};
 use derive_more::Display;
 use dg_ta::indicators::SimpleMovingAverage;
 use std::collections::BTreeMap;
@@ -127,7 +127,7 @@ mod tests {
     use super::ManualTradingModel;
     use crate::Date;
     use crate::{
-        backtester::Position, marketdata::prices::Prices, trading::tradingmodel::TradingModel,
+        marketdata::prices::Prices, trading::tradingmodel::TradingModel, trading::Position,
         util::TimeSeries,
     };
     use chrono::Duration;

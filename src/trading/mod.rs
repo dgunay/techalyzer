@@ -3,7 +3,9 @@
 pub mod buyandhold;
 pub mod dtmodel;
 pub mod manual;
+pub mod position;
 pub mod tradingmodel;
+pub use position::*;
 
 use strum_macros::{Display, EnumString};
 

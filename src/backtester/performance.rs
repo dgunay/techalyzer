@@ -134,7 +134,7 @@ impl PortfolioPerformance {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::{backtester::Position as Pos, util::nearly_equal};
+    use crate::{trading::Position as Pos, util::nearly_equal};
 
     #[test]
     fn total_return_divide_by_zero() {

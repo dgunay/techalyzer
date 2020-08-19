@@ -1,8 +1,8 @@
 //! Buys and holds shares for the entirety of the trading period.
 
 use super::tradingmodel::{Trades, TradingModel};
-use crate::backtester::Position::*;
 use crate::marketdata::prices::Prices;
+use crate::trading::Position::*;
 use derive_more::Display;
 use std::collections::BTreeMap;
 

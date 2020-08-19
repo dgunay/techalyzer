@@ -1,6 +1,6 @@
 //! Interface for trading models to integrate with the rest of Techalyzer.
 
-use crate::backtester::Position;
+use crate::trading::Position;
 use crate::Date;
 use crate::{error::TechalyzerError, marketdata::prices::Prices, util::TimeSeries};
 
