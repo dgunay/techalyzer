@@ -58,7 +58,9 @@ The basic idea:
 ```
 
 There is no initial intent to make this a highly scalable or distributed 
-architecture, it is simply a CLI app for now.
+architecture, it is simply a CLI app for now, though the library portions
+of the code can easily be taken apart and deployed behind some sort of
+API or messaging interface if so desired.
 
 ## Known Issues
 

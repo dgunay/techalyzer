@@ -15,7 +15,7 @@ unless ($data) {
   $data = "$symbol\_rsi.json";
 }
 
-system("cargo run -- -d $symbol\_rsi.json --end-date $end_train_date $symbol train -s MACD")
+system("cargo run -- -d $symbol\_rsi.json --end-date $end_train_date $symbol train -s SmaCrossover rsi macd bb")
  == 0  or die;
 
 system("cargo run -- -d $symbol\_rsi.json --start-date $start_test_date $symbol back-test MachineLearningModel -m $symbol.bin 10000 > $symbol\_perf.json")

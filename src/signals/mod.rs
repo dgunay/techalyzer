@@ -7,6 +7,7 @@
 pub mod bollingerbandssignals;
 pub mod macdsignals;
 pub mod relativestrengthindexsignals;
+pub mod smacrossovers;
 
 use derive_more::Display;
 use dg_ta::Reset;
@@ -17,7 +18,7 @@ use std::{collections::HashMap, fmt::Debug, ops::Add};
 ///
 /// Signal is runtime checked in debug builds to be between -1.0 and 1.0
 /// inclusive (the expected range for signal generators to be outputting).
-#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq)]
 #[serde(transparent)]
 pub struct Signal {
     pub val: f64,
@@ -86,6 +87,11 @@ pub struct Output {
     pub output: HashMap<String, f64>,
 }
 
+// TODO: consider implementing Output as a trait or some other way
+// trait OutputTrait {
+//     fn output(&self) -> HashMap<String, f64>;
+// }
+
 /// Errors that can occur while using Output (mainly mapping length mismatches).
 #[derive(Debug, Display)]
 pub enum OutputError {
@@ -120,6 +126,7 @@ impl Output {
     }
 }
 
+// FIXME: this should be a polymorphic trait maybe
 impl From<f64> for Output {
     fn from(f: f64) -> Self {
         Output {

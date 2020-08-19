@@ -17,6 +17,10 @@ impl Trades {
     pub fn get(&self, k: &Date) -> Option<&Position> {
         self.trades.get(k)
     }
+
+    pub fn len(&self) -> usize {
+        self.trades.len()
+    }
 }
 
 /// Given historical price data, comes up with a series of trades to attempt
