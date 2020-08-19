@@ -2,6 +2,7 @@
 
 use crate::{date::Date, marketdata::prices::Prices};
 use derive_more::Display;
+use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::{ops::RangeBounds, str::FromStr};
 use strum_macros::EnumIter;
@@ -11,7 +12,7 @@ pub mod csv;
 pub mod techalyzerjson;
 
 /// Data sources supported by Techalyzer, be they APIs or otherwise.
-#[derive(Debug, EnumIter)]
+#[derive(Debug, EnumIter, Deserialize, Serialize)]
 pub enum SupportedDataSource {
     /// Get a file locally
     TechalyzerJson(PathBuf),

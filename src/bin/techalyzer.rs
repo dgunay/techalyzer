@@ -1,4 +1,4 @@
-use std::{path::PathBuf, str::FromStr};
+use std::path::PathBuf;
 use structopt::StructOpt;
 use techalyzer::error::TechalyzerError;
 use techalyzer::get_market_data;
@@ -6,7 +6,7 @@ use techalyzer::output::SupportedIndicators;
 use techalyzer::secret::Secret;
 use techalyzer::subcommands::*;
 use techalyzer::{
-    datasource::SupportedDataSource,
+    config::GeneralParams,
     date::{today, Date},
     marketdata::prices::PricesError,
     trading::SupportedTradingModel,
@@ -18,43 +18,13 @@ use techalyzer::{
 /// The outputs, source code, and views of the authors of Techalyzer are not
 /// professional or financial advice.
 #[derive(StructOpt, Debug)]
-#[structopt(name = "Techalyzer",  author = "Devin Gunay <devingunay@gmail.com>")]
+#[structopt(name = "Techalyzer", author = "Devin Gunay <devingunay@gmail.com>")]
 struct Opts {
-    /// Secret associated with your chosen data source, usually an API key
-    #[structopt(long)]
-    secret: Option<String>,
-
-    // TODO: it'd be better for error display if a data source were
-    // selected as mutually exclusive flags (e.g. --file-data and --api-data)
-    /// Where to get stock data from
-    #[structopt(long, short)]
-    data_source: SupportedDataSource,
-
-    /// The symbol of the security to analyze
-    symbol: String,
-
-    /// Start date of the analysis. Defaults to the earliest possible date.
-    #[structopt(long, short, parse(try_from_str = parse_date))]
-    start_date: Option<Date>,
-
-    /// End date of the analysis. Defaults to the latest possible date
-    /// (usually today).
-    #[structopt(long, short, parse(try_from_str = parse_date))]
-    end_date: Option<Date>,
+    #[structopt(flatten)]
+    params: GeneralParams,
 
     #[structopt(subcommand)]
     cmd: SubCommands,
-}
-
-/// Gives us a little more flexibility when parsing dates from the command line
-/// for things like "today"
-fn parse_date(datestr: &str) -> Result<Date, chrono::ParseError> {
-    match datestr {
-        "today" => Ok(today()),
-        "yesterday" => Ok(today() - chrono::Duration::days(1)),
-        // TODO: maybe implement things like "a year ago", "a month ago", etc
-        s => Date::from_str(s),
-    }
 }
 
 #[derive(StructOpt, Debug)]
@@ -158,19 +128,27 @@ fn very_early_date() -> Date {
 
 /// Wrappable main function to make it easier to test.
 fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
+    let params = opts.params;
+
     // Date range for the data
-    let start = opts.start_date;
-    let end = opts.end_date;
+    let start = params.start_date;
+    let end = params.end_date;
 
     // API keys if necessary
-    let secret = Secret { data: opts.secret };
+    let secret = Secret {
+        data: params.secret,
+    };
 
     let start_date = start.unwrap_or_else(very_early_date);
     let end_date = end.unwrap_or_else(today);
 
     // Get market data
-    let prices = match get_market_data(opts.data_source, opts.symbol, start_date..=end_date, secret)
-    {
+    let prices = match get_market_data(
+        params.data_source,
+        params.symbol,
+        start_date..=end_date,
+        secret,
+    ) {
         Ok(d) => d,
         Err(e) => {
             return Err(TechalyzerError::Generic(format!("{}", e)));
@@ -258,18 +236,20 @@ mod tests {
     use super::SupportedIndicators;
     use super::{run_program, Opts, SubCommands};
     use crate::TrainingParams;
-    use techalyzer::{datasource::SupportedDataSource, date::Date};
+    use techalyzer::{config::GeneralParams, datasource::SupportedDataSource, date::Date};
     use tempfile::NamedTempFile;
 
     #[test]
     fn end_to_end_print_rsi() {
         // Basic smoke test that the program can go end to end
         let res = run_program(Opts {
-            data_source: SupportedDataSource::TechalyzerJson("test/json/jpm_rsi.json".into()),
-            secret: None,
-            symbol: "JPM".to_string(),
-            start_date: None,
-            end_date: None,
+            params: GeneralParams {
+                data_source: SupportedDataSource::TechalyzerJson("test/json/jpm_rsi.json".into()),
+                secret: None,
+                symbol: "JPM".to_string(),
+                start_date: None,
+                end_date: None,
+            },
             cmd: SubCommands::Print {
                 indicator: SupportedIndicators::RelativeStrengthIndex,
                 print_signals: true,
@@ -292,11 +272,13 @@ mod tests {
         // way.
         let file = NamedTempFile::new().unwrap();
         let _ = run_program(Opts {
-            secret: None,
-            data_source: SupportedDataSource::TechalyzerJson("test/json/jpm_rsi.json".into()),
-            symbol: "JPM".to_string(),
-            start_date: None,
-            end_date: Some(Date::from_ymd(2020, 06, 02)),
+            params: GeneralParams {
+                secret: None,
+                data_source: SupportedDataSource::TechalyzerJson("test/json/jpm_rsi.json".into()),
+                symbol: "JPM".to_string(),
+                start_date: None,
+                end_date: Some(Date::from_ymd(2020, 06, 02)),
+            },
             cmd: SubCommands::Train {
                 params: TrainingParams::default(),
                 out_path: Some(file.path().to_path_buf()),

@@ -7,6 +7,7 @@
 
 #[deny(missing_docs)]
 pub mod backtester;
+pub mod config;
 pub mod datasource;
 pub mod date;
 pub mod error;
