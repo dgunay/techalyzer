@@ -2,34 +2,13 @@
 
 use crate::{
     backtester::performance::PortfolioPerformance,
+    indicators::SupportedIndicators,
     marketdata::prices::Prices,
-    signals::{Output, Signal, SignalsIter},
+    signals::{Output, Signal},
     trading::tradingmodel::Trades,
     util::TimeSeries,
 };
 use serde::{Deserialize, Serialize};
-use strum_macros::{EnumString, EnumVariantNames};
-
-/// The list of technical indicators supported by Techalyzer.
-#[derive(Debug, Serialize, Deserialize, EnumString, EnumVariantNames, Copy, Clone)]
-pub enum SupportedIndicators {
-    #[strum(serialize = "BollingerBands", serialize = "bb")]
-    BollingerBands,
-
-    #[strum(serialize = "RelativeStrengthIndex", serialize = "rsi")]
-    RelativeStrengthIndex,
-
-    #[strum(serialize = "MACD", serialize = "macd")]
-    MACD,
-
-    SmaCrossover,
-}
-
-impl From<&SupportedIndicators> for Box<dyn SignalsIter> {
-    fn from(s: &SupportedIndicators) -> Self {
-        Self::from(*s)
-    }
-}
 
 /// An entry at some date with price, signal, and technical indicator data.
 #[derive(Serialize, Deserialize)]

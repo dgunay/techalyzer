@@ -245,8 +245,8 @@ dependencies = [
 
 [[package]]
 name = "dg_ta"
-version = "1.0.1"
-source = "git+https://github.com/dgunay/ta-rs#a018bd301f09a77c252b995c5022507c0c53633e"
+version = "1.1.1"
+source = "git+https://github.com/dgunay/ta-rs#ab40ebb798bf8373a6cf095455b649cde2fb18f7"
 dependencies = [
  "error-chain",
  "serde",

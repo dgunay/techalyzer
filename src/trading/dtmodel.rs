@@ -13,6 +13,7 @@ use crate::{
     trading::Position,
 };
 use derive_more::Display;
+use derive_more::{From, FromStr};
 use rustlearn::prelude::*;
 use rustlearn::{
     multiclass::OneVsRestWrapper,
@@ -21,7 +22,26 @@ use rustlearn::{
 use serde::{Deserialize, Serialize};
 use std::{collections::BTreeMap, marker::PhantomData};
 
-/// State type parameter that denotes a trained model.
+/// Newtype wrapper for the 'horizon' parameter of the model (how many days in
+/// the future it will look for returns when labelling features).
+#[derive(Debug, Display, Serialize, Deserialize, FromStr, From, Copy, Clone, PartialEq)]
+pub struct Horizon(pub u32);
+impl Default for Horizon {
+    fn default() -> Self {
+        Self(10)
+    }
+}
+
+/// Newtype wrapper for 'decision_threshold' parameter of the model ()
+#[derive(Debug, Display, Serialize, Deserialize, FromStr, From, Copy, Clone, PartialEq)]
+pub struct DecisionThreshold(pub f64);
+impl Default for DecisionThreshold {
+    fn default() -> Self {
+        Self(0.03)
+    }
+}
+
+/// Session type that denotes a trained model.
 pub struct Trained;
 
 /// Predicts trading opportunities using a one-vs-rest decision tree classifier
@@ -37,8 +57,8 @@ pub struct DecisionTreeTrader<TrainedState = ()> {
     /// The maximum shares that the bot will commit to a given trade
     max_shares: u32,
 
-    /// Silences the compiler as we implement compile-time checks for untrained
-    /// models.
+    /// Silences the compiler as we implement session types for
+    /// trained/untrained models.
     phantom: PhantomData<TrainedState>,
 }
 
@@ -50,7 +70,7 @@ pub enum DecisionTreeError {
         _0,
         _1
     )]
-    NoLookAheadPriceData(u32, Date),
+    NoLookAheadPriceData(Horizon, Date),
 
     #[display(fmt = "Error while fitting model: {}", _0)]
     TrainingError(String),
@@ -125,7 +145,7 @@ impl DecisionTreeTrader {
         mut self,
         train_prices: &Prices,
         train_dates: Vec<Date>,
-        horizon: u32,
+        horizon: Horizon,
         threshold: f32,
     ) -> Result<DecisionTreeTrader<Trained>, DecisionTreeError> {
         let mut x = Vec::new();
@@ -140,7 +160,7 @@ impl DecisionTreeTrader {
 
             // look ahead for n-day future return
             let future_price = train_prices
-                .get_after(&day, horizon)
+                .get_after(&day, horizon.0)
                 .ok_or(DecisionTreeError::NoLookAheadPriceData(horizon, day))?
                 .1;
             let future_return = ((future_price / price) - 1.0) as f32;
@@ -223,7 +243,7 @@ impl TradingModel for DecisionTreeTrader<Trained> {
 
 #[cfg(test)]
 mod tests {
-    use super::{DecisionTreeTrader, Trained};
+    use super::{DecisionTreeTrader, Horizon, Trained};
     use crate::{
         date::Date,
         marketdata::prices::Prices,
@@ -266,7 +286,7 @@ mod tests {
         // Train it
         let prices = fixture_setup();
         let range = Date::range(Date::from_ymd(2012, 01, 2), Date::from_ymd(2012, 01, 30));
-        let trained_trader = dt_trader.train(&prices, range, 3, 0.03).unwrap();
+        let trained_trader = dt_trader.train(&prices, range, Horizon(3), 0.03).unwrap();
 
         // Can we turn it into bincode and back?
         let bytes = bincode::serialize(&trained_trader).unwrap();
@@ -284,7 +304,7 @@ mod tests {
     fn bull_market() {
         let indics: Vec<Box<dyn SignalsIter>> = vec![Box::new(MACDSignalsIter::default())];
         let new_prices: Vec<f64> = (15..55).map(|f| f.into()).collect();
-        let trades = run_trader_test(indics, new_prices, 3, 0.03);
+        let trades = run_trader_test(indics, new_prices, Horizon(3), 0.03);
         assert!(trades.trades.iter().all(|p| *p.1 == Position::Long(1000)));
     }
 
@@ -293,13 +313,13 @@ mod tests {
     fn run_trader_test(
         indics: Vec<Box<dyn SignalsIter>>,
         new_prices: Vec<f64>,
-        horizon: u32,
+        horizon: Horizon,
         threshold: f32,
     ) -> Trades {
         // Construct the model
         let dt_trader = DecisionTreeTrader::new(indics, 1000).unwrap();
 
-        // Train it (in a bull market where stonks only go up)
+        // Train it
         let mut prices = fixture_setup();
         for (i, (_, price)) in prices.iter_mut().enumerate() {
             *price = new_prices[i];
@@ -315,7 +335,7 @@ mod tests {
     fn bear_market() {
         let new_prices: Vec<f64> = (15..55).map(|f| f.into()).rev().collect();
         let indics: Vec<Box<dyn SignalsIter>> = vec![Box::new(MACDSignalsIter::default())];
-        let trades = run_trader_test(indics, new_prices, 3, 0.03);
+        let trades = run_trader_test(indics, new_prices, Horizon(3), 0.03);
         assert!(trades.trades.iter().all(|p| *p.1 == Position::Short(1000)));
     }
 
@@ -323,7 +343,7 @@ mod tests {
     fn afraid_to_invest() {
         let new_prices: Vec<f64> = (15..55).map(|f| f.into()).rev().collect();
         let indics: Vec<Box<dyn SignalsIter>> = vec![Box::new(MACDSignalsIter::default())];
-        let trades = run_trader_test(indics, new_prices, 3, 1.0);
+        let trades = run_trader_test(indics, new_prices, Horizon(3), 1.0);
         assert!(trades.trades.iter().all(|p| *p.1 == Position::Out));
     }
 
@@ -335,9 +355,12 @@ mod tests {
             Box::new(BBSignalsIter::default()),
         ];
         let new_prices: Vec<f64> = (15..55).map(|f| f.into()).rev().collect();
-        let _ = run_trader_test(indics, new_prices, 3, 1.0);
+        let _ = run_trader_test(indics, new_prices, Horizon(3), 1.0);
     }
 
     #[test]
-    fn up_and_down() {}
+    #[should_panic]
+    fn up_and_down() {
+        todo!("test how the trader reacts to a triangle wave");
+    }
 }

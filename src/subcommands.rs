@@ -5,10 +5,9 @@ use crate::Date;
 use crate::{
     backtester::BackTester,
     error::TechalyzerError,
+    indicators::SupportedIndicators,
     marketdata::prices::Prices,
-    output::{
-        SupportedIndicators, TechalyzerBacktestOutput, TechalyzerEntry, TechalyzerPrintOutput,
-    },
+    output::{TechalyzerBacktestOutput, TechalyzerEntry, TechalyzerPrintOutput},
     signals::{
         bollingerbandssignals::BBSignalsIter, macdsignals::MACDSignalsIter,
         relativestrengthindexsignals::RSISignalsIter, smacrossovers::SmaCrossoversSignalsIter,
@@ -16,7 +15,7 @@ use crate::{
     },
     trading::{
         buyandhold::BuyAndHold,
-        dtmodel::{DecisionTreeError, DecisionTreeTrader, Trained},
+        dtmodel::{DecisionTreeError, DecisionTreeTrader, Horizon, Trained},
         manual::ManualTradingModel,
         tradingmodel::TradingModel,
         SupportedTradingModel,
@@ -76,7 +75,7 @@ pub fn train(
     prices: Prices,
     train_dates: Vec<Date>,
     signal_generators: Vec<SupportedIndicators>,
-    horizon: u32,
+    horizon: Horizon,
     // TODO: add threshold as a param here
     out_path: PathBuf,
 ) -> Result<(), TechalyzerError> {
@@ -103,7 +102,7 @@ fn train_model(
     prices: &Prices,
     train_dates: Vec<Date>,
     signal_generators: Vec<Box<dyn SignalsIter>>,
-    horizon: u32,
+    horizon: Horizon,
 ) -> Result<DecisionTreeTrader<Trained>, DecisionTreeError> {
     // TODO: either load a model or train a new one right here.
     // TODO: don't hardcore shares

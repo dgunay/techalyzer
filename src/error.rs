@@ -8,8 +8,8 @@
 
 use crate::{
     backtester::{performance::PerformanceError, BackTesterError},
+    indicators::SupportedIndicators,
     marketdata::prices::PricesError,
-    output::SupportedIndicators,
     trading::{
         buyandhold::BuyAndHoldError, dtmodel::DecisionTreeError, manual::ManualTradingModelError,
     },

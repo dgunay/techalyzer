@@ -47,8 +47,8 @@ impl DataSource for CsvFile {
 
 fn parse_date_in_csv(datestr: &str) -> Result<Date, Error> {
     // try multiple date formats
-    let result =
-        Date::parse_from_str(datestr, "%Y-%m-%d").or(Date::parse_from_str(datestr, "%Y/%m/%d"));
+    let result = Date::parse_from_str(datestr, "%Y-%m-%d")
+        .or_else(|_| Date::parse_from_str(datestr, "%Y/%m/%d"));
     result.map_err(|e| Error::CsvError(e.to_string()))
 }
 

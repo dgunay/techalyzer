@@ -11,6 +11,7 @@ pub mod config;
 pub mod datasource;
 pub mod date;
 pub mod error;
+pub mod indicators;
 pub mod marketdata;
 pub mod output;
 pub mod secret;

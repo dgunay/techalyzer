@@ -1,13 +1,13 @@
-use std::path::PathBuf;
+use std::{fs::File, path::PathBuf};
 use structopt::StructOpt;
 use techalyzer::error::TechalyzerError;
 use techalyzer::get_market_data;
-use techalyzer::output::SupportedIndicators;
 use techalyzer::secret::Secret;
 use techalyzer::subcommands::*;
 use techalyzer::{
     config::{GeneralParams, TrainingParams},
     date::{today, Date},
+    indicators::SupportedIndicators,
     marketdata::prices::PricesError,
     trading::SupportedTradingModel,
     util::last_key,
@@ -45,8 +45,16 @@ enum SubCommands {
     /// Trains a machine learning model on stock data to make trades based on
     /// technical indicators, then serializes it for later use.
     Train {
+        // FIXME: We can't have flattened structs as part of groups, so hacks
+        // abound here in order to get mutual exclusion between TrainingParams
+        // and paramfile.
         #[structopt(flatten)]
         params: TrainingParams,
+
+        // TODO: make paramfile override-able using params.
+        /// A file with training parameters as JSON.
+        #[structopt(short, long)]
+        paramfile: Option<PathBuf>,
 
         // TODO: find a way to express this default in code without inlining it
         // into the Train function and hardcoding the default here. There has to
@@ -131,12 +139,29 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
         SubCommands::Train {
             params: p,
             out_path,
+            paramfile,
         } => {
-            if p.signal_generators.is_empty() {
+            // println!("{}", serde_json::to_string_pretty(&p)?);
+            // std::process::exit(0);
+
+            // Paramfile is our default if it is present, otherwise use passed params.
+            let params: TrainingParams = match paramfile {
+                Some(path) => {
+                    let p: TrainingParams = serde_json::from_reader(File::open(path)?)?;
+                    // TODO: override parameters if cli ones are present
+                    p
+                }
+                None => p,
+            };
+
+            // TODO: implement a verbose flag
+            dbg!(&params);
+
+            if params.signal_generators.is_empty() {
                 return Err(TechalyzerError::NoIndicatorSpecified);
             }
 
-            let start_date = match p.train_start_date {
+            let start_date = match params.train_start_date {
                 Some(d) => d,
                 None => {
                     *prices
@@ -152,17 +177,17 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
                 // horizon days before it
                 Some(d) => {
                     prices
-                        .get_before(&d, p.horizon)
+                        .get_before(&d, params.horizon.0)
                         .ok_or(PricesError::DateNotFound(d))?
                         .0
                 }
                 // else use the last n days
                 None => {
                     last_key(&prices.map)
-                        .and_then(|d| prices.get_before(&d, p.horizon))
+                        .and_then(|d| prices.get_before(&d, params.horizon.0))
                         .ok_or(format!(
                             "Could not find {} days before last day in price data",
-                            p.horizon
+                            params.horizon
                         ))?
                         .0
                 }
@@ -180,7 +205,13 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
             // FIXME: need a way to output to null for testing
             let out_path =
                 out_path.unwrap_or_else(|| PathBuf::from(format!("{}.bin", &prices.symbol)));
-            train(prices, range, p.signal_generators, p.horizon, out_path)?
+            train(
+                prices,
+                range,
+                params.signal_generators.into(),
+                params.horizon,
+                out_path,
+            )?
         }
         SubCommands::Backtest {
             trading_model,
@@ -245,6 +276,7 @@ mod tests {
             cmd: SubCommands::Train {
                 params: TrainingParams::default(),
                 out_path: Some(file.path().to_path_buf()),
+                paramfile: Default::default(),
             },
         })
         .unwrap();

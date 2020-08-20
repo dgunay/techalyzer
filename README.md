@@ -75,6 +75,7 @@ TBD
 
 ## Random Backlog
 
+* TODO: grep for `#[should_panic]` and fix the tests if they are just todos
 * TODO: Add a parameters file to help make model and technical indicators
         easier to configure
 * TODO: Immediately backtest a trained model without having to stitch commands together

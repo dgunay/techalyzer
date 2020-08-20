@@ -69,9 +69,9 @@ impl<'a> BackTester<'a> {
             self.cash += cash_difference;
 
             if trade == Position::Hold {
-                trade = self.current_position.clone();
+                trade = self.current_position;
             } else {
-                self.current_position = trade.clone();
+                self.current_position = trade;
             }
 
             // Calculate portfolio value (equity plus cash)
