@@ -75,6 +75,7 @@ TBD
 
 ## Random Backlog
 
+* TODO: consider using/contributing to [rusty-backtest](https://github.com/drbh/rusty-backtest)
 * TODO: grep for `#[should_panic]` and fix the tests if they are just todos
 * TODO: Add a parameters file to help make model and technical indicators
         easier to configure
