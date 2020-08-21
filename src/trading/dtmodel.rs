@@ -2,7 +2,10 @@
 //! generators provide features, future returns provide labels. Various
 //! parameters influence trading behavior.
 
-use super::tradingmodel::{Trades, TradingModel};
+use super::{
+    ml::{decisiontree::DecisionTreeClassifier, mlmodel::MachineLearningAlgorithm},
+    tradingmodel::{Trades, TradingModel},
+};
 use crate::Date;
 use crate::{
     marketdata::prices::Prices,
@@ -14,11 +17,7 @@ use crate::{
 };
 use derive_more::Display;
 use derive_more::{From, FromStr};
-use rustlearn::prelude::*;
-use rustlearn::{
-    multiclass::OneVsRestWrapper,
-    trees::decision_tree::{DecisionTree, Hyperparameters},
-};
+use rustlearn::trees::decision_tree::Hyperparameters;
 use serde::{Deserialize, Serialize};
 use std::{collections::BTreeMap, marker::PhantomData};
 
@@ -49,8 +48,9 @@ pub struct Trained;
 #[derive(Serialize, Deserialize)]
 pub struct DecisionTreeTrader<TrainedState = ()> {
     /// Our multi-class decision tree classifier
-    learner: OneVsRestWrapper<DecisionTree>,
-
+    // learner:
+    learner: DecisionTreeClassifier,
+    // learner: OneVsRestWrapper<DecisionTree>,
     /// Signals that will inform the model.
     signal_generators: Vec<Box<dyn SignalsIter>>,
 
@@ -72,8 +72,12 @@ pub enum DecisionTreeError {
     )]
     NoLookAheadPriceData(Horizon, Date),
 
+    // TODO: this is kind of just copy and paste from mlmodel errors, can we not?
     #[display(fmt = "Error while fitting model: {}", _0)]
     TrainingError(String),
+
+    #[display(fmt = "Prediction error: {}", _0)]
+    PredictionError(String),
 
     #[display(fmt = "No price found on date {}", _0)]
     NoPriceFound(Date),
@@ -82,13 +86,24 @@ pub enum DecisionTreeError {
     NoSignalGeneratorsProvided,
 }
 
+impl From<super::ml::mlmodel::Error> for DecisionTreeError {
+    fn from(e: super::ml::mlmodel::Error) -> Self {
+        match e {
+            super::ml::mlmodel::Error::FitError(msg) => DecisionTreeError::TrainingError(msg),
+            super::ml::mlmodel::Error::PredictionError(msg) => {
+                DecisionTreeError::PredictionError(msg)
+            }
+        }
+    }
+}
+
 const LONG: f32 = 1.0;
 const OUT: f32 = 0.0;
 const SHORT: f32 = -1.0;
 
 // Private constructor to control construction of untrained/trained DecisionTreeTrader.
 fn state_constructor<State>(
-    learner: OneVsRestWrapper<DecisionTree>,
+    learner: DecisionTreeClassifier,
     signal_generators: Vec<Box<dyn SignalsIter>>,
     max_shares: u32,
 ) -> DecisionTreeTrader<State> {
@@ -107,7 +122,9 @@ impl Default for DecisionTreeTrader {
             Box::new(RSISignalsIter::default()),
             Box::new(BBSignalsIter::default()),
         ];
-        let learner = Hyperparameters::new(signal_generators.len()).one_vs_rest();
+        let learner = DecisionTreeClassifier::new(
+            Hyperparameters::new(signal_generators.len()).one_vs_rest(),
+        );
 
         state_constructor(learner, signal_generators, 1000)
     }
@@ -125,7 +142,9 @@ impl DecisionTreeTrader {
 
         // TODO: be able to adjust the parameters (and figure out how to reduce
         // overfitting)
-        let learner = Hyperparameters::new(signal_generators.len()).one_vs_rest();
+        let learner = DecisionTreeClassifier::new(
+            Hyperparameters::new(signal_generators.len()).one_vs_rest(),
+        );
 
         Ok(state_constructor(learner, signal_generators, max_shares))
     }
@@ -178,9 +197,7 @@ impl DecisionTreeTrader {
         }
 
         // Construct X train, Y train data out of the prices
-        self.learner
-            .fit(&Array::from(&x), &y.into())
-            .map_err(|msg| DecisionTreeError::TrainingError(msg.to_string()))?;
+        self.learner.fit(&x, &y)?;
 
         Ok(state_constructor::<Trained>(
             self.learner,
@@ -216,18 +233,20 @@ impl TradingModel for DecisionTreeTrader<Trained> {
 
             // TODO: start submitting PRs to improve rustlearn, it has no
             // error enums for one thing
-            let prediction = match self.learner.predict(&Array::from(&vec![signals])) {
-                Ok(r) => r,
-                Err(msg) => return Err(DecisionTreeError::TrainingError(msg.to_string())),
-            };
+            // FIXME: fit/predict after the looping
+            let prediction = self.learner.predict(&vec![signals])?;
+            //     Ok(r) => r,
+            //     Err(msg) => return Err(DecisionTreeError::TrainingError(msg.to_string())),
+            // };
 
             // TODO: don't hardcode traded shares
-            let position = match prediction.get(0, 0) {
+            let position = match prediction[0][0] {
+                // let position = match prediction.get(0, 0) {
                 val if val == LONG => Position::Long(1000),
                 val if val == OUT => Position::Out,
                 val if val == SHORT => Position::Short(1000),
                 val => {
-                    return Err(DecisionTreeError::TrainingError(format!(
+                    return Err(DecisionTreeError::PredictionError(format!(
                         "Invalid prediction '{}'",
                         val
                     )))

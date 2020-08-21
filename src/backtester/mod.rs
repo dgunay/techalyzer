@@ -115,6 +115,8 @@ impl<'a> BackTester<'a> {
             Position::Hold => 0,
         };
 
+        // TODO: add optional slippage or commission costs
+
         // For long (positive) shares, we lose cash. For short (negative)
         // shares, we gain cash.
         -(shares as f64 * price)

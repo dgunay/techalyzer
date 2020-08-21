@@ -59,3 +59,4 @@ impl_techalyzer_error_from_stringable_type!(std::io::Error);
 impl_techalyzer_error_from_stringable_type!(bincode::Error);
 impl_techalyzer_error_from_stringable_type!(BackTesterError);
 impl_techalyzer_error_from_stringable_type!(PricesError);
+impl_techalyzer_error_from_stringable_type!(crate::trading::ml::mlmodel::Error);

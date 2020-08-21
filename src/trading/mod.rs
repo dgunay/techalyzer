@@ -6,6 +6,7 @@ pub mod manual;
 pub mod position;
 pub mod tradingmodel;
 pub use position::*;
+pub mod ml;
 
 use strum_macros::{Display, EnumString};
 

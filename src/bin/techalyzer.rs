@@ -155,7 +155,7 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
             };
 
             // TODO: implement a verbose flag
-            dbg!(&params);
+            // dbg!(&params);
 
             if params.signal_generators.is_empty() {
                 return Err(TechalyzerError::NoIndicatorSpecified);
