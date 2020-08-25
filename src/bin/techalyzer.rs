@@ -141,9 +141,6 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
             out_path,
             paramfile,
         } => {
-            // println!("{}", serde_json::to_string_pretty(&p)?);
-            // std::process::exit(0);
-
             // Paramfile is our default if it is present, otherwise use passed params.
             let params: TrainingParams = match paramfile {
                 Some(path) => {

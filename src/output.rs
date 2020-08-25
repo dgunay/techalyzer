@@ -33,6 +33,7 @@ pub struct TechalyzerBacktestOutput {
     pub trades: Trades,
     pub performance: PortfolioPerformance,
     pub benchmark: PortfolioPerformance,
+    pub trades_accuracy: f64,
     pub total_return: f64,
     pub model_name: String,
     pub symbol: String,

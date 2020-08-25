@@ -155,10 +155,12 @@ pub fn backtest(
     let total_return = performance.total_return()?;
 
     let symbol = prices.symbol.clone();
+    let trades_accuracy = performance.trades_accuracy(&trades)?;
     let output = TechalyzerBacktestOutput {
         performance,
         total_return,
         trades,
+        trades_accuracy,
         model_name: trading_model.to_string(),
         symbol,
         prices,

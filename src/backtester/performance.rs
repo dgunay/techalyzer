@@ -78,7 +78,11 @@ impl PortfolioPerformance {
     /// profitable). For the purposes of this measurement, a "trade" is counted
     /// as opening a long or short position, and then exiting the trade either
     /// by going out or by entering an opposite position (long to short or short
-    /// to long)
+    /// to long).
+    ///
+    /// # Notes
+    ///
+    /// A pure buy and hold strategy will result in a division by zero.
     pub fn trades_accuracy(&self, trades: &Trades) -> Result<f64, PerformanceError> {
         let mut last_entry = Position::Out;
         let mut entry_portval = 0.0;
