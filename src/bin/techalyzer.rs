@@ -295,12 +295,6 @@ mod tests {
         res.unwrap();
     }
 
-    #[test]
-    fn args_parse_without_panic() {
-        // Fails if there is a collision in short/long args
-        Opts::from_args();
-    }
-
     // TODO: test behavior of each path (mainly whether required arguments work
     // properly or not)
 
