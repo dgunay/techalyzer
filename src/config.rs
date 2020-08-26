@@ -5,11 +5,10 @@ use crate::{
     date::{today, Date},
     indicators::{ListOfIndicators, SupportedIndicators},
     trading::dtmodel::{DecisionThreshold, Horizon},
-    util::ToJson,
+    util::{Symbol, ToJson},
 };
-use derive_more::FromStr;
 use serde::{Deserialize, Serialize};
-use std::{convert::Infallible, ops::Deref, str::FromStr};
+use std::{convert::Infallible, str::FromStr};
 use structopt::StructOpt;
 
 // TODO: link to these as the central source of truth for the frontend args
@@ -45,24 +44,6 @@ pub struct GeneralParams {
     #[structopt(long, short, parse(try_from_str = parse_date))]
     #[serde(default)]
     pub end_date: Option<Date>,
-}
-
-/// A stock ticker symbol.
-#[derive(Debug, Default, Serialize, Deserialize, FromStr, PartialEq)]
-#[serde(transparent)]
-pub struct Symbol(String);
-impl Symbol {
-    pub fn new(s: &str) -> Self {
-        Self(s.to_string())
-    }
-}
-
-impl Deref for Symbol {
-    type Target = String;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
 }
 
 impl ToJson for GeneralParams {}
@@ -188,7 +169,7 @@ mod tests {
         // results of dumping default parameters to json
         let gp = GeneralParams {
             data_source: TechalyzerJson("test/json/jpm_rsi.json".into()),
-            symbol: Symbol("jpm".to_string()),
+            symbol: Symbol::new("jpm".to_string()),
             secret: None,
             start_date: None,
             end_date: None,

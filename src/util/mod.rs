@@ -1,4 +1,8 @@
-//! Utility functions with general use in various parts of Techalyzer.
+//! Utility functions, traits, and structs with general use in various parts of
+//! Techalyzer.
+
+mod symbol;
+pub use symbol::*;
 
 use crate::date::Date;
 use serde::Serialize;

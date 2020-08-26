@@ -26,11 +26,11 @@ use crate::datasource::SupportedDataSource;
 use crate::datasource::{DataSource, Error};
 use crate::marketdata::prices::Prices;
 use ::alphavantage::blocking::Client;
-use config::Symbol;
 use datasource::csv::CsvFile;
 use date::Date;
 use secret::Secret;
 use std::ops::RangeInclusive;
+use util::Symbol;
 
 /// Gets stock price time series data from a given `SupportedDataSource`, within the given
 /// date range. A Secret is used to access the data source, if necessary.

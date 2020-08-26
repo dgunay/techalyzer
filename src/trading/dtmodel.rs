@@ -19,7 +19,7 @@ use derive_more::Display;
 use derive_more::{From, FromStr};
 use rustlearn::trees::decision_tree::Hyperparameters;
 use serde::{Deserialize, Serialize};
-use std::{collections::BTreeMap, marker::PhantomData};
+use std::{collections::BTreeMap, marker::PhantomData, ops::Deref};
 
 /// Newtype wrapper for the 'horizon' parameter of the model (how many days in
 /// the future it will look for returns when labelling features).
@@ -31,7 +31,15 @@ impl Default for Horizon {
     }
 }
 
-/// Newtype wrapper for 'decision_threshold' parameter of the model ()
+impl Deref for Horizon {
+    type Target = u32;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+/// Newtype wrapper for 'decision_threshold' parameter of the model.
 #[derive(Debug, Display, Serialize, Deserialize, FromStr, From, Copy, Clone, PartialEq)]
 pub struct DecisionThreshold(pub f64);
 impl Default for DecisionThreshold {

@@ -226,9 +226,7 @@ mod tests {
     use super::{run_program, Opts, SubCommands};
     use crate::TrainingParams;
     use techalyzer::{
-        config::{GeneralParams, Symbol},
-        datasource::SupportedDataSource,
-        date::Date,
+        config::GeneralParams, datasource::SupportedDataSource, date::Date, util::Symbol,
     };
     use tempfile::NamedTempFile;
 
@@ -239,7 +237,7 @@ mod tests {
             params: GeneralParams {
                 data_source: SupportedDataSource::TechalyzerJson("test/json/jpm_rsi.json".into()),
                 secret: None,
-                symbol: Symbol::new("JPM"),
+                symbol: Symbol::new("JPM".to_string()),
                 start_date: None,
                 end_date: None,
             },
@@ -268,7 +266,7 @@ mod tests {
             params: GeneralParams {
                 secret: None,
                 data_source: SupportedDataSource::TechalyzerJson("test/json/jpm_rsi.json".into()),
-                symbol: Symbol::new("JPM"),
+                symbol: Symbol::new("JPM".to_string()),
                 start_date: None,
                 end_date: Some(Date::from_ymd(2020, 06, 02)),
             },
