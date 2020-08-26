@@ -26,6 +26,7 @@ use crate::datasource::SupportedDataSource;
 use crate::datasource::{DataSource, Error};
 use crate::marketdata::prices::Prices;
 use ::alphavantage::blocking::Client;
+use config::Symbol;
 use datasource::csv::CsvFile;
 use date::Date;
 use secret::Secret;
@@ -35,7 +36,7 @@ use std::ops::RangeInclusive;
 /// date range. A Secret is used to access the data source, if necessary.
 pub fn get_market_data(
     source: SupportedDataSource,
-    symbol: String,
+    symbol: Symbol,
     date_range: RangeInclusive<Date>,
     secret: Secret,
 ) -> Result<Prices, Error> {

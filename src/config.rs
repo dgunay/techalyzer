@@ -5,9 +5,11 @@ use crate::{
     date::{today, Date},
     indicators::{ListOfIndicators, SupportedIndicators},
     trading::dtmodel::{DecisionThreshold, Horizon},
+    util::ToJson,
 };
+use derive_more::FromStr;
 use serde::{Deserialize, Serialize};
-use std::{convert::Infallible, str::FromStr};
+use std::{convert::Infallible, ops::Deref, str::FromStr};
 use structopt::StructOpt;
 
 // TODO: link to these as the central source of truth for the frontend args
@@ -15,20 +17,12 @@ use structopt::StructOpt;
 
 // TODO: is it possible to have missing keys use a default value?
 
-/// Serde compatible struct for saving and loading premade Techalyzer
-/// configurations.
-#[derive(Serialize, Deserialize)]
-struct ParamFile {
-    ml_params: MachineLearningParams,
-    backtester_params: BacktesterParams,
-    general_params: GeneralParams,
-}
-
 /// General parameters common to every subcommand of Techalyzer.
-#[derive(Serialize, Deserialize, StructOpt, Debug)]
+#[derive(Serialize, Deserialize, StructOpt, Debug, PartialEq)]
 pub struct GeneralParams {
     /// Secret associated with your chosen data source, usually an API key
     #[structopt(long)]
+    #[serde(default)]
     pub secret: Option<String>,
 
     // TODO: it'd be better for error display if a data source were
@@ -38,17 +32,40 @@ pub struct GeneralParams {
     pub data_source: SupportedDataSource,
 
     /// The symbol of the security to analyze
-    pub symbol: String,
+    #[structopt()]
+    pub symbol: Symbol,
 
     /// Start date of the analysis. Defaults to the earliest possible date.
     #[structopt(long, short, parse(try_from_str = parse_date))]
+    #[serde(default)]
     pub start_date: Option<Date>,
 
     /// End date of the analysis. Defaults to the latest possible date
     /// (usually today).
     #[structopt(long, short, parse(try_from_str = parse_date))]
+    #[serde(default)]
     pub end_date: Option<Date>,
 }
+
+/// A stock ticker symbol.
+#[derive(Debug, Default, Serialize, Deserialize, FromStr, PartialEq)]
+#[serde(transparent)]
+pub struct Symbol(String);
+impl Symbol {
+    pub fn new(s: &str) -> Self {
+        Self(s.to_string())
+    }
+}
+
+impl Deref for Symbol {
+    type Target = String;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl ToJson for GeneralParams {}
 
 /// Parameters when running the Train command.
 #[derive(Debug, StructOpt, Deserialize, Serialize, PartialEq)]
@@ -83,11 +100,7 @@ pub struct TrainingParams {
     pub signal_generators: ListOfIndicators,
 }
 
-impl TrainingParams {
-    pub fn to_json(&self) -> Result<String, serde_json::Error> {
-        serde_json::to_string_pretty(&self)
-    }
-}
+impl ToJson for TrainingParams {}
 
 // FIXME: remove this when done experimenting
 impl FromStr for TrainingParams {
@@ -116,9 +129,6 @@ impl Default for TrainingParams {
 
 // TODO: determine whether separate structs for different kinds of ml algorithms
 // are necessary
-/// Parameters for training a machine learning model.
-#[derive(Serialize, Deserialize)]
-pub struct MachineLearningParams {}
 
 /// Parameters for running the Backtester.
 #[derive(Serialize, Deserialize)]
@@ -137,7 +147,8 @@ fn parse_date(datestr: &str) -> Result<Date, chrono::ParseError> {
 
 #[cfg(test)]
 mod tests {
-    use super::TrainingParams;
+    use super::{GeneralParams, Symbol, TrainingParams};
+    use crate::{datasource::SupportedDataSource::TechalyzerJson, util::ToJson};
 
     #[test]
     fn test_trainingparams_json() {
@@ -167,5 +178,48 @@ mod tests {
 
         let params: TrainingParams = serde_json::from_str(left_out_keys).unwrap();
         assert_eq!(params, TrainingParams::default());
+    }
+
+    // FIXME: this test is largely obsolete because I decided not to go with
+    // deserializable GeneralParams as a way of supplying arguments instead of
+    // CLI due to limitations in structopt.
+    #[test]
+    fn test_generalparams_json() {
+        // results of dumping default parameters to json
+        let gp = GeneralParams {
+            data_source: TechalyzerJson("test/json/jpm_rsi.json".into()),
+            symbol: Symbol("jpm".to_string()),
+            secret: None,
+            start_date: None,
+            end_date: None,
+        };
+        let _as_json_str = gp.to_json().unwrap();
+
+        // should look something like this, the exact specifics are not that
+        // important
+        /*
+        {
+          "secret": null,
+          "data_source": {
+            "TechalyzerJson": "test/json/jpm_rsi.json"
+          },
+          "symbol": "jpm",
+          "start_date": null,
+          "end_date": null
+        }
+        */
+
+        // What happens if we leave out non-mandatory keys? Do they revert to their defaults?
+        let left_out_keys = r#"
+        {
+            "data_source": { 
+                "TechalyzerJson": "test/json/jpm_rsi.json"
+            },
+            "symbol": "jpm"
+        }
+        "#;
+
+        let params: GeneralParams = serde_json::from_str(left_out_keys).unwrap();
+        assert_eq!(params, gp);
     }
 }

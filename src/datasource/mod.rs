@@ -12,7 +12,7 @@ pub mod csv;
 pub mod techalyzerjson;
 
 /// Data sources supported by Techalyzer, be they APIs or otherwise.
-#[derive(Debug, EnumIter, Deserialize, Serialize)]
+#[derive(Debug, EnumIter, Deserialize, Serialize, PartialEq)]
 pub enum SupportedDataSource {
     /// Get a file locally
     TechalyzerJson(PathBuf),

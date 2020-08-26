@@ -20,8 +20,6 @@ use techalyzer::{
 #[derive(StructOpt, Debug)]
 #[structopt(name = "Techalyzer", author = "Devin Gunay <devingunay@gmail.com>")]
 struct Opts {
-    // TODO: make it so either there's a --paramfile given, or the user supplies
-    // options
     #[structopt(flatten)]
     params: GeneralParams,
 
@@ -227,7 +225,11 @@ mod tests {
     use super::SupportedIndicators;
     use super::{run_program, Opts, SubCommands};
     use crate::TrainingParams;
-    use techalyzer::{config::GeneralParams, datasource::SupportedDataSource, date::Date};
+    use techalyzer::{
+        config::{GeneralParams, Symbol},
+        datasource::SupportedDataSource,
+        date::Date,
+    };
     use tempfile::NamedTempFile;
 
     #[test]
@@ -237,7 +239,7 @@ mod tests {
             params: GeneralParams {
                 data_source: SupportedDataSource::TechalyzerJson("test/json/jpm_rsi.json".into()),
                 secret: None,
-                symbol: "JPM".to_string(),
+                symbol: Symbol::new("JPM"),
                 start_date: None,
                 end_date: None,
             },
@@ -266,7 +268,7 @@ mod tests {
             params: GeneralParams {
                 secret: None,
                 data_source: SupportedDataSource::TechalyzerJson("test/json/jpm_rsi.json".into()),
-                symbol: "JPM".to_string(),
+                symbol: Symbol::new("JPM"),
                 start_date: None,
                 end_date: Some(Date::from_ymd(2020, 06, 02)),
             },

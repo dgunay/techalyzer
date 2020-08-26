@@ -41,7 +41,7 @@ impl From<&SupportedIndicators> for Box<dyn SignalsIter> {
 
 /// Newtype wrapper for a vector of SupportedIndicator. This type exists solely
 /// because Strum errors out when the user passes an empty Vec of enums, but we
-/// want that to be an acceptable input for Techalyzer.
+/// want that to be an acceptable input for Techalyzer (should use a default).
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 #[serde(transparent)]
 pub struct ListOfIndicators(pub Vec<SupportedIndicators>);

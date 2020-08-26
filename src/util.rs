@@ -1,6 +1,7 @@
 //! Utility functions with general use in various parts of Techalyzer.
 
 use crate::date::Date;
+use serde::Serialize;
 use std::collections::BTreeMap;
 
 /// Used for every time series type - aliases a BTreeMap of Date to whatever.
@@ -64,6 +65,14 @@ pub fn first_value<K, V>(map: &BTreeMap<K, V>) -> Option<&V> {
 /// Gets the last value from a BTreeMap
 pub fn last_value<K, V>(map: &BTreeMap<K, V>) -> Option<&V> {
     map.values().last()
+}
+
+/// Trait that quickly and easily grafts a `to_json()` method onto any struct
+/// that supports serde.
+pub trait ToJson: Serialize {
+    fn to_json(&self) -> Result<String, serde_json::Error> {
+        serde_json::to_string_pretty(&self)
+    }
 }
 
 /// Computes the slope between two floating point values. Normalized to a scale
