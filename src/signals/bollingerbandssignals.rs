@@ -108,8 +108,8 @@ mod tests {
         let signals: Vec<Signal> = prices.iter().map(|p| sig_gen.next(*p.1).0).collect();
 
         assert_eq!(signals.len(), l);
-        assert!(nearly_equal(signals[0].val, 0.0));
-        assert!(nearly_equal(signals[1].val, -0.5));
-        assert!(nearly_equal(signals[5].val, 0.9669875568304561));
+        assert!(nearly_equal(signals[0].into(), 0.0));
+        assert!(nearly_equal(signals[1].into(), -0.5));
+        assert!(nearly_equal(signals[5].into(), 0.9669875568304561));
     }
 }

@@ -4,7 +4,7 @@ use super::tradingmodel::{Trades, TradingModel};
 use crate::marketdata::prices::Prices;
 use crate::trading::Position::*;
 use derive_more::Display;
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, fmt::Display};
 
 pub struct BuyAndHold {
     /// How many share to buy and hold.
@@ -14,6 +14,12 @@ pub struct BuyAndHold {
 impl Default for BuyAndHold {
     fn default() -> Self {
         Self { shares: 1000 }
+    }
+}
+
+impl Display for BuyAndHold {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "BuyAndHold")
     }
 }
 

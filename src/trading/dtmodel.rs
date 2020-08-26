@@ -19,7 +19,7 @@ use derive_more::Display;
 use derive_more::{From, FromStr};
 use rustlearn::trees::decision_tree::Hyperparameters;
 use serde::{Deserialize, Serialize};
-use std::{collections::BTreeMap, marker::PhantomData, ops::Deref};
+use std::{collections::BTreeMap, fmt::Display, marker::PhantomData, ops::Deref};
 
 /// Newtype wrapper for the 'horizon' parameter of the model (how many days in
 /// the future it will look for returns when labelling features).
@@ -221,6 +221,12 @@ fn next_signals(signal_generators: &mut Vec<Box<dyn SignalsIter>>, price: &f64) 
         .iter_mut()
         .map(|g| f32::from(g.next(*price).0))
         .collect()
+}
+
+impl<T> Display for DecisionTreeTrader<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "DecisionTreeTrader")
+    }
 }
 
 impl TradingModel for DecisionTreeTrader<Trained> {

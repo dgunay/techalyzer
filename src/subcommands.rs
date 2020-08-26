@@ -123,25 +123,15 @@ fn train_model(
 /// * `cash` - How much cash the trading model starts with.
 pub fn backtest(
     prices: Prices,
-    trading_model: SupportedTradingModel,
-    model_file: Option<PathBuf>,
+    trading_model: impl TradingModel,
     cash: f64,
 ) -> Result<(), TechalyzerError> {
     // TODO: allow parameters for the models here.
 
-    let trades = match &trading_model {
-        // TODO: don't unwrap
-        SupportedTradingModel::BuyAndHold => BuyAndHold::default().get_trades(&prices).unwrap(),
-        SupportedTradingModel::ManualTradingAlgo => {
-            ManualTradingModel::default().get_trades(&prices)?
-        }
-        SupportedTradingModel::MachineLearningModel => {
-            let model: DecisionTreeTrader<Trained> = match model_file {
-                Some(path) => bincode::deserialize(std::fs::read(path)?.as_slice())?,
-                None => return Err(TechalyzerError::NoModelFileSpecified),
-            };
-            model.get_trades(&prices)?
-        }
+    let model_name = trading_model.to_string();
+    let trades = match trading_model.get_trades(&prices) {
+        Ok(t) => t,
+        Err(e) => return Err(e.into()),
     };
 
     // TODO: have a way for the model to tell us its signal data
@@ -161,7 +151,7 @@ pub fn backtest(
         total_return,
         trades,
         trades_accuracy,
-        model_name: trading_model.to_string(),
+        model_name,
         symbol,
         prices,
         benchmark: bench_perf,

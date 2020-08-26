@@ -115,8 +115,8 @@ mod tests {
         let prices = fixture_prices();
         let mut signals = SmaCrossoversSignalsIter::new(2, 8).unwrap();
         let sigs: Vec<(Signal, Output)> = prices.iter().map(|f| signals.next(*f.1)).collect();
-        assert_eq!(sigs[2].0.val, 1.0);
-        assert_eq!(sigs[10].0.val, -1.0);
+        assert_eq!(sigs[2].0, Signal::new(1.0));
+        assert_eq!(sigs[10].0, Signal::new(-1.0));
     }
 
     fn fixture_prices() -> Prices {
@@ -162,53 +162,53 @@ mod tests {
 
         let crossovers: Vec<&(Date, Signal)> = signals
             .iter()
-            .filter(|e| e.1.val == 1.0 || e.1.val == -1.0)
+            .filter(|e| e.1 == Signal::new(1.0) || e.1 == Signal::new(-1.0))
             .collect();
 
         let expected = vec![
             (
                 Date::parse_from_str("2015-05-29", "%Y-%m-%d").unwrap(),
-                Signal { val: 1.0 },
+                Signal(1.0),
             ),
             (
                 Date::parse_from_str("2015-07-10", "%Y-%m-%d").unwrap(),
-                Signal { val: -1.0 },
+                Signal(-1.0),
             ),
             (
                 Date::parse_from_str("2015-11-18", "%Y-%m-%d").unwrap(),
-                Signal { val: 1.0 },
+                Signal(1.0),
             ),
             (
                 Date::parse_from_str("2018-01-09", "%Y-%m-%d").unwrap(),
-                Signal { val: 1.0 },
+                Signal(1.0),
             ),
             (
                 Date::parse_from_str("2018-01-10", "%Y-%m-%d").unwrap(),
-                Signal { val: 1.0 },
+                Signal(1.0),
             ),
             (
                 Date::parse_from_str("2018-05-22", "%Y-%m-%d").unwrap(),
-                Signal { val: -1.0 },
+                Signal(-1.0),
             ),
             (
                 Date::parse_from_str("2018-09-25", "%Y-%m-%d").unwrap(),
-                Signal { val: 1.0 },
+                Signal(1.0),
             ),
             (
                 Date::parse_from_str("2018-12-20", "%Y-%m-%d").unwrap(),
-                Signal { val: -1.0 },
+                Signal(-1.0),
             ),
             (
                 Date::parse_from_str("2019-04-11", "%Y-%m-%d").unwrap(),
-                Signal { val: 1.0 },
+                Signal(1.0),
             ),
             (
                 Date::parse_from_str("2019-04-16", "%Y-%m-%d").unwrap(),
-                Signal { val: -1.0 },
+                Signal(-1.0),
             ),
             (
                 Date::parse_from_str("2020-07-21", "%Y-%m-%d").unwrap(),
-                Signal { val: 1.0 },
+                Signal(1.0),
             ),
         ];
 

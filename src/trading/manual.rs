@@ -12,11 +12,19 @@ use crate::{
 use crate::{signals::SignalsIter, trading::Position};
 use derive_more::Display;
 use dg_ta::indicators::SimpleMovingAverage;
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, fmt::Display};
+use structopt::StructOpt;
 
 /// Errors that can happen.
 pub enum Error {
     NoSignalAvailable,
+}
+
+#[derive(StructOpt, Debug)]
+pub struct ManualParams {
+    pub shares: u64,
+    pub dead_zone: Signal,
+    pub disposition: Signal,
 }
 
 /// The manual trading model.
@@ -37,11 +45,11 @@ pub struct ManualTradingModel {
 }
 
 impl ManualTradingModel {
-    pub fn new(shares: u64, dead_zone: f64, disposition: f64) -> Self {
+    pub fn new(shares: u64, dead_zone: Signal, disposition: Signal) -> Self {
         Self {
             shares,
-            dead_zone: dead_zone.into(),
-            disposition: disposition.into(),
+            dead_zone,
+            disposition,
         }
     }
 
@@ -53,7 +61,7 @@ impl ManualTradingModel {
 impl Default for ManualTradingModel {
     /// Sets shares to 1000, deadzone and disposition to 0.0.
     fn default() -> Self {
-        Self::new(1000, 0.0, 0.0)
+        Self::new(1000, Signal::new(0.0), Signal::new(0.0))
     }
 }
 
@@ -85,6 +93,12 @@ impl ManualTradingModel {
     }
 }
 
+impl Display for ManualTradingModel {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "ManualTradingModel")
+    }
+}
+
 impl TradingModel for ManualTradingModel {
     type Error = ManualTradingModelError;
 
@@ -104,7 +118,7 @@ impl TradingModel for ManualTradingModel {
             //     MarketState::Oscillating => todo!("Favor oscillating indicators"),
             // };
             let signals = vec![rsi.next(*price).0, bb.next(*price).0, macd.next(*price).0];
-            let sum: f64 = signals.iter().map(|s| s.val).sum();
+            let sum: f64 = signals.iter().map(|s| s.0).sum();
             let signal_average = (sum / signals.len() as f64) + self.disposition;
 
             // Consult the indicators' consensus.
@@ -127,8 +141,8 @@ mod tests {
     use super::ManualTradingModel;
     use crate::Date;
     use crate::{
-        marketdata::prices::Prices, trading::tradingmodel::TradingModel, trading::Position,
-        util::TimeSeries,
+        marketdata::prices::Prices, signals::Signal, trading::tradingmodel::TradingModel,
+        trading::Position, util::TimeSeries,
     };
     use chrono::Duration;
     use std::collections::BTreeMap;
@@ -210,12 +224,12 @@ mod tests {
         let prices = fixture_setup();
 
         // set to perma-bear mode
-        let algo = ManualTradingModel::new(1, 0.0, -1.0);
+        let algo = ManualTradingModel::new(1, Signal::new(0.0), Signal::new(-1.0));
         let trades = algo.get_trades(&prices).unwrap();
         assert!(trades.trades.iter().all(|t| *t.1 == Position::Short(1)));
 
         // perma-bull mode
-        let algo = ManualTradingModel::new(1, 0.0, 1.0);
+        let algo = ManualTradingModel::new(1, Signal::new(0.0), Signal::new(1.0));
         let trades = algo.get_trades(&prices).unwrap();
         assert!(trades.trades.iter().all(|t| *t.1 == Position::Long(1)));
     }

@@ -9,27 +9,42 @@ pub mod macdsignals;
 pub mod relativestrengthindexsignals;
 pub mod smacrossovers;
 
-use derive_more::Display;
+use derive_more::{Display, FromStr};
 use dg_ta::Reset;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, fmt::Debug, ops::Add};
+use std::{
+    collections::HashMap,
+    fmt::Debug,
+    ops::{Add, Deref},
+};
 
 /// Thin wrapper for a float - represents a bullish or bearish signal.
 ///
 /// Signal is runtime checked in debug builds to be between -1.0 and 1.0
 /// inclusive (the expected range for signal generators to be outputting).
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, FromStr, Default)]
 #[serde(transparent)]
-pub struct Signal {
-    pub val: f64,
+pub struct Signal(pub f64);
+impl Deref for Signal {
+    type Target = f64;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
 }
 
 impl Add<Signal> for f64 {
     type Output = f64;
     fn add(self, rhs: Signal) -> Self::Output {
-        self + rhs.val
+        self + rhs.0
     }
 }
+
+// impl Eq<f64> for Signal {
+//     fn assert_receiver_is_total_eq(&self) {
+
+//     }
+// }
 
 impl From<f64> for Signal {
     fn from(f: f64) -> Self {
@@ -45,19 +60,19 @@ impl From<&f64> for Signal {
 
 impl From<Signal> for f64 {
     fn from(s: Signal) -> Self {
-        s.val
+        s.0
     }
 }
 
 impl From<&Signal> for f64 {
     fn from(s: &Signal) -> Self {
-        s.val
+        s.0
     }
 }
 
 impl From<Signal> for f32 {
     fn from(s: Signal) -> Self {
-        s.val as f32
+        s.0 as f32
     }
 }
 
@@ -65,7 +80,7 @@ impl Signal {
     /// Creates a new Signal. Panics if it is out of range.
     pub fn new(val: f64) -> Self {
         debug_assert!((-1.0..=1.0).contains(&val));
-        Self { val }
+        Self(val)
     }
 }
 

@@ -5,6 +5,7 @@ use crate::Date;
 use crate::{error::TechalyzerError, marketdata::prices::Prices, util::TimeSeries};
 
 use serde::Serialize;
+use std::fmt::Display;
 
 /// Thin wrapper around a TimeSeries of Position.
 #[derive(Serialize, Clone, Debug, Eq, PartialEq)]
@@ -25,9 +26,11 @@ impl Trades {
 
 /// Given historical price data, comes up with a series of trades to attempt
 /// to turn as much of a profit as possible.
-pub trait TradingModel {
+pub trait TradingModel: Display {
     /// Error type that can happen for our implementation of TradingModel.
     /// Must be convertible into the top-level TechalyzerError.
+    // type Error = TechalyzerError;
+    // type Error: Display;
     type Error: Into<TechalyzerError>;
 
     /// Given the Prices time series data, returns a Trades object.

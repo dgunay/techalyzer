@@ -63,12 +63,12 @@ mod tests {
         let signals: Vec<Signal> = prices.iter().map(|p| sig_gen.next(*p.1).0).collect();
 
         assert_eq!(signals.len(), l);
-        assert!(nearly_equal(signals[0].val, 0.0));
-        assert!(nearly_equal(signals[1].val, -0.0714285714285714));
-        assert!(nearly_equal(signals[2].val, -0.14213197969543168));
-        assert!(nearly_equal(signals[3].val, -0.21141421392677695));
-        assert!(nearly_equal(signals[4].val, -0.1081504306316774));
-        assert!(nearly_equal(signals[5].val, 0.3031110904761263));
+        assert!(nearly_equal(signals[0].into(), 0.0));
+        assert!(nearly_equal(signals[1].into(), -0.0714285714285714));
+        assert!(nearly_equal(signals[2].into(), -0.14213197969543168));
+        assert!(nearly_equal(signals[3].into(), -0.21141421392677695));
+        assert!(nearly_equal(signals[4].into(), -0.1081504306316774));
+        assert!(nearly_equal(signals[5].into(), 0.3031110904761263));
     }
 
     fn fixture_prices() -> Prices {

@@ -9,7 +9,13 @@ use techalyzer::{
     date::{today, Date},
     indicators::SupportedIndicators,
     marketdata::prices::PricesError,
-    trading::SupportedTradingModel,
+    signals::Signal,
+    trading::{
+        buyandhold::BuyAndHold,
+        dtmodel::{DecisionTreeTrader, Trained},
+        manual::ManualTradingModel,
+        SupportedTradingModel,
+    },
     util::last_key,
 };
 
@@ -70,6 +76,20 @@ enum SubCommands {
     Backtest {
         /// Which trading model to use.
         trading_model: SupportedTradingModel,
+
+        // FIXME: can't take advantage of default values because of how
+        // required_if works :/ needs an Option, which we can't use with
+        // default_value.
+
+        // ManualTradingAlgo params
+        #[structopt(long, required_if("trading-model", "ManualTradingAlgo"))]
+        shares: Option<u64>,
+
+        #[structopt(long, required_if("trading-model", "ManualTradingAlgo"))]
+        dead_zone: Option<Signal>,
+
+        #[structopt(long, required_if("trading-model", "ManualTradingAlgo"))]
+        disposition: Option<Signal>,
 
         /// Saved model file to use (generate one with `techalyzer train`)
         #[structopt(long, short, required_if("trading-model", "MachineLearningModel"))]
@@ -212,8 +232,32 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
             trading_model,
             cash,
             model_file,
+            dead_zone,
+            disposition,
+            shares,
         } => {
-            backtest(prices, trading_model, model_file, cash)?;
+            match trading_model {
+                // TODO: don't unwrap
+                SupportedTradingModel::BuyAndHold => {
+                    backtest(prices, BuyAndHold::default(), cash)?;
+                }
+                SupportedTradingModel::ManualTradingAlgo => {
+                    let (shares, dead_zone, disposition) =
+                        (shares.unwrap(), dead_zone.unwrap(), disposition.unwrap());
+                    backtest(
+                        prices,
+                        ManualTradingModel::new(shares, dead_zone, disposition),
+                        cash,
+                    )?;
+                }
+                SupportedTradingModel::MachineLearningModel => {
+                    let model: DecisionTreeTrader<Trained> = match model_file {
+                        Some(path) => bincode::deserialize(std::fs::read(path)?.as_slice())?,
+                        None => return Err(TechalyzerError::NoModelFileSpecified),
+                    };
+                    backtest(prices, model, cash)?;
+                }
+            };
         }
     }
 
@@ -225,6 +269,7 @@ mod tests {
     use super::SupportedIndicators;
     use super::{run_program, Opts, SubCommands};
     use crate::TrainingParams;
+    use structopt::StructOpt;
     use techalyzer::{
         config::GeneralParams, datasource::SupportedDataSource, date::Date, util::Symbol,
     };
@@ -248,6 +293,12 @@ mod tests {
         });
 
         res.unwrap();
+    }
+
+    #[test]
+    fn args_parse_without_panic() {
+        // Fails if there is a collision in short/long args
+        Opts::from_args();
     }
 
     // TODO: test behavior of each path (mainly whether required arguments work
