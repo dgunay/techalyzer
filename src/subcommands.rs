@@ -16,9 +16,7 @@ use crate::{
     trading::{
         buyandhold::BuyAndHold,
         dtmodel::{DecisionTreeError, DecisionTreeTrader, Horizon, Trained},
-        manual::ManualTradingModel,
         tradingmodel::TradingModel,
-        SupportedTradingModel,
     },
 };
 use std::{fs::File, path::PathBuf};

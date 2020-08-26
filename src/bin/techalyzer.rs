@@ -269,7 +269,6 @@ mod tests {
     use super::SupportedIndicators;
     use super::{run_program, Opts, SubCommands};
     use crate::TrainingParams;
-    use structopt::StructOpt;
     use techalyzer::{
         config::GeneralParams, datasource::SupportedDataSource, date::Date, util::Symbol,
     };
