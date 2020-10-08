@@ -4,8 +4,8 @@
 
 use super::{Output, Signal, SignalsIter};
 use crate::util::{clamp, slope};
-use dg_ta::{errors::ErrorKind, indicators::SimpleMovingAverage, Next, Reset};
 use serde::{Deserialize, Serialize};
+use ta::{errors::ErrorKind, indicators::SimpleMovingAverage, Next, Reset};
 
 /// Generates buy and sell signals golden/death crosses and long-term SMA trends.
 #[derive(Debug, Serialize, Deserialize)]
@@ -32,7 +32,7 @@ impl Reset for SmaCrossoversSignalsIter {
 impl SmaCrossoversSignalsIter {
     /// Constructs an SmaCrossoversSignalsIter. Panics if the windows are equal.
     // TODO: use a different, native error type
-    pub fn new(fast_window: u32, slow_window: u32) -> Result<Self, dg_ta::errors::ErrorKind> {
+    pub fn new(fast_window: u32, slow_window: u32) -> Result<Self, ta::errors::ErrorKind> {
         if fast_window == slow_window {
             return Err(ErrorKind::InvalidParameter);
         }

@@ -10,13 +10,13 @@ pub mod relativestrengthindexsignals;
 pub mod smacrossovers;
 
 use derive_more::{Display, FromStr};
-use dg_ta::Reset;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
     fmt::Debug,
     ops::{Add, Deref},
 };
+use ta::Reset;
 
 /// Thin wrapper for a float - represents a bullish or bearish signal.
 ///

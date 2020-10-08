@@ -2,11 +2,11 @@
 
 use super::{Output, Signal, SignalsIter};
 use crate::util::clamp;
-use dg_ta::indicators::MovingAverageConvergenceDivergence;
-use dg_ta::indicators::MovingAverageConvergenceDivergenceOutput;
-use dg_ta::{Next, Reset};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use ta::indicators::MovingAverageConvergenceDivergence;
+use ta::indicators::MovingAverageConvergenceDivergenceOutput;
+use ta::{Next, Reset};
 
 #[derive(Default, Debug, Serialize, Deserialize)]
 pub struct MACDSignalsIter {
@@ -19,7 +19,7 @@ impl MACDSignalsIter {
         fast_length: u32,
         slow_length: u32,
         signal_length: u32,
-    ) -> Result<Self, dg_ta::errors::ErrorKind> {
+    ) -> Result<Self, ta::errors::ErrorKind> {
         Ok(Self {
             macd_line_prev: 0.0,
             macd: MovingAverageConvergenceDivergence::new(fast_length, slow_length, signal_length)?,
@@ -95,7 +95,7 @@ mod tests {
         price: f64,
     }
 
-    impl dg_ta::Close for Close {
+    impl ta::Close for Close {
         fn close(&self) -> f64 {
             self.price
         }

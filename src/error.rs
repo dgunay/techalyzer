@@ -50,7 +50,7 @@ macro_rules! impl_techalyzer_error_from_stringable_type {
 }
 
 impl_techalyzer_error_from_stringable_type!(serde_json::Error);
-impl_techalyzer_error_from_stringable_type!(dg_ta::errors::Error);
+impl_techalyzer_error_from_stringable_type!(ta::errors::Error);
 impl_techalyzer_error_from_stringable_type!(PerformanceError);
 impl_techalyzer_error_from_stringable_type!(BuyAndHoldError);
 impl_techalyzer_error_from_stringable_type!(ManualTradingModelError);

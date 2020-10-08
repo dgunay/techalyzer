@@ -11,9 +11,9 @@ use crate::{
 };
 use crate::{signals::SignalsIter, trading::Position};
 use derive_more::Display;
-use dg_ta::indicators::SimpleMovingAverage;
 use std::{collections::BTreeMap, fmt::Display};
 use structopt::StructOpt;
+use ta::indicators::SimpleMovingAverage;
 
 /// Errors that can happen.
 pub enum Error {

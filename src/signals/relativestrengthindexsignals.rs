@@ -1,9 +1,9 @@
 //! Signals generated with Relative Strength Index (RSI).
 
 use super::{Output, Signal, SignalsIter};
-use dg_ta::indicators::RelativeStrengthIndex;
-use dg_ta::{Next, Reset};
 use serde::{Deserialize, Serialize};
+use ta::indicators::RelativeStrengthIndex;
+use ta::{Next, Reset};
 
 /// Generates buy and sell signals from RSI.
 #[derive(Default, Debug, Serialize, Deserialize)]
@@ -20,7 +20,7 @@ impl Reset for RSISignalsIter {
 impl RSISignalsIter {
     /// Constructs an RSISignalsIter. `ema_window` is the window used for the
     /// exponential moving averages used to calculate RSI.
-    pub fn new(ema_window: u32) -> Result<Self, dg_ta::errors::ErrorKind> {
+    pub fn new(ema_window: u32) -> Result<Self, ta::errors::ErrorKind> {
         Ok(Self {
             rsi: RelativeStrengthIndex::new(ema_window)?,
         })
@@ -47,7 +47,7 @@ mod tests {
         price: f64,
     }
 
-    impl dg_ta::Close for Close {
+    impl ta::Close for Close {
         fn close(&self) -> f64 {
             self.price
         }

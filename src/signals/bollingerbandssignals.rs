@@ -2,10 +2,10 @@
 
 use super::{Output, Signal, SignalsIter};
 use crate::util::clamp;
-use dg_ta::indicators::{BollingerBands, BollingerBandsOutput};
-use dg_ta::{Next, Reset};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use ta::indicators::{BollingerBands, BollingerBandsOutput};
+use ta::{Next, Reset};
 
 /// Contains a ta-rs BollingerBands object, from which it generates signals.
 #[derive(Default, Debug, Serialize, Deserialize)]
@@ -14,7 +14,7 @@ pub struct BBSignalsIter {
 }
 
 impl BBSignalsIter {
-    pub fn new(length: u32, multiplier: f64) -> Result<Self, dg_ta::errors::ErrorKind> {
+    pub fn new(length: u32, multiplier: f64) -> Result<Self, ta::errors::ErrorKind> {
         Ok(Self {
             bb: BollingerBands::new(length, multiplier)?,
         })
@@ -77,7 +77,7 @@ mod tests {
         price: f64,
     }
 
-    impl dg_ta::Close for Close {
+    impl ta::Close for Close {
         fn close(&self) -> f64 {
             self.price
         }
