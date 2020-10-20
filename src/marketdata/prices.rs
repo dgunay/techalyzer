@@ -2,17 +2,17 @@
 
 use crate::Date;
 use crate::{output::TechalyzerPrintOutput, util::TimeSeries};
-use derive_more::Display;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::btree_map::{Iter, IterMut},
     ops::RangeBounds,
 };
+use thiserror::Error;
 
 /// Errors that can occur while using Prices.
-#[derive(Display)]
+#[derive(Debug, Error)]
 pub enum PricesError {
-    #[display(fmt = "No Date found at {} in Prices", _0)]
+    #[error("No Date found at {0} in Prices")]
     DateNotFound(Date),
 }
 

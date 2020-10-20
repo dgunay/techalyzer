@@ -2,8 +2,8 @@
 //! technical indicators and various trading models based on either machine
 //! learning or bespoke algorithms.
 //!
-//! Neither the outputs nor source code of Techalyzer nor the views of its
-//! contributors constitute professional or financial advice.
+//! The outputs, source code, and views of contributors to Techalyzer do not
+//! constitute professional or financial advice.
 
 #[deny(missing_docs)]
 pub mod backtester;

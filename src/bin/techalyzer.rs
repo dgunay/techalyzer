@@ -1,3 +1,4 @@
+use anyhow::Result;
 use std::{fs::File, path::PathBuf};
 use structopt::StructOpt;
 use techalyzer::error::TechalyzerError;
@@ -100,7 +101,7 @@ enum SubCommands {
     },
 }
 
-fn main() -> Result<(), TechalyzerError> {
+fn main() -> Result<()> {
     let opts = Opts::from_args();
     match run_program(opts) {
         Ok(_) => Ok(()),
@@ -116,7 +117,7 @@ fn very_early_date() -> Date {
 }
 
 /// Wrappable main function to make it easier to test.
-fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
+fn run_program(opts: Opts) -> Result<()> {
     let params = opts.params;
 
     // Date range for the data
@@ -132,17 +133,18 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
     let end_date = end.unwrap_or_else(today);
 
     // Get market data
-    let prices = match get_market_data(
+    let prices = get_market_data(
         params.data_source,
         params.symbol,
         start_date..=end_date,
         secret,
-    ) {
-        Ok(d) => d,
-        Err(e) => {
-            return Err(TechalyzerError::Generic(format!("{}", e)));
-        }
-    };
+    )?;
+    // {
+    //     Ok(d) => d,
+    //     Err(e) => {
+    //         return Err(TechalyzerError::Generic(format!("{}", e)));
+    //     }
+    // };
 
     // Run a subcommand
     match opts.cmd {
@@ -173,7 +175,7 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
             // dbg!(&params);
 
             if params.signal_generators.is_empty() {
-                return Err(TechalyzerError::NoIndicatorSpecified);
+                return Err(TechalyzerError::NoIndicatorSpecified.into());
             }
 
             let start_date = match params.train_start_date {
@@ -181,7 +183,11 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
                 None => {
                     *prices
                         .first_entry()
-                        .ok_or_else(|| "Could not find first entry in dataset".to_string())?
+                        .ok_or_else(|| {
+                            TechalyzerError::Generic(
+                                "Could not find first entry in dataset".to_string(),
+                            )
+                        })?
                         .0
                 }
             };
@@ -200,10 +206,10 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
                 None => {
                     last_key(&prices.map)
                         .and_then(|d| prices.get_before(&d, params.horizon.0))
-                        .ok_or(format!(
+                        .ok_or(TechalyzerError::Generic(format!(
                             "Could not find {} days before last day in price data",
                             params.horizon
-                        ))?
+                        )))?
                         .0
                 }
             };
@@ -253,7 +259,7 @@ fn run_program(opts: Opts) -> Result<(), TechalyzerError> {
                 SupportedTradingModel::MachineLearningModel => {
                     let model: DecisionTreeTrader<Trained> = match model_file {
                         Some(path) => bincode::deserialize(std::fs::read(path)?.as_slice())?,
-                        None => return Err(TechalyzerError::NoModelFileSpecified),
+                        None => return Err(TechalyzerError::NoModelFileSpecified.into()),
                     };
                     backtest(prices, model, cash)?;
                 }

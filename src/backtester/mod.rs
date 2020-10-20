@@ -9,15 +9,15 @@ use crate::trading::tradingmodel::Trades;
 use crate::date::Date;
 use crate::marketdata::prices::Prices;
 use crate::trading::Position;
-use derive_more::Display;
 use performance::{PerformanceError, PortfolioPerformance};
 use std::collections::BTreeMap;
+use thiserror::Error;
 
 /// Errors that can occur while running a backtest.
-#[derive(Debug, Display)]
+#[derive(Debug, Error)]
 pub enum BackTesterError {
     /// No position found for this trading day
-    #[display(fmt = "No Position/trade could be found on date {}", _0)]
+    #[error("No Position/trade could be found on date {0}")]
     NoPositionFound(Date),
 }
 

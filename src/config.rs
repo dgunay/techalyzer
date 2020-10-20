@@ -63,7 +63,6 @@ pub struct TrainingParams {
 
     /// How many days in the future to check future returns in order to decide
     /// how to label the data.
-    // TODO: implement a default
     #[structopt(default_value = "10", long, short)]
     #[serde(default)]
     pub horizon: Horizon,

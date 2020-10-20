@@ -20,6 +20,7 @@ use derive_more::{From, FromStr};
 use rustlearn::trees::decision_tree::Hyperparameters;
 use serde::{Deserialize, Serialize};
 use std::{collections::BTreeMap, fmt::Display, marker::PhantomData, ops::Deref};
+use thiserror::Error;
 
 /// Newtype wrapper for the 'horizon' parameter of the model (how many days in
 /// the future it will look for returns when labelling features).
@@ -71,26 +72,22 @@ pub struct DecisionTreeTrader<TrainedState = ()> {
 }
 
 /// Things that can go wrong while training or using a DecisionTreeTrader.
-#[derive(Display, Debug)]
+#[derive(Debug, Error)]
 pub enum DecisionTreeError {
-    #[display(
-        fmt = "No price information found looking ahead {} days after {}",
-        _0,
-        _1
-    )]
+    #[error("No price information found looking ahead {0} days after {1}")]
     NoLookAheadPriceData(Horizon, Date),
 
-    // TODO: this is kind of just copy and paste from mlmodel errors, can we not?
-    #[display(fmt = "Error while fitting model: {}", _0)]
+    // TODO: this is kind of just copy and paste from mlmodel errors, can we do better?
+    #[error("Error while fitting model: {0}")]
     TrainingError(String),
 
-    #[display(fmt = "Prediction error: {}", _0)]
+    #[error("Prediction error: {0}")]
     PredictionError(String),
 
-    #[display(fmt = "No price found on date {}", _0)]
+    #[error("No price found on date {0}")]
     NoPriceFound(Date),
 
-    #[display(fmt = "No signal generators provided")]
+    #[error("No signal generators provided")]
     NoSignalGeneratorsProvided,
 }
 

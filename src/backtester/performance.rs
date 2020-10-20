@@ -3,10 +3,10 @@
 use super::Position;
 use crate::util::{first_key, TimeSeries};
 use crate::{trading::tradingmodel::Trades, Date};
-use derive_more::Display;
 use serde::Serialize;
 use stats::stddev;
 use std::{collections::BTreeMap, ops::RangeBounds};
+use thiserror::Error;
 
 /// Represents portfolio performance.
 #[derive(Debug, Serialize)]
@@ -23,18 +23,15 @@ pub struct PortfolioPerformance {
 }
 
 /// Errors that may occur during portfolio performance calculation.
-#[derive(Debug, Serialize, Display)]
+#[derive(Debug, Serialize, Error)]
 pub enum PerformanceError {
     /// Occurs if there is not at least one data point to measure.
-    #[display(fmt = "Not enough data points to calculate performance")]
+    #[error("Not enough data points to calculate performance")]
     NotEnoughDataPoints,
 
     /// Occurs if the given date is not in the performance period given when
     /// constructing the PortfolioPerformance.
-    #[display(
-        fmt = "Day {} not found in performance period while calculating trade accuracy",
-        _0
-    )]
+    #[error("Day {0} not found in performance period while calculating trade accuracy")]
     DayNotInPerformancePeriod(Date),
 }
 

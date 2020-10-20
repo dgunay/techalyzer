@@ -9,7 +9,6 @@ edition = "2018"
 [dependencies]
 ta = { version="0.3.0", features = ["serde"] }
 # TODO: use a stable release of alphavantage if they bother to tag one
-# alphavantage = { git = "https://github.com/dgunay/alphavantage", features = ["blocking"] }
 alphavantage = { git = "https://github.com/asmarques/alphavantage", features = ["blocking"], rev="57a5414" }
 # alphavantage = { version = "0.6.0", features = ["blocking"] }
 chrono = "0.4"
@@ -28,6 +27,8 @@ rustlearn = "0.5.0"
 bincode = "1.3.1"
 typetag = "0.1"
 csv = "1.1"
+anyhow = "1.0"
+thiserror = "1.0"
 
 [dev-dependencies]
 tempfile = "3.1.0"

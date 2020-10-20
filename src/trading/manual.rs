@@ -65,11 +65,6 @@ impl Default for ManualTradingModel {
     }
 }
 
-#[derive(Debug, Display)]
-pub enum ManualTradingModelError {
-    NotConvertibleFromStr(String),
-}
-
 #[allow(dead_code)]
 enum MarketState {
     Trending,
@@ -99,8 +94,11 @@ impl Display for ManualTradingModel {
     }
 }
 
+#[derive(Display, Debug)]
+pub struct CanNeverHappen;
+
 impl TradingModel for ManualTradingModel {
-    type Error = ManualTradingModelError;
+    type Error = CanNeverHappen;
 
     fn get_trades(self, prices: &Prices) -> Result<Trades, Self::Error> {
         // Make a bin of technical indicators to use - 2 trending, 2 oscillating.

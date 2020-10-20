@@ -1,11 +1,11 @@
 //! Code for getting stock price information from a variety of sources.
 
 use crate::{date::Date, marketdata::prices::Prices};
-use derive_more::Display;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::{ops::RangeBounds, str::FromStr};
 use strum_macros::EnumIter;
+use thiserror::Error;
 
 pub mod alphavantage;
 pub mod csv;
@@ -64,24 +64,24 @@ impl FromStr for SupportedDataSource {
 // TODO: this error enum is causing a lot of architectural problems - should we
 // switch to an error crate or reorganize things?
 /// Errors arising from attempts to get data from different data sources
-#[derive(Debug, Display)]
+#[derive(Debug, Error)]
 pub enum Error {
-    #[display(fmt = "{}", _0)]
+    #[error("{0}")]
     AlphaVantageError(String),
 
-    #[display(fmt = "File '{}' not found", _0)]
+    #[error("File '{0}' not found")]
     FileNotFound(String),
 
-    #[display(fmt = "Symbol mismatch (expected {}, found {})", expected, actual)]
+    #[error("Symbol mismatch (expected {expected:?}, found {actual:?})")]
     SymbolMismatch { expected: String, actual: String },
 
-    #[display(fmt = "'{}' is not a supported data source", _0)]
+    #[error("'{0}' is not a supported data source")]
     NoSuchDataSource(String),
 
-    #[display(fmt = "Error with CSV file: {}", _0)]
+    #[error("Error with CSV file: {0}")]
     CsvError(String),
 
-    #[display(fmt = "Other error: {} (context: {})", msg, context)]
+    #[error("Other error: {msg:?} (context: {context:?})")]
     Other { msg: String, context: String },
 }
 

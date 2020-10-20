@@ -3,8 +3,8 @@
 use super::tradingmodel::{Trades, TradingModel};
 use crate::marketdata::prices::Prices;
 use crate::trading::Position::*;
-use derive_more::Display;
 use std::{collections::BTreeMap, fmt::Display};
+use thiserror::Error;
 
 pub struct BuyAndHold {
     /// How many share to buy and hold.
@@ -24,9 +24,9 @@ impl Display for BuyAndHold {
 }
 
 /// Things that can go wrong with the BuyAndHold.
-#[derive(Display, Debug)]
+#[derive(Debug, Error)]
 pub enum BuyAndHoldError {
-    #[display(techalyzer = "No first day found", _0)]
+    #[error("No first day found")]
     NoFirstDay,
 }
 
